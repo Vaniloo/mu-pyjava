@@ -2,7 +2,7 @@
 
 import json
 import subprocess
-from typing import Any, Dict, Iterator, List, Tuple
+from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple
 
 from .judge import DecisionEngine, DecisionPoint
 from .model import ChatModel
@@ -31,7 +31,8 @@ class Agent:
         self.max_steps = max_steps
         self.messages: List[Dict[str, Any]] = [{"role": "system", "content": SYSTEM_MESSAGE}]
 
-    def run(self, prompt: str) -> Iterator[Tuple[str, str]]:
+    def run(self, prompt: str,
+            approval: Optional[Callable[[str, str, Dict[str, Any]], bool]] = None) -> Iterator[Tuple[str, str]]:
         if not prompt.strip():
             raise ValueError("Prompt is empty")
         self.messages.append({"role": "user", "content": prompt})
@@ -80,6 +81,8 @@ class Agent:
                             yield "judge", f"{name}: {verdict}{detail}; {record['mode']} mode, {record['latency_ms']} ms"
                         if not approved:
                             raise PermissionError("Judge declined this tool action")
+                        if approval is not None and not approval(call_id, name, arguments):
+                            raise PermissionError("User did not allow this tool action")
                     result = self.tools.execute(name, arguments)
                     yield "tool", name + ": " + result[:500]
                 except (KeyError, TypeError, ValueError, PermissionError, OSError, subprocess.TimeoutExpired) as error:

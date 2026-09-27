@@ -3,11 +3,13 @@
 import argparse
 import os
 import sys
+import threading
 from pathlib import Path
 
 from .agent import Agent
 from .judge import DecisionEngine, LayaBooleanJudge, LayaHttpBooleanJudge, ModelBooleanJudge
 from .model import ChatCompletionsModel, model_from_environment
+from .permissions import ApprovalManager
 from .tools import WorkspaceTools
 from .wire import event_line, parse_request
 
@@ -39,7 +41,9 @@ def build_agent(args: argparse.Namespace) -> Agent:
         backend=backend,
         ledger=Path(args.ledger) if args.ledger else None,
     )
-    tools = WorkspaceTools(Path(args.workspace), args.allow_write, args.allow_command)
+    # The interactive server gates each call before reaching these tool methods.
+    tools = WorkspaceTools(Path(args.workspace), args.allow_write or args.server,
+                           args.allow_command or args.server)
     return Agent(model, tools, judge)
 
 
@@ -63,15 +67,47 @@ def main() -> int:
         for kind, message in agent.run(args.prompt):
             print(kind + ": " + message)
         return 0
-    for raw in sys.stdin:
-        request_id = "?"
+    output_lock = threading.Lock()
+
+    def emit(request_id: str, kind: str, message: str) -> None:
+        with output_lock:
+            print(event_line(request_id, kind, message), flush=True)
+
+    manager = ApprovalManager(agent.tools, emit, args.allow_write, args.allow_command)
+    worker = None
+
+    def run_chat(request_id: str, prompt: str) -> None:
         try:
-            _, request_id, prompt = parse_request(raw)
-            for kind, message in agent.run(prompt):
-                print(event_line(request_id, kind, message), flush=True)
+            for kind, message in agent.run(
+                prompt, approval=lambda call_id, name, arguments:
+                    manager.request(request_id, call_id, name, arguments)
+            ):
+                emit(request_id, kind, message)
         except Exception as error:
-            print(event_line(request_id, "error", str(error)), flush=True)
-        print(event_line(request_id, "done", ""), flush=True)
+            emit(request_id, "error", str(error))
+        finally:
+            emit(request_id, "done", "")
+
+    try:
+        for raw in sys.stdin:
+            fields = raw.rstrip("\n").split("\t")
+            if len(fields) == 3 and fields[0] == "APPROVAL":
+                manager.resolve(fields[1], fields[2])
+                continue
+            request_id = "?"
+            try:
+                _, request_id, prompt = parse_request(raw)
+                if worker is not None and worker.is_alive():
+                    emit(request_id, "error", "A turn is already running")
+                    emit(request_id, "done", "")
+                    continue
+                worker = threading.Thread(target=run_chat, args=(request_id, prompt), daemon=True)
+                worker.start()
+            except Exception as error:
+                emit(request_id, "error", str(error))
+                emit(request_id, "done", "")
+    finally:
+        manager.close()
     return 0
 
 

@@ -1,5 +1,8 @@
 import json
+import os
+import queue
 import shlex
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -10,6 +13,7 @@ from pathlib import Path
 
 from mupyjava.agent import Agent
 from mupyjava.judge import DecisionEngine, DecisionPoint, LayaBooleanJudge, LayaHttpBooleanJudge
+from mupyjava.permissions import ApprovalManager
 from mupyjava.tools import WorkspaceTools
 from mupyjava.wire import decode_text, encode_text, event_line, parse_request
 
@@ -23,6 +27,247 @@ class ScriptedModel:
 
 
 class CoreTests(unittest.TestCase):
+    @unittest.skipUnless(shutil.which("javac") and shutil.which("java"), "JDK is unavailable")
+    def test_java_smoke_approval_round_trip(self):
+        class Handler(BaseHTTPRequestHandler):
+            def do_POST(self):
+                payload = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
+                if payload["messages"][-1]["role"] == "tool":
+                    message = {"role": "assistant", "content": "Finished."}
+                else:
+                    message = {"role": "assistant", "content": None, "tool_calls": [{
+                        "id": "write-1", "type": "function", "function": {"name": "write_file",
+                            "arguments": json.dumps({"path": "note.txt", "content": "created"})},
+                    }]}
+                body = json.dumps({"choices": [{"message": message}]}).encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+
+            def log_message(self, *args):
+                pass
+
+        with HTTPServer(("127.0.0.1", 0), Handler) as server, tempfile.TemporaryDirectory() as directory:
+            server_thread = threading.Thread(target=server.serve_forever, daemon=True)
+            server_thread.start()
+            repository = Path(__file__).resolve().parents[2]
+            classes = Path(directory) / "classes"
+            classes.mkdir()
+            try:
+                subprocess.run(["javac", "-d", str(classes),
+                                *map(str, (repository / "java/src/main/java/dev/mupyjava").glob("*.java"))],
+                               check=True, capture_output=True, text=True)
+                env = os.environ.copy()
+                env.update({"MU_MODEL": "fixture", "MU_MODEL_BACKEND": "", "MU_JUDGE_MODE": "off",
+                            "MU_PYTHON": sys.executable,
+                            "MU_API_BASE": f"http://127.0.0.1:{server.server_port}/v1"})
+                result = subprocess.run(["java", "-cp", str(classes), "dev.mupyjava.Main",
+                                         "--workspace", directory, "--smoke", "Write note.txt"],
+                                        cwd=repository, env=env, capture_output=True, text=True, timeout=15)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertIn("User did not allow this tool action", result.stdout)
+                self.assertFalse((Path(directory) / "note.txt").exists())
+                allowed = subprocess.run(["java", "-cp", str(classes), "dev.mupyjava.Main",
+                                          "--workspace", directory, "--smoke", "Write note.txt",
+                                          "--smoke-approval", "once"],
+                                         cwd=repository, env=env, capture_output=True, text=True, timeout=15)
+                self.assertEqual(allowed.returncode, 0, allowed.stderr)
+                self.assertIn("tool: write_file: Wrote note.txt", allowed.stdout)
+                self.assertEqual((Path(directory) / "note.txt").read_text(), "created")
+            finally:
+                server.shutdown()
+                server_thread.join(timeout=5)
+
+    def test_server_approval_round_trip_denies_then_allows(self):
+        class Handler(BaseHTTPRequestHandler):
+            def do_POST(self):
+                payload = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
+                if payload["messages"][-1]["role"] == "tool":
+                    message = {"role": "assistant", "content": "Finished."}
+                else:
+                    message = {"role": "assistant", "content": None, "tool_calls": [{
+                        "id": "write-1", "type": "function", "function": {"name": "write_file",
+                            "arguments": json.dumps({"path": "note.txt", "content": "created"})},
+                    }]}
+                body = json.dumps({"choices": [{"message": message}]}).encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+
+            def log_message(self, *args):
+                pass
+
+        with HTTPServer(("127.0.0.1", 0), Handler) as server, tempfile.TemporaryDirectory() as directory:
+            server_thread = threading.Thread(target=server.serve_forever, daemon=True)
+            server_thread.start()
+            env = os.environ.copy()
+            env.update({"PYTHONPATH": str(Path(__file__).resolve().parents[1]), "MU_MODEL": "fixture",
+                        "MU_MODEL_BACKEND": "", "MU_JUDGE_MODE": "off",
+                        "MU_API_BASE": f"http://127.0.0.1:{server.server_port}/v1"})
+            process = subprocess.Popen([sys.executable, "-m", "mupyjava", "--server", "--workspace", directory],
+                                       env=env, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                       stderr=subprocess.PIPE, text=True)
+            lines = queue.Queue()
+            reader = threading.Thread(target=lambda: [lines.put(line) for line in process.stdout], daemon=True)
+            reader.start()
+
+            def read_event():
+                fields = lines.get(timeout=5).rstrip("\n").split("\t")
+                self.assertEqual(fields[0], "EVENT")
+                return fields[1], fields[2], decode_text(fields[3])
+
+            try:
+                for turn, answer in (("one", "deny"), ("two", "once")):
+                    process.stdin.write("CHAT\t" + turn + "\t" + encode_text("Write note.txt") + "\n")
+                    process.stdin.flush()
+                    request_id, kind, payload = read_event()
+                    self.assertEqual((request_id, kind), (turn, "approval.request"))
+                    approval_id = payload.split("\t")[1]
+                    process.stdin.write("APPROVAL\t" + approval_id + "\t" + answer + "\n")
+                    process.stdin.flush()
+                    events = []
+                    while True:
+                        event = read_event()
+                        events.append(event)
+                        if event[1] == "done":
+                            break
+                    self.assertIn((turn, "approval.resolved", answer), events)
+                    self.assertTrue(any(item[1] == "tool" for item in events))
+                    self.assertEqual((Path(directory) / "note.txt").exists(), answer == "once")
+            finally:
+                process.stdin.close()
+                process.wait(timeout=5)
+                reader.join(timeout=5)
+                process.stdout.close()
+                stderr_text = process.stderr.read()
+                process.stderr.close()
+                server.shutdown()
+                server_thread.join(timeout=5)
+            self.assertEqual(process.returncode, 0, stderr_text)
+
+    def test_approval_denial_prevents_write_and_rejects_duplicate_answer(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            emitted = queue.Queue()
+            tools = WorkspaceTools(root, allow_write=True)
+            manager = ApprovalManager(tools, lambda request_id, kind, value: emitted.put((kind, value)))
+            model = ScriptedModel([
+                {"role": "assistant", "content": None, "tool_calls": [{
+                    "id": "write-1", "type": "function", "function": {"name": "write_file", "arguments":
+                        json.dumps({"path": "note.txt", "content": "secret"})},
+                }]},
+                {"role": "assistant", "content": "Stopped."},
+            ])
+            agent = Agent(model, tools, DecisionEngine())
+            events = []
+            worker = threading.Thread(target=lambda: events.extend(agent.run(
+                "Write note.txt", approval=lambda call_id, name, args:
+                    manager.request("turn-1", call_id, name, args))), daemon=True)
+            worker.start()
+            kind, payload = emitted.get(timeout=2)
+            self.assertEqual(kind, "approval.request")
+            fields = payload.split("\t")
+            self.assertEqual(fields[0], "v1")
+            self.assertEqual(decode_text(fields[2]), "write-1")
+            self.assertEqual(fields[3], "deny,once,session")
+            self.assertIn("secret", decode_text(fields[5]))
+            self.assertTrue(manager.resolve(fields[1], "deny"))
+            self.assertFalse(manager.resolve(fields[1], "once"))
+            worker.join(timeout=2)
+            self.assertFalse(worker.is_alive())
+            self.assertFalse((root / "note.txt").exists())
+            self.assertIn("User did not allow", events[0][1])
+
+    def test_approval_denial_prevents_edit_and_command(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            note = root / "note.txt"
+            note.write_text("before", encoding="utf-8")
+            marker = root / "started.txt"
+            command = shlex.quote(sys.executable) + " -c " + shlex.quote(
+                f"from pathlib import Path; Path({str(marker)!r}).write_text('ran')")
+            for name, arguments in (
+                ("edit_file", {"path": "note.txt", "old_text": "before", "new_text": "after"}),
+                ("run_command", {"command": command}),
+            ):
+                with self.subTest(name=name):
+                    emitted = queue.Queue()
+                    tools = WorkspaceTools(root, allow_write=True, allow_command=True)
+                    manager = ApprovalManager(tools, lambda request_id, kind, value: emitted.put((kind, value)))
+                    model = ScriptedModel([
+                        {"role": "assistant", "content": None, "tool_calls": [{"id": name, "type": "function",
+                            "function": {"name": name, "arguments": json.dumps(arguments)}}]},
+                        {"role": "assistant", "content": "Finished."},
+                    ])
+                    agent = Agent(model, tools, DecisionEngine())
+                    events = []
+                    worker = threading.Thread(target=lambda: events.extend(agent.run(
+                        "Do the action", approval=lambda call_id, tool_name, args:
+                            manager.request("turn-1", call_id, tool_name, args))), daemon=True)
+                    worker.start()
+                    kind, payload = emitted.get(timeout=2)
+                    self.assertEqual(kind, "approval.request")
+                    self.assertTrue(manager.resolve(payload.split("\t")[1], "deny"))
+                    worker.join(timeout=2)
+                    self.assertFalse(worker.is_alive())
+                    self.assertIn("User did not allow", events[0][1])
+                    self.assertEqual(note.read_text(encoding="utf-8"), "before")
+                    self.assertFalse(marker.exists())
+
+    def test_session_grant_is_scoped_and_protected_file_requires_fresh_approval(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            emitted = queue.Queue()
+            manager = ApprovalManager(WorkspaceTools(root, allow_write=True),
+                                      lambda request_id, kind, value: emitted.put((kind, value)))
+            answers = []
+
+            def request(path):
+                answers.append(manager.request("turn-1", "call-1", "write_file", {"path": path, "content": "x"}))
+
+            worker = threading.Thread(target=request, args=("note.txt",), daemon=True)
+            worker.start()
+            _, payload = emitted.get(timeout=2)
+            approval_id = payload.split("\t")[1]
+            self.assertTrue(manager.resolve(approval_id, "session"))
+            worker.join(timeout=2)
+            self.assertEqual(answers, [True])
+            self.assertEqual(emitted.get(timeout=2)[0], "approval.resolved")
+            self.assertTrue(manager.request("turn-1", "call-2", "write_file",
+                                            {"path": "note.txt", "content": "new"}))
+            self.assertTrue(emitted.empty())
+
+            worker = threading.Thread(target=request, args=(".env",), daemon=True)
+            worker.start()
+            while True:
+                kind, payload = emitted.get(timeout=2)
+                if kind == "approval.request":
+                    break
+            fields = payload.split("\t")
+            self.assertEqual(fields[3], "deny,once")
+            self.assertTrue(manager.resolve(fields[1], "session"))
+            worker.join(timeout=2)
+            self.assertEqual(answers, [True, False])
+
+    def test_disconnect_denies_pending_approval(self):
+        with tempfile.TemporaryDirectory() as directory:
+            emitted = queue.Queue()
+            manager = ApprovalManager(WorkspaceTools(Path(directory), allow_command=True),
+                                      lambda request_id, kind, value: emitted.put((kind, value)))
+            answers = []
+            worker = threading.Thread(target=lambda: answers.append(manager.request(
+                "turn-1", "call-1", "run_command", {"command": "python3 -V"})), daemon=True)
+            worker.start()
+            kind, payload = emitted.get(timeout=2)
+            self.assertEqual(kind, "approval.request")
+            self.assertEqual(payload.split("\t")[3], "deny,once")
+            manager.close()
+            self.assertFalse(manager.resolve(payload.split("\t")[1], "once"))
+            worker.join(timeout=2)
+            self.assertEqual(answers, [False])
+
     def test_wire_round_trip_preserves_unicode_and_newlines(self):
         message = "你好\nPython + Java"
         self.assertEqual(parse_request("CHAT\t42\t" + encode_text(message) + "\n"), ("CHAT", "42", message))

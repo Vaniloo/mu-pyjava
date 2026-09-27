@@ -18,7 +18,7 @@ This is a behavior-oriented plan for the independent Python engine and Java desk
 
 ### 1. Establish the action boundary
 
-Make the Python engine pause before each `write_file`, `edit_file` or `run_command`. Send Java a versioned `approval.request` with a unique tool-call ID, tool name, normalized workspace path or command arguments, concise preview and reason. Accept `once`, a scoped `session` grant where safe, or `deny`; record the resolution. Replace the current blanket launch flags with explicit permission modes. With no interactive client, deny requests that cannot be approved. A denial becomes a tool result that tells the agent to continue without circumventing the decision. Revalidate the approved path and arguments immediately before execution.
+Make the Python engine pause before each `write_file`, `edit_file` or `run_command`. Send Java a versioned `approval.request` with a unique tool-call ID, normalized workspace path or command arguments and an action preview. Accept `once`, a scoped `session` grant where safe, or `deny`; record the resolution. The desktop defaults to asking, while CLI launch flags remain explicit broad-access overrides for noninteractive use. With no interactive client, deny requests that cannot be approved. A denial becomes a tool result that tells the agent to continue without circumventing the decision. Revalidate the approved path immediately before execution.
 
 Keep path containment and deterministic command-risk checks in Python. The judge may recommend an outcome only after those rules run; uncertainty or judge failure asks the user. Protected paths and flagged commands require a fresh answer, even after a session grant. Do not enable automatic Laya approval until independent labels show that its false-positive rate is acceptable for every mutating tool.
 
@@ -44,7 +44,7 @@ Add typed question and answer schemas, per-point mode/routing and deterministic 
 
 ## Immediate next slice
 
-Build step 1 with the event envelope needed for step 2. Start with `write_file`, `edit_file` and `run_command`; retain the existing tool implementations behind the gate. Add end-to-end tests from Java approval buttons through Python execution and rejection. Update issue #1 when this slice lands.
+The versioned approval request/response and Java dialog for `write_file`, `edit_file` and `run_command` are implemented. Python subprocess and Java smoke tests cover denial and one-time approval. The durable session/event envelope, cancellation and a dedicated judgment panel remain in step 2. Update issue #1 when that slice lands.
 
 ## Source anchors
 

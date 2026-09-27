@@ -14,6 +14,8 @@ import java.util.function.Consumer;
 /** Starts the Python engine and exchanges one line per event. */
 public final class BackendClient implements AutoCloseable {
     public record Event(String id, String kind, String text) {}
+    public record ApprovalRequest(String approvalId, String toolCallId, boolean sessionOption,
+                                  String summary, String preview) {}
 
     private final Process process;
     private final BufferedWriter input;
@@ -56,6 +58,32 @@ public final class BackendClient implements AutoCloseable {
         input.write("CHAT\t" + id + "\t" + encoded + "\n");
         input.flush();
         return id;
+    }
+
+    public synchronized void sendApproval(String approvalId, String answer) throws IOException {
+        if (!process.isAlive()) throw new IOException("Python backend has stopped");
+        if (!UUID.fromString(approvalId).toString().equals(approvalId))
+            throw new IllegalArgumentException("Invalid approval id");
+        if (!answer.equals("deny") && !answer.equals("once") && !answer.equals("session"))
+            throw new IllegalArgumentException("Invalid approval answer");
+        input.write("APPROVAL\t" + approvalId + "\t" + answer + "\n");
+        input.flush();
+    }
+
+    public static ApprovalRequest parseApproval(String text) {
+        String[] fields = text.split("\t", -1);
+        if (fields.length != 6 || !fields[0].equals("v1"))
+            throw new IllegalArgumentException("Invalid approval request");
+        String id = UUID.fromString(fields[1]).toString();
+        boolean session;
+        if (fields[3].equals("deny,once,session")) session = true;
+        else if (fields[3].equals("deny,once")) session = false;
+        else throw new IllegalArgumentException("Invalid approval options");
+        return new ApprovalRequest(id, decode(fields[2]), session, decode(fields[4]), decode(fields[5]));
+    }
+
+    private static String decode(String value) {
+        return new String(Base64.getDecoder().decode(value), StandardCharsets.UTF_8);
     }
 
     private static void readEvents(Process process, Consumer<Event> onEvent) {
