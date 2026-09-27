@@ -8,11 +8,11 @@ This is a behavior-oriented plan for the independent Python engine and Java desk
 | Area | mu behavior | mu-pyjava today | Gap |
 | --- | --- | --- | --- |
 | Tool access | Read, find, grep, list, edit, write, and shell/PowerShell have rich results, cancellation and operation interfaces; extensions add more tools. | Nine fixed tools cover text read/search, exact edit/write, Git inspection and no-shell process execution. | Image reads, streamed/cancellable shell, full-output retrieval, structured diffs, atomic/queued mutations, extensibility and remote operations. Tool-name counts hide these differences. |
-| Permission boundary | Each tool call passes a permission gate. Modes and grants belong to a conversation; risky or protected operations are evaluated each time, with a human fallback. | Launch flags allow every write or command for the lifetime of the backend. Active `tool.intent` can veto a call, but cannot grant tool access; experimental Laya runs in shadow mode. | A request/answer protocol, action preview, deny result, per-session grants, deterministic risk and protected-path rules. |
-| Session runtime | Append-only JSONL session tree, stable entries, resume/branch, tool events and cancellation. | Python keeps messages only in memory; Java sends `CHAT` and receives text events from one long-lived process. | Durable turns and tool lifecycle, restart recovery, concurrent input/cancel semantics, versioned structured events. |
+| Permission boundary | Each tool call passes a permission gate. Modes and grants belong to a conversation; risky or protected operations are evaluated each time, with a human fallback. | The desktop now asks for each mutation, with a per-file grant where safe; CLI flags are explicit broad-access overrides. Active `tool.intent` can veto but cannot grant access; Laya remains shadow-only. | Configurable permission modes and more complete deterministic command-risk rules. |
+| Session runtime | Append-only JSONL session tree, stable entries, resume/branch, tool events and cancellation. | Versioned append-only journal, completed-turn restoration, interruption markers, latest-session resume and a new-session action. | Branch/fork, active-turn cancellation, richer tool lifecycle and background tasks. |
 | Context | Tool output is admitted in chunks and archived; stale context can be forgotten or compacted. | Tool result sent to the model is clipped at 60,000 characters; no archive or token budget. | Preserve complete output outside the prompt, expose retrieval, and add deterministic context budgeting before judge-led admission. |
 | Judge | 35 decision points spanning input, context, tools, turns and teamwork; typed boolean/choice/score questions, routing/cascade, modes per point and ledger. | One Boolean `tool.intent` point, global off/shadow/active mode, optional Laya or LLM backend and JSONL ledger. | Typed registry, per-point policies and fallbacks, routing, calibration/replay and more decision points. The current Laya checkpoint has confident false positives, so it remains shadow-only. |
-| Desktop/provider | mu desktop presents permissions, sessions and judgments, and bundles a runtime; the host supports multiple providers and model features. | A Swing transcript and input, one Chat Completions adapter, external Python launch. | Approval UI, session browser, ledger view, model settings, packaging and provider streaming. |
+| Desktop/provider | mu desktop presents permissions, sessions and judgments, and bundles a runtime; the host supports multiple providers and model features. | Swing conversation and judgments tabs, approval dialog, newest-session resume and one Chat Completions adapter. | Session browser, model settings, packaged runtime and provider streaming. |
 
 ## Implementation order
 
@@ -44,7 +44,7 @@ Add typed question and answer schemas, per-point mode/routing and deterministic 
 
 ## Immediate next slice
 
-The versioned approval request/response and Java dialog for `write_file`, `edit_file` and `run_command` are implemented. Python subprocess and Java smoke tests cover denial and one-time approval. The durable session/event envelope, cancellation and a dedicated judgment panel remain in step 2. Update issue #1 when that slice lands.
+The versioned approval request/response and Java dialog for `write_file`, `edit_file` and `run_command` are implemented. Python subprocess and Java smoke tests cover denial and one-time approval. The local versioned session journal, latest-session restart recovery, new-session action and dedicated judgment tab are also implemented. Active-turn cancellation, streamed command output and branch/fork remain future work.
 
 ## Source anchors
 

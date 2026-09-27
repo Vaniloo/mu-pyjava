@@ -32,10 +32,17 @@ class Agent:
         self.messages: List[Dict[str, Any]] = [{"role": "system", "content": SYSTEM_MESSAGE}]
 
     def run(self, prompt: str,
-            approval: Optional[Callable[[str, str, Dict[str, Any]], bool]] = None) -> Iterator[Tuple[str, str]]:
+            approval: Optional[Callable[[str, str, Dict[str, Any]], bool]] = None,
+            on_message: Optional[Callable[[Dict[str, Any]], None]] = None) -> Iterator[Tuple[str, str]]:
         if not prompt.strip():
             raise ValueError("Prompt is empty")
-        self.messages.append({"role": "user", "content": prompt})
+
+        def append(message: Dict[str, Any]) -> None:
+            if on_message is not None:
+                on_message(message)
+            self.messages.append(message)
+
+        append({"role": "user", "content": prompt})
         for _ in range(self.max_steps):
             response = self.model.complete(self.messages, TOOL_SCHEMAS)
             calls = response.get("tool_calls") or []
@@ -44,10 +51,10 @@ class Agent:
                 raise RuntimeError("Model returned invalid tool calls")
             if not calls:
                 answer = str(content or "")
-                self.messages.append({"role": "assistant", "content": answer})
+                append({"role": "assistant", "content": answer})
                 yield "assistant", answer
                 return
-            self.messages.append({"role": "assistant", "content": content, "tool_calls": calls})
+            append({"role": "assistant", "content": content, "tool_calls": calls})
             for call in calls:
                 name = str(call.get("function", {}).get("name", ""))
                 call_id = str(call.get("id", ""))
@@ -84,10 +91,11 @@ class Agent:
                         if approval is not None and not approval(call_id, name, arguments):
                             raise PermissionError("User did not allow this tool action")
                     result = self.tools.execute(name, arguments)
-                    yield "tool", name + ": " + result[:500]
                 except (KeyError, TypeError, ValueError, PermissionError, OSError, subprocess.TimeoutExpired) as error:
                     result = "Tool error: " + str(error)
-                    yield "tool", name + ": " + result
                 tool_content = result if len(result) <= 60_000 else result[:59_900] + "\n[Tool result clipped at 60,000 characters]"
-                self.messages.append({"role": "tool", "tool_call_id": call_id, "content": tool_content})
-        yield "assistant", "Stopped after the maximum number of tool steps."
+                append({"role": "tool", "tool_call_id": call_id, "content": tool_content})
+                yield "tool", name + ": " + result[:500]
+        answer = "Stopped after the maximum number of tool steps."
+        append({"role": "assistant", "content": answer})
+        yield "assistant", answer

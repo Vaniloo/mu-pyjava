@@ -49,6 +49,8 @@ The agent now has nine tools, following mu's basic read/find/grep/edit/write/com
 
 The Java desktop now asks before each write, edit or command. A file action can be allowed once, allowed for the same file during this conversation, or denied; commands and protected files are approved one at a time. Denial returns a tool result to the model. Closing the backend denies pending requests. In noninteractive CLI mode, `--allow-write` and `--allow-command` still explicitly grant broad access for that process; passing those flags to the desktop also bypasses its approval dialog. The `--smoke` test path denies actions unless `--smoke-approval once` is supplied for an automated test.
 
+The desktop now restores the latest conversation for the selected workspace on restart. **New session** starts an empty one; the **Judgments** tab shows saved verdicts, probabilities and fallback details. Sessions are local JSONL journals containing prompts, tool arguments and results. Set `MU_SESSION_DIR` to choose their storage directory. Interrupted turns are shown but excluded from restored model context, so tool actions are not replayed. See [session format and protocol](docs/SESSIONS.md).
+
 ## Decisions
 
 `tool.intent` is the first decision point. Version 2 asks whether a proposed `write_file`, `edit_file`, or `run_command` action serves the latest user request. Read-only tools do not use this decision point. The default mode is `off`; `shadow` asks and records without changing behavior; `active` applies the answer. The desktop permission gate still applies after the judge decision. A separate judge model can be configured with `MU_JUDGE_MODEL`, `MU_JUDGE_MODE=shadow|active`, and an optional `--ledger path/to/ledger.jsonl` argument.

@@ -4,14 +4,16 @@ import argparse
 import os
 import sys
 import threading
+import uuid
 from pathlib import Path
 
 from .agent import Agent
 from .judge import DecisionEngine, LayaBooleanJudge, LayaHttpBooleanJudge, ModelBooleanJudge
 from .model import ChatCompletionsModel, model_from_environment
 from .permissions import ApprovalManager
+from .sessions import SessionStore, format_judgment
 from .tools import WorkspaceTools
-from .wire import event_line, parse_request
+from .wire import decode_text, event_line, parse_request
 
 
 def build_agent(args: argparse.Namespace) -> Agent:
@@ -55,6 +57,8 @@ def main() -> int:
     parser.add_argument("--allow-write", action="store_true")
     parser.add_argument("--allow-command", action="store_true")
     parser.add_argument("--ledger", help="Optional JSONL path for decision records")
+    parser.add_argument("--session-dir", help="Local directory for saved sessions")
+    parser.add_argument("--new-session", action="store_true", help="Start a fresh server session")
     args = parser.parse_args()
     if not args.server and not args.prompt:
         parser.error("Pass --prompt TEXT or --server")
@@ -67,25 +71,58 @@ def main() -> int:
         for kind, message in agent.run(args.prompt):
             print(kind + ": " + message)
         return 0
+    session_root = Path(args.session_dir) if args.session_dir else None
+    store = SessionStore.open(agent.tools.root, session_root, resume=not args.new_session)
+    agent.messages = store.restore_messages()
     output_lock = threading.Lock()
+    current_turn = None
 
     def emit(request_id: str, kind: str, message: str) -> None:
         with output_lock:
             print(event_line(request_id, kind, message), flush=True)
 
-    manager = ApprovalManager(agent.tools, emit, args.allow_write, args.allow_command)
+    def emit_action(request_id: str, kind: str, message: str) -> None:
+        if current_turn is not None and kind == "approval.request":
+            fields = message.split("\t")
+            if len(fields) == 6 and fields[0] == "v1":
+                store.append("approval.request", {"approval_id": fields[1], "summary": decode_text(fields[4])},
+                             current_turn, decode_text(fields[2]))
+        elif current_turn is not None and kind == "approval.resolved":
+            fields = message.split("\t")
+            if len(fields) == 3 and fields[0] == "v1":
+                store.append("approval.resolved", {"approval_id": fields[1], "answer": fields[2]}, current_turn)
+        emit(request_id, kind, message)
+
+    manager = ApprovalManager(agent.tools, emit_action, args.allow_write, args.allow_command)
     worker = None
 
-    def run_chat(request_id: str, prompt: str) -> None:
+    def run_chat(request_id: str, prompt: str, turn_id: str) -> None:
+        nonlocal current_turn
         try:
+            store.append("turn.started", {"request_id": request_id}, turn_id)
+            store.append("display", {"kind": "you", "text": prompt}, turn_id)
+
+            def save_message(message: dict) -> None:
+                store.append("message", {"message": message}, turn_id, message.get("tool_call_id"))
+
             for kind, message in agent.run(
                 prompt, approval=lambda call_id, name, arguments:
-                    manager.request(request_id, call_id, name, arguments)
+                    manager.request(request_id, call_id, name, arguments),
+                on_message=save_message,
             ):
+                if kind == "judge" and agent.judge.last_record is not None:
+                    record = dict(agent.judge.last_record)
+                    store.append("judge.record", record, turn_id)
+                    emit(request_id, "judge.detail", format_judgment(record))
+                store.append("display", {"kind": kind, "text": message}, turn_id)
                 emit(request_id, kind, message)
+            store.append("turn.completed", {}, turn_id)
         except Exception as error:
+            store.append("turn.interrupted", {"reason": type(error).__name__}, turn_id)
+            agent.messages = store.restore_messages()
             emit(request_id, "error", str(error))
         finally:
+            current_turn = None
             emit(request_id, "done", "")
 
     try:
@@ -94,14 +131,31 @@ def main() -> int:
             if len(fields) == 3 and fields[0] == "APPROVAL":
                 manager.resolve(fields[1], fields[2])
                 continue
+            if len(fields) == 2 and fields[0] == "HISTORY" and fields[1]:
+                emit(fields[1], "session.info", store.session_id)
+                for kind, message in store.history():
+                    emit(fields[1], kind, message)
+                emit(fields[1], "history.done", "")
+                continue
+            if len(fields) == 2 and fields[0] == "NEW" and fields[1]:
+                if current_turn is not None:
+                    emit(fields[1], "error", "A turn is already running")
+                else:
+                    store = SessionStore.open(agent.tools.root, session_root, resume=False)
+                    agent.messages = store.restore_messages()
+                    manager.reset_grants()
+                    emit(fields[1], "session.info", store.session_id)
+                emit(fields[1], "done", "")
+                continue
             request_id = "?"
             try:
                 _, request_id, prompt = parse_request(raw)
-                if worker is not None and worker.is_alive():
+                if current_turn is not None:
                     emit(request_id, "error", "A turn is already running")
                     emit(request_id, "done", "")
                     continue
-                worker = threading.Thread(target=run_chat, args=(request_id, prompt), daemon=True)
+                current_turn = str(uuid.uuid4())
+                worker = threading.Thread(target=run_chat, args=(request_id, prompt, current_turn), daemon=True)
                 worker.start()
             except Exception as error:
                 emit(request_id, "error", str(error))

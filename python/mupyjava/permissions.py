@@ -123,8 +123,14 @@ class ApprovalManager:
                 answer = "deny"
             pending.answer = answer
             pending.done.set()
-        self.emit(pending.request_id, "approval.resolved", answer)
+        self.emit(pending.request_id, "approval.resolved", "v1\t" + approval_id + "\t" + answer)
         return True
+
+    def reset_grants(self) -> None:
+        with self._lock:
+            if self._pending:
+                raise RuntimeError("Cannot reset grants during a pending approval")
+            self._grants.clear()
 
     def close(self) -> None:
         with self._lock:

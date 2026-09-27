@@ -15,6 +15,7 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 
@@ -63,11 +64,13 @@ public final class Main {
                 }
             }
             if (event.kind().equals("assistant") || event.kind().equals("error") ||
-                    event.kind().equals("judge") || event.kind().equals("tool"))
+                    event.kind().equals("judge") || event.kind().equals("tool") ||
+                    event.kind().equals("history.judge"))
                 System.out.println(event.kind() + ": " + event.text());
             if (event.kind().equals("done") || event.kind().equals("stopped")) done.countDown();
         })) {
             clientRef.set(client);
+            client.requestHistory();
             client.send(prompt);
             if (!done.await(90, TimeUnit.SECONDS)) throw new IllegalStateException("Backend did not finish");
         }
@@ -81,13 +84,27 @@ public final class Main {
         transcript.setLineWrap(true);
         transcript.setWrapStyleWord(true);
         transcript.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 13));
+        var judgments = new JTextArea();
+        judgments.setEditable(false);
+        judgments.setLineWrap(true);
+        judgments.setWrapStyleWord(true);
+        judgments.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 13));
+        var tabs = new JTabbedPane();
+        tabs.addTab("Conversation", new JScrollPane(transcript));
+        tabs.addTab("Judgments", new JScrollPane(judgments));
         var input = new JTextArea(3, 50);
         input.setLineWrap(true);
         var send = new JButton("Send");
+        var newSession = new JButton("New session");
+        send.setEnabled(false);
+        newSession.setEnabled(false);
+        var actions = new JPanel(new BorderLayout(4, 4));
+        actions.add(send, BorderLayout.NORTH);
+        actions.add(newSession, BorderLayout.SOUTH);
         var bottom = new JPanel(new BorderLayout(8, 8));
         bottom.add(new JScrollPane(input), BorderLayout.CENTER);
-        bottom.add(send, BorderLayout.EAST);
-        frame.add(new JScrollPane(transcript), BorderLayout.CENTER);
+        bottom.add(actions, BorderLayout.EAST);
+        frame.add(tabs, BorderLayout.CENTER);
         frame.add(bottom, BorderLayout.SOUTH);
         frame.setPreferredSize(new Dimension(760, 560));
         frame.pack();
@@ -108,26 +125,64 @@ public final class Main {
                         }
                         return;
                     }
-                    if (event.kind().equals("done")) {
-                        send.setEnabled(true);
+                    if (event.kind().equals("session.info")) {
+                        frame.setTitle("mu-pyjava · session " + event.text().substring(0, 8));
                         return;
                     }
-                    if (event.kind().equals("stopped")) send.setEnabled(false);
+                    if (event.kind().equals("history.transcript")) {
+                        transcript.append(event.text());
+                        return;
+                    }
+                    if (event.kind().equals("history.judge") || event.kind().equals("judge.detail")) {
+                        judgments.append(event.text());
+                        return;
+                    }
+                    if (event.kind().equals("history.done")) {
+                        send.setEnabled(true);
+                        newSession.setEnabled(true);
+                        return;
+                    }
+                    if (event.kind().equals("approval.resolved")) return;
+                    if (event.kind().equals("done")) {
+                        send.setEnabled(true);
+                        newSession.setEnabled(true);
+                        return;
+                    }
+                    if (event.kind().equals("stopped")) {
+                        send.setEnabled(false);
+                        newSession.setEnabled(false);
+                    }
                     transcript.append("[" + event.kind() + "] " + event.text() + "\n\n");
                 })
             );
             clientRef.set(client);
+            client.requestHistory();
             send.addActionListener(action -> {
                 String text = input.getText().trim();
                 if (text.isEmpty()) return;
                 input.setText("");
                 send.setEnabled(false);
+                newSession.setEnabled(false);
                 transcript.append("[you] " + text + "\n\n");
                 try {
                     client.send(text);
                 } catch (Exception error) {
                     transcript.append("[error] " + error.getMessage() + "\n\n");
                     send.setEnabled(true);
+                    newSession.setEnabled(true);
+                }
+            });
+            newSession.addActionListener(action -> {
+                send.setEnabled(false);
+                newSession.setEnabled(false);
+                try {
+                    client.newSession();
+                    transcript.setText("");
+                    judgments.setText("");
+                } catch (Exception error) {
+                    transcript.append("[error] " + error.getMessage() + "\n\n");
+                    send.setEnabled(true);
+                    newSession.setEnabled(true);
                 }
             });
             frame.addWindowListener(new WindowAdapter() {
@@ -138,6 +193,7 @@ public final class Main {
             transcript.append("[error] Could not start Python backend: " + error.getMessage());
             frame.setVisible(true);
             send.setEnabled(false);
+            newSession.setEnabled(false);
         }
     }
 

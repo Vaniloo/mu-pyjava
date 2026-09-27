@@ -70,6 +70,22 @@ public final class BackendClient implements AutoCloseable {
         input.flush();
     }
 
+    public synchronized String requestHistory() throws IOException {
+        return sendControl("HISTORY");
+    }
+
+    public synchronized String newSession() throws IOException {
+        return sendControl("NEW");
+    }
+
+    private String sendControl(String kind) throws IOException {
+        if (!process.isAlive()) throw new IOException("Python backend has stopped");
+        String id = UUID.randomUUID().toString();
+        input.write(kind + "\t" + id + "\n");
+        input.flush();
+        return id;
+    }
+
     public static ApprovalRequest parseApproval(String text) {
         String[] fields = text.split("\t", -1);
         if (fields.length != 6 || !fields[0].equals("v1"))

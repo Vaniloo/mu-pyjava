@@ -3,6 +3,7 @@ import os
 import queue
 import shlex
 import shutil
+import stat
 import subprocess
 import sys
 import tempfile
@@ -14,6 +15,7 @@ from pathlib import Path
 from mupyjava.agent import Agent
 from mupyjava.judge import DecisionEngine, DecisionPoint, LayaBooleanJudge, LayaHttpBooleanJudge
 from mupyjava.permissions import ApprovalManager
+from mupyjava.sessions import SessionStore
 from mupyjava.tools import WorkspaceTools
 from mupyjava.wire import decode_text, encode_text, event_line, parse_request
 
@@ -27,6 +29,106 @@ class ScriptedModel:
 
 
 class CoreTests(unittest.TestCase):
+    def test_session_store_restores_completed_turns_and_marks_interruption(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            store = SessionStore.open(workspace, root / "state", resume=False)
+            first_id = store.session_id
+            if os.name != "nt":
+                self.assertEqual(stat.S_IMODE(store.path.stat().st_mode), 0o600)
+            store.append("turn.started", {"request_id": "one"}, "turn-one")
+            store.append("message", {"message": {"role": "user", "content": "hello"}}, "turn-one")
+            store.append("message", {"message": {"role": "assistant", "content": "hi"}}, "turn-one")
+            store.append("display", {"kind": "you", "text": "hello"}, "turn-one")
+            store.append("judge.record", {"point": "tool.intent", "version": 2, "tool": "write_file",
+                                          "answer": False, "outcome": True, "source": "fallback",
+                                          "mode": "shadow", "latency_ms": 1.2}, "turn-one")
+            store.append("turn.completed", {}, "turn-one")
+            store.append("turn.started", {"request_id": "two"}, "turn-two")
+            store.append("message", {"message": {"role": "user", "content": "unfinished"}}, "turn-two")
+            reopened = SessionStore.open(workspace, root / "state", resume=True)
+            self.assertEqual(reopened.session_id, first_id)
+            self.assertEqual([message["content"] for message in reopened.restore_messages()[1:]], ["hello", "hi"])
+            self.assertIn("turn.interrupted", [entry["type"] for entry in reopened.events()])
+            history = reopened.history()
+            self.assertTrue(any(kind == "history.judge" and "tool.intent" in text for kind, text in history))
+            self.assertTrue(any("actions were not replayed" in text for _, text in history))
+            fresh = SessionStore.open(workspace, root / "state", resume=False)
+            self.assertNotEqual(fresh.session_id, first_id)
+            self.assertEqual(len(fresh.restore_messages()), 1)
+
+    def test_server_history_survives_restart_and_new_session(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            env = os.environ.copy()
+            env.update({"PYTHONPATH": str(Path(__file__).resolve().parents[1]),
+                        "MU_MODEL_BACKEND": "echo", "MU_JUDGE_MODE": "off",
+                        "MU_SESSION_DIR": str(root / "sessions")})
+
+            def launch():
+                process = subprocess.Popen([sys.executable, "-m", "mupyjava", "--server",
+                                            "--workspace", str(root / "workspace")],
+                                           env=env, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                           stderr=subprocess.PIPE, text=True)
+                lines = queue.Queue()
+                reader = threading.Thread(target=lambda: [lines.put(line) for line in process.stdout], daemon=True)
+                reader.start()
+                return process, lines, reader
+
+            def receive(lines, terminal):
+                events = []
+                while True:
+                    fields = lines.get(timeout=5).rstrip("\n").split("\t")
+                    self.assertEqual(fields[0], "EVENT")
+                    events.append((fields[1], fields[2], decode_text(fields[3])))
+                    if fields[2] == terminal:
+                        return events
+
+            def stop(process, reader):
+                process.stdin.close()
+                process.wait(timeout=5)
+                reader.join(timeout=5)
+                process.stdout.close()
+                error = process.stderr.read()
+                process.stderr.close()
+                self.assertEqual(process.returncode, 0, error)
+
+            (root / "workspace").mkdir()
+            process, lines, reader = launch()
+            try:
+                process.stdin.write("CHAT\tone\t" + encode_text("hello") + "\n")
+                process.stdin.flush()
+                first = receive(lines, "done")
+                self.assertIn(("one", "assistant", "Echo: hello"), first)
+                process.stdin.write("HISTORY\thistory-one\n")
+                process.stdin.flush()
+                history = receive(lines, "history.done")
+                session_id = next(text for _, kind, text in history if kind == "session.info")
+            finally:
+                stop(process, reader)
+
+            process, lines, reader = launch()
+            try:
+                process.stdin.write("HISTORY\thistory-two\n")
+                process.stdin.flush()
+                history = receive(lines, "history.done")
+                self.assertIn(("history-two", "session.info", session_id), history)
+                self.assertTrue(any(kind == "history.transcript" and "Echo: hello" in text
+                                    for _, kind, text in history))
+                process.stdin.write("NEW\tnew-session\n")
+                process.stdin.flush()
+                new_events = receive(lines, "done")
+                new_id = next(text for _, kind, text in new_events if kind == "session.info")
+                self.assertNotEqual(new_id, session_id)
+                process.stdin.write("HISTORY\thistory-new\n")
+                process.stdin.flush()
+                fresh = receive(lines, "history.done")
+                self.assertFalse(any(kind == "history.transcript" for _, kind, _ in fresh))
+            finally:
+                stop(process, reader)
+
     @unittest.skipUnless(shutil.which("javac") and shutil.which("java"), "JDK is unavailable")
     def test_java_smoke_approval_round_trip(self):
         class Handler(BaseHTTPRequestHandler):
@@ -61,6 +163,7 @@ class CoreTests(unittest.TestCase):
                 env = os.environ.copy()
                 env.update({"MU_MODEL": "fixture", "MU_MODEL_BACKEND": "", "MU_JUDGE_MODE": "off",
                             "MU_PYTHON": sys.executable,
+                            "MU_SESSION_DIR": str(Path(directory) / "sessions"),
                             "MU_API_BASE": f"http://127.0.0.1:{server.server_port}/v1"})
                 result = subprocess.run(["java", "-cp", str(classes), "dev.mupyjava.Main",
                                          "--workspace", directory, "--smoke", "Write note.txt"],
@@ -68,11 +171,16 @@ class CoreTests(unittest.TestCase):
                 self.assertEqual(result.returncode, 0, result.stderr)
                 self.assertIn("User did not allow this tool action", result.stdout)
                 self.assertFalse((Path(directory) / "note.txt").exists())
+                store = SessionStore.open(Path(directory), Path(directory) / "sessions", resume=True)
+                store.append("judge.record", {"point": "tool.intent", "version": 2, "tool": "write_file",
+                                              "answer": False, "outcome": True, "source": "fallback",
+                                              "mode": "shadow", "latency_ms": 1.2})
                 allowed = subprocess.run(["java", "-cp", str(classes), "dev.mupyjava.Main",
                                           "--workspace", directory, "--smoke", "Write note.txt",
                                           "--smoke-approval", "once"],
                                          cwd=repository, env=env, capture_output=True, text=True, timeout=15)
                 self.assertEqual(allowed.returncode, 0, allowed.stderr)
+                self.assertIn("history.judge: tool.intent v2", allowed.stdout)
                 self.assertIn("tool: write_file: Wrote note.txt", allowed.stdout)
                 self.assertEqual((Path(directory) / "note.txt").read_text(), "created")
             finally:
@@ -105,6 +213,7 @@ class CoreTests(unittest.TestCase):
             env = os.environ.copy()
             env.update({"PYTHONPATH": str(Path(__file__).resolve().parents[1]), "MU_MODEL": "fixture",
                         "MU_MODEL_BACKEND": "", "MU_JUDGE_MODE": "off",
+                        "MU_SESSION_DIR": str(Path(directory) / "sessions"),
                         "MU_API_BASE": f"http://127.0.0.1:{server.server_port}/v1"})
             process = subprocess.Popen([sys.executable, "-m", "mupyjava", "--server", "--workspace", directory],
                                        env=env, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
@@ -133,7 +242,7 @@ class CoreTests(unittest.TestCase):
                         events.append(event)
                         if event[1] == "done":
                             break
-                    self.assertIn((turn, "approval.resolved", answer), events)
+                    self.assertIn((turn, "approval.resolved", "v1\t" + approval_id + "\t" + answer), events)
                     self.assertTrue(any(item[1] == "tool" for item in events))
                     self.assertEqual((Path(directory) / "note.txt").exists(), answer == "once")
             finally:
@@ -238,6 +347,15 @@ class CoreTests(unittest.TestCase):
             self.assertTrue(manager.request("turn-1", "call-2", "write_file",
                                             {"path": "note.txt", "content": "new"}))
             self.assertTrue(emitted.empty())
+            manager.reset_grants()
+            worker = threading.Thread(target=request, args=("note.txt",), daemon=True)
+            worker.start()
+            kind, payload = emitted.get(timeout=2)
+            self.assertEqual(kind, "approval.request")
+            self.assertTrue(manager.resolve(payload.split("\t")[1], "deny"))
+            worker.join(timeout=2)
+            self.assertEqual(answers, [True, False])
+            self.assertEqual(emitted.get(timeout=2)[0], "approval.resolved")
 
             worker = threading.Thread(target=request, args=(".env",), daemon=True)
             worker.start()
@@ -249,7 +367,7 @@ class CoreTests(unittest.TestCase):
             self.assertEqual(fields[3], "deny,once")
             self.assertTrue(manager.resolve(fields[1], "session"))
             worker.join(timeout=2)
-            self.assertEqual(answers, [True, False])
+            self.assertEqual(answers, [True, False, False])
 
     def test_disconnect_denies_pending_approval(self):
         with tempfile.TemporaryDirectory() as directory:
