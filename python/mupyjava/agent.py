@@ -64,10 +64,22 @@ class Agent:
                         judged_arguments = {"path": arguments.get("path"),
                                             "old_text_bytes": len(str(arguments.get("old_text", "")).encode("utf-8")),
                                             "new_text_bytes": len(str(arguments.get("new_text", "")).encode("utf-8"))}
-                    if name in {"write_file", "edit_file", "run_command"} and not self.judge.decide(
-                        TOOL_INTENT, {"user_request": prompt[:1000], "tool": name, "arguments": judged_arguments}
-                    ):
-                        raise PermissionError("Judge declined this tool action")
+                    if name in {"write_file", "edit_file", "run_command"}:
+                        approved = self.judge.decide(
+                            TOOL_INTENT, {"user_request": prompt[:1000], "tool": name, "arguments": judged_arguments}
+                        )
+                        if self.judge.mode != "off" and self.judge.last_record is not None:
+                            record = self.judge.last_record
+                            verdict = "would allow" if record["answer"] is True else (
+                                "would decline" if record["answer"] is False else "undecided"
+                            )
+                            probability = record["probability"]
+                            detail = f" (p={probability:.3f})" if probability is not None else ""
+                            if record["failure"]:
+                                detail += f" ({record['failure']})"
+                            yield "judge", f"{name}: {verdict}{detail}; {record['mode']} mode, {record['latency_ms']} ms"
+                        if not approved:
+                            raise PermissionError("Judge declined this tool action")
                     result = self.tools.execute(name, arguments)
                     yield "tool", name + ": " + result[:500]
                 except (KeyError, TypeError, ValueError, PermissionError, OSError, subprocess.TimeoutExpired) as error:

@@ -2,10 +2,13 @@
 
 import json
 import math
+import time
+import urllib.request
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Optional, Protocol
+from urllib.parse import urlparse
 
 from .model import ChatModel
 
@@ -13,6 +16,20 @@ from .model import ChatModel
 class BooleanJudge(Protocol):
     def answer(self, question: str, state: Dict[str, Any]) -> Optional[bool]:
         ...
+
+
+@dataclass(frozen=True)
+class BooleanJudgment:
+    answer: Optional[bool]
+    probability: Optional[float] = None
+
+
+def _laya_judgment(value: Any) -> BooleanJudgment:
+    probability = float(value)
+    if not math.isfinite(probability) or not 0 <= probability <= 1:
+        raise ValueError("Laya returned an invalid probability")
+    answer = True if probability >= 0.8 else False if probability <= 0.2 else None
+    return BooleanJudgment(answer, probability)
 
 
 class ModelBooleanJudge:
@@ -45,18 +62,41 @@ class LayaBooleanJudge:
             agent = laya.load(checkpoint, device=device)
         self.agent = agent
 
-    def answer(self, question: str, state: Dict[str, Any]) -> Optional[bool]:
+    def evaluate(self, question: str, state: Dict[str, Any]) -> BooleanJudgment:
         result = self.agent.predict(state, {
             "intent": {"type": "noul", "instructions": question, "criteria": self.CRITERIA}
         })
-        probability = float(result["answers"]["intent"]["noul"])
-        if not math.isfinite(probability) or not 0 <= probability <= 1:
-            raise ValueError("Laya returned an invalid probability")
-        if probability >= 0.8:
-            return True
-        if probability <= 0.2:
-            return False
-        return None
+        return _laya_judgment(result["answers"]["intent"]["noul"])
+
+    def answer(self, question: str, state: Dict[str, Any]) -> Optional[bool]:
+        return self.evaluate(question, state).answer
+
+
+class LayaHttpBooleanJudge:
+    """Connect to a loopback-only Laya service through an SSH tunnel."""
+
+    def __init__(self, base_url: str, timeout: float = 15.0):
+        parsed = urlparse(base_url)
+        if parsed.scheme != "http" or parsed.hostname not in {"127.0.0.1", "localhost", "::1"}:
+            raise ValueError("The Laya service URL must use local HTTP through an SSH tunnel")
+        if parsed.username or parsed.password or parsed.path not in {"", "/"} or parsed.query or parsed.fragment:
+            raise ValueError("The Laya service URL must contain only the local host and port")
+        self.url = base_url.rstrip("/") + "/judge"
+        self.timeout = timeout
+        self.opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+
+    def evaluate(self, question: str, state: Dict[str, Any]) -> BooleanJudgment:
+        request = urllib.request.Request(
+            self.url,
+            data=json.dumps({"question": question, "state": state}, ensure_ascii=False).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+        )
+        with self.opener.open(request, timeout=self.timeout) as response:
+            result = json.load(response)
+        return _laya_judgment(result["probability"])
+
+    def answer(self, question: str, state: Dict[str, Any]) -> Optional[bool]:
+        return self.evaluate(question, state).answer
 
 
 @dataclass(frozen=True)
@@ -74,28 +114,39 @@ class DecisionEngine:
         self.mode = mode
         self.backend = backend
         self.ledger = ledger
+        self.last_record: Optional[Dict[str, Any]] = None
 
     def decide(self, point: DecisionPoint, state: Dict[str, Any]) -> bool:
         answer = None
+        probability = None
         failure = None
+        started = time.perf_counter()
         if self.mode != "off" and self.backend is not None:
             try:
-                answer = self.backend.answer(point.question, state)
+                if hasattr(self.backend, "evaluate"):
+                    judgment = self.backend.evaluate(point.question, state)
+                    answer, probability = judgment.answer, judgment.probability
+                else:
+                    answer = self.backend.answer(point.question, state)
             except Exception as error:  # A judge outage must not crash the agent.
                 failure = type(error).__name__
         outcome = answer if self.mode == "active" and answer is not None else point.fallback
+        record = {
+            "at": datetime.now(timezone.utc).isoformat(),
+            "point": point.id,
+            "version": point.version,
+            "tool": state.get("tool"),
+            "mode": self.mode,
+            "answer": answer,
+            "probability": probability,
+            "outcome": outcome,
+            "source": "judge" if self.mode == "active" and answer is not None else "fallback",
+            "failure": failure,
+            "latency_ms": round((time.perf_counter() - started) * 1000, 1),
+        }
+        self.last_record = record
         if self.ledger is not None:
             self.ledger.parent.mkdir(parents=True, exist_ok=True)
-            record = {
-                "at": datetime.now(timezone.utc).isoformat(),
-                "point": point.id,
-                "version": point.version,
-                "mode": self.mode,
-                "answer": answer,
-                "outcome": outcome,
-                "source": "judge" if self.mode == "active" and answer is not None else "fallback",
-                "failure": failure,
-            }
             with self.ledger.open("a", encoding="utf-8") as file:
                 file.write(json.dumps(record, ensure_ascii=False) + "\n")
         return outcome

@@ -1,11 +1,13 @@
 import json
 import subprocess
 import tempfile
+import threading
 import unittest
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 
 from mupyjava.agent import Agent
-from mupyjava.judge import DecisionEngine, DecisionPoint, LayaBooleanJudge
+from mupyjava.judge import DecisionEngine, DecisionPoint, LayaBooleanJudge, LayaHttpBooleanJudge
 from mupyjava.tools import WorkspaceTools
 from mupyjava.wire import decode_text, encode_text, event_line, parse_request
 
@@ -106,7 +108,9 @@ class CoreTests(unittest.TestCase):
                 {"role": "assistant", "content": "Done."},
             ])
             agent = Agent(model, WorkspaceTools(root, allow_write=True), DecisionEngine("shadow", judge))
-            self.assertEqual(list(agent.run("Change note.py"))[-1], ("assistant", "Done."))
+            events = list(agent.run("Change note.py"))
+            self.assertEqual(events[-1], ("assistant", "Done."))
+            self.assertEqual(events[0][0], "judge")
             self.assertEqual(judge.state["tool"], "edit_file")
             self.assertNotIn("private_old", json.dumps(judge.state))
             self.assertIn("private_new", (root / "note.py").read_text())
@@ -129,7 +133,7 @@ class CoreTests(unittest.TestCase):
             ])
             events = list(Agent(model, WorkspaceTools(root, allow_write=True),
                                 DecisionEngine("active", NoJudge())).run("Explain note.py without editing"))
-            self.assertIn("Judge declined", events[0][1])
+            self.assertIn("Judge declined", events[1][1])
             self.assertEqual((root / "note.py").read_text(), "value = 1")
 
     def test_git_inspection_needs_no_command_permission(self):
@@ -178,6 +182,39 @@ class CoreTests(unittest.TestCase):
         self.assertIsNone(judge.answer("Needed?", state))
         fake.probability = 0.1
         self.assertFalse(judge.answer("Needed?", state))
+
+    def test_http_judge_records_probability_in_shadow_ledger(self):
+        class Handler(BaseHTTPRequestHandler):
+            def do_POST(self):
+                payload = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
+                self.server.received = payload
+                body = b'{"probability": 0.97}'
+                self.send_response(200)
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+
+            def log_message(self, *args):
+                pass
+
+        with HTTPServer(("127.0.0.1", 0), Handler) as server, tempfile.TemporaryDirectory() as directory:
+            worker = threading.Thread(target=server.serve_forever, daemon=True)
+            worker.start()
+            try:
+                backend = LayaHttpBooleanJudge(f"http://127.0.0.1:{server.server_port}")
+                point = DecisionPoint("tool.intent", 2, "Needed?", False)
+                engine = DecisionEngine("shadow", backend, Path(directory) / "ledger.jsonl")
+                self.assertFalse(engine.decide(point, {"tool": "edit_file", "user_request": "Edit a file"}))
+                record = json.loads((Path(directory) / "ledger.jsonl").read_text())
+                self.assertEqual(record["probability"], 0.97)
+                self.assertEqual(record["answer"], True)
+                self.assertEqual(record["tool"], "edit_file")
+                self.assertEqual(server.received["question"], "Needed?")
+            finally:
+                server.shutdown()
+                worker.join()
+        with self.assertRaises(ValueError):
+            LayaHttpBooleanJudge("http://example.com:18765")
 
     def test_write_judgment_excludes_file_content(self):
         class CapturingJudge:

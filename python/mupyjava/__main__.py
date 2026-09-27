@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 from .agent import Agent
-from .judge import DecisionEngine, LayaBooleanJudge, ModelBooleanJudge
+from .judge import DecisionEngine, LayaBooleanJudge, LayaHttpBooleanJudge, ModelBooleanJudge
 from .model import ChatCompletionsModel, model_from_environment
 from .tools import WorkspaceTools
 from .wire import event_line, parse_request
@@ -17,12 +17,13 @@ def build_agent(args: argparse.Namespace) -> Agent:
     mode = os.environ.get("MU_JUDGE_MODE", "off")
     judge_model_name = os.environ.get("MU_JUDGE_MODEL")
     laya_path = os.environ.get("MU_JUDGE_LAYA_PATH")
-    if laya_path and mode == "active":
+    laya_url = os.environ.get("MU_JUDGE_LAYA_URL")
+    if (laya_path or laya_url) and mode == "active":
         raise ValueError("The experimental Laya judge is shadow-only until independently validated")
-    if mode != "off" and not (judge_model_name or laya_path):
-        raise ValueError("Set MU_JUDGE_MODEL or MU_JUDGE_LAYA_PATH when MU_JUDGE_MODE is shadow or active")
-    if judge_model_name and laya_path:
-        raise ValueError("Set only one of MU_JUDGE_MODEL and MU_JUDGE_LAYA_PATH")
+    if mode != "off" and not (judge_model_name or laya_path or laya_url):
+        raise ValueError("Set MU_JUDGE_MODEL, MU_JUDGE_LAYA_PATH or MU_JUDGE_LAYA_URL for a judge mode")
+    if sum(bool(value) for value in (judge_model_name, laya_path, laya_url)) > 1:
+        raise ValueError("Set only one judge backend")
     judge_model = None
     if judge_model_name:
         judge_model = ChatCompletionsModel(
@@ -30,9 +31,9 @@ def build_agent(args: argparse.Namespace) -> Agent:
             os.environ.get("MU_API_KEY", ""),
             judge_model_name,
         )
-    backend = LayaBooleanJudge(laya_path, device=os.environ.get("MU_JUDGE_LAYA_DEVICE")) if laya_path else (
-        ModelBooleanJudge(judge_model) if judge_model else None
-    )
+    backend = (LayaHttpBooleanJudge(laya_url) if laya_url else
+               LayaBooleanJudge(laya_path, device=os.environ.get("MU_JUDGE_LAYA_DEVICE")) if laya_path else
+               ModelBooleanJudge(judge_model) if judge_model else None)
     judge = DecisionEngine(
         mode=mode,
         backend=backend,
