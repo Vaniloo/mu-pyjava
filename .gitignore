@@ -5,3 +5,4 @@ __pycache__/
 java/out/
 .DS_Store
 *.log
+work/

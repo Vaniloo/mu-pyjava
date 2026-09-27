@@ -13,6 +13,7 @@ This file records what the repository actually does. The goal is a Python agent 
 
 ## Next milestones
 
+- [ ] Evaluate a Laya multilingual fine-tune for the first judge decision before enabling it.
 - [ ] Per-action approval in the UI rather than process-wide write/command flags.
 - [ ] Durable sessions and a user-facing judgment ledger panel.
 - [ ] Typed choice/score decisions, judge routing, and output admission.

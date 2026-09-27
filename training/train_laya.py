@@ -1,0 +1,212 @@
+"""Fine-tune Laya multilingual on tool.intent and evaluate untouched cases."""
+
+import argparse
+import copy
+import hashlib
+import json
+import random
+from pathlib import Path
+
+import torch
+import torch.nn.functional as F
+from huggingface_hub import snapshot_download
+from safetensors.torch import load_file, save_file
+from transformers import AutoTokenizer
+
+from laya.agent import _fix_tokenizer_config
+from laya.common import QTYPES, build_model, build_sequence
+
+
+def read_rows(path):
+    return [json.loads(line) for line in Path(path).read_text(encoding="utf-8").splitlines() if line.strip()]
+
+
+def prepare(rows, tokenizer, config):
+    items = []
+    for row in rows:
+        question = row.get("question", "Does the user's latest request clearly call for this tool action?")
+        criteria = row.get("criteria", {
+            "false": "The action goes beyond the requested task.",
+            "true": "The action is needed for the requested task.",
+        })
+        ids, markers = build_sequence(
+            tokenizer,
+            row["state"],
+            {"t": "noul", "ins": question, "crit": criteria},
+            min(config.get("max_len", 1024), 512),
+            config.get("head_max_len", 256),
+        )
+        if len(markers) != 2:
+            raise ValueError("Expected two markers for a yes/no decision")
+        items.append({"ids": ids, "markers": markers, "label": int(row["label"])})
+    return items
+
+
+def collate(items, pad_id, device):
+    width = max(len(item["ids"]) for item in items)
+    ids = torch.full((len(items), width), pad_id, dtype=torch.long)
+    attention = torch.zeros((len(items), width), dtype=torch.long)
+    markers = torch.zeros((len(items), 2), dtype=torch.long)
+    for index, item in enumerate(items):
+        size = len(item["ids"])
+        ids[index, :size] = torch.tensor(item["ids"])
+        attention[index, :size] = 1
+        markers[index] = torch.tensor(item["markers"])
+    return (
+        ids.to(device),
+        attention.to(device),
+        markers.to(device),
+        torch.ones((len(items), 2), dtype=torch.bool, device=device),
+        torch.full((len(items),), QTYPES["noul"], dtype=torch.long, device=device),
+        torch.tensor([item["label"] for item in items], dtype=torch.long, device=device),
+    )
+
+
+@torch.no_grad()
+def predict(model, items, pad_id, device, batch_size, temperature=1.0):
+    model.eval()
+    logits_all = []
+    labels_all = []
+    for offset in range(0, len(items), batch_size):
+        batch = collate(items[offset:offset + batch_size], pad_id, device)
+        with torch.autocast("cuda", dtype=torch.bfloat16, enabled=device.type == "cuda"):
+            logits, _ = model(*batch[:5])
+        logits_all.append(logits.float().cpu())
+        labels_all.append(batch[5].cpu())
+    logits = torch.cat(logits_all)
+    labels = torch.cat(labels_all)
+    probabilities = torch.softmax(logits / temperature, dim=-1)[:, 1]
+    predicted = (probabilities >= 0.5).long()
+    return logits, labels, {
+        "n": len(labels),
+        "accuracy": round((predicted == labels).float().mean().item(), 4),
+        "false_positives": int(((predicted == 1) & (labels == 0)).sum()),
+        "false_negatives": int(((predicted == 0) & (labels == 1)).sum()),
+        "brier": round(((probabilities - labels.float()) ** 2).mean().item(), 4),
+    }
+
+
+def fit_temperature(logits, labels):
+    log_temp = torch.zeros((), requires_grad=True)
+    optimizer = torch.optim.LBFGS([log_temp], lr=0.1, max_iter=80)
+
+    def closure():
+        optimizer.zero_grad()
+        loss = F.cross_entropy(logits / log_temp.exp(), labels)
+        loss.backward()
+        return loss
+
+    optimizer.step(closure)
+    return float(log_temp.exp().clamp(0.5, 5.0).item())
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--data", type=Path, required=True)
+    parser.add_argument("--manual-eval", type=Path, required=True)
+    parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--model", default="convaiinnovations/laya-multilingual")
+    parser.add_argument("--revision", default="e4e9ddf21a7b1903b7acffd8814ad4307bf63a67")
+    parser.add_argument("--epochs", type=int, default=3)
+    parser.add_argument("--batch-size", type=int, default=8)
+    parser.add_argument("--device", default="cuda")
+    args = parser.parse_args()
+    random.seed(20260927)
+    torch.manual_seed(20260927)
+    device = torch.device(args.device)
+    if device.type == "cuda" and not torch.cuda.is_available():
+        raise RuntimeError("CUDA is unavailable")
+
+    source = snapshot_download(args.model, revision=args.revision)
+    _fix_tokenizer_config(source)
+    config = json.loads((Path(source) / "rl_agent_config.json").read_text())
+    tokenizer = AutoTokenizer.from_pretrained(str(Path(source) / "tokenizer"))
+    model = build_model(config, encoder_dir=str(Path(source) / "encoder"))
+    model.load_state_dict(load_file(str(Path(source) / "model.safetensors")), strict=True)
+    model.to(device)
+    model.encoder.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False})
+    model.head_checkpointing = True
+
+    rows = read_rows(args.data)
+    train = prepare([row for row in rows if row["split"] == "train"], tokenizer, config)
+    validation = prepare([row for row in rows if row["split"] == "validation"], tokenizer, config)
+    manual = prepare(read_rows(args.manual_eval), tokenizer, config)
+    if not train or not validation or not manual:
+        raise ValueError("Train, validation and manual evaluation must all be nonempty")
+    baseline_validation = predict(model, validation, tokenizer.pad_token_id, device, args.batch_size)[2]
+    baseline_manual = predict(model, manual, tokenizer.pad_token_id, device, args.batch_size)[2]
+    print("baseline", json.dumps({"validation": baseline_validation, "manual": baseline_manual}), flush=True)
+
+    encoder = [parameter for name, parameter in model.named_parameters() if name.startswith("encoder.")]
+    head = [parameter for name, parameter in model.named_parameters() if not name.startswith("encoder.")]
+    optimizer = torch.optim.AdamW([
+        {"params": encoder, "lr": 2e-5},
+        {"params": head, "lr": 1e-4},
+    ], weight_decay=0.01)
+    best_loss = float("inf")
+    best_state = None
+    for epoch in range(args.epochs):
+        random.Random(20260927 + epoch).shuffle(train)
+        model.train()
+        losses = []
+        for offset in range(0, len(train), args.batch_size):
+            batch = collate(train[offset:offset + args.batch_size], tokenizer.pad_token_id, device)
+            optimizer.zero_grad(set_to_none=True)
+            with torch.autocast("cuda", dtype=torch.bfloat16, enabled=device.type == "cuda"):
+                logits, _ = model(*batch[:5])
+                loss = F.cross_entropy(logits.float(), batch[5])
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+            optimizer.step()
+            losses.append(float(loss.detach()))
+        val_logits, val_labels, val_metrics = predict(
+            model, validation, tokenizer.pad_token_id, device, args.batch_size
+        )
+        val_loss = float(F.cross_entropy(val_logits, val_labels))
+        print("epoch", epoch + 1, "train_loss", round(sum(losses) / len(losses), 4),
+              "validation_loss", round(val_loss, 4), "metrics", val_metrics, flush=True)
+        if val_loss < best_loss:
+            best_loss = val_loss
+            best_state = {key: value.detach().half().cpu().clone() for key, value in model.state_dict().items()}
+
+    if best_state is None:
+        raise RuntimeError("No checkpoint was selected")
+    model.load_state_dict(best_state, strict=True)
+    val_logits, val_labels, _ = predict(model, validation, tokenizer.pad_token_id, device, args.batch_size)
+    temperature = fit_temperature(val_logits, val_labels)
+    trained_validation = predict(model, validation, tokenizer.pad_token_id, device, args.batch_size, temperature)[2]
+    trained_manual = predict(model, manual, tokenizer.pad_token_id, device, args.batch_size, temperature)[2]
+
+    args.output.mkdir(parents=True, exist_ok=True)
+    save_file({key: value.contiguous() for key, value in best_state.items()}, str(args.output / "model.safetensors"))
+    model.encoder.config.save_pretrained(str(args.output / "encoder"))
+    tokenizer.save_pretrained(str(args.output / "tokenizer"))
+    exported = copy.deepcopy(config)
+    exported["fine_tuned"] = True
+    exported["model_name"] = "mu-pyjava-tool-intent-laya"
+    temps = list(exported.get("temperature", [1.0, 1.0, 1.0]))
+    temps[QTYPES["noul"]] = temperature
+    exported["temperature"] = temps
+    exported.pop("temperature_by_options", None)
+    (args.output / "rl_agent_config.json").write_text(json.dumps(exported, indent=2), encoding="utf-8")
+    metrics = {
+        "base_model": args.model,
+        "base_revision": args.revision,
+        "training_data_sha256": hashlib.sha256(args.data.read_bytes()).hexdigest(),
+        "manual_eval_sha256": hashlib.sha256(args.manual_eval.read_bytes()).hexdigest(),
+        "train_count": len(train),
+        "validation_count": len(validation),
+        "manual_count": len(manual),
+        "baseline_validation": baseline_validation,
+        "baseline_manual": baseline_manual,
+        "trained_validation": trained_validation,
+        "trained_manual": trained_manual,
+        "noul_temperature": temperature,
+        "best_validation_loss": best_loss,
+    }
+    (args.output / "metrics.json").write_text(json.dumps(metrics, indent=2), encoding="utf-8")
+    print("final", json.dumps(metrics), flush=True)
+
+
+if __name__ == "__main__":
+    main()
