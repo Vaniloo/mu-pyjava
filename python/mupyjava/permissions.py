@@ -20,7 +20,8 @@ def _encoded(value: str) -> str:
     return base64.b64encode(value.encode("utf-8")).decode("ascii")
 
 
-def action_preview(tools: WorkspaceTools, name: str, arguments: dict) -> Tuple[str, str, Optional[str], Optional[Path]]:
+def action_preview(tools: WorkspaceTools, name: str, arguments: dict,
+                   prepared_change: Optional[dict] = None) -> Tuple[str, str, Optional[str], Optional[Path]]:
     """Describe the exact proposed action and return a narrow session-grant key."""
     if name in {"write_file", "edit_file"}:
         target = tools._path(arguments["path"])
@@ -28,22 +29,12 @@ def action_preview(tools: WorkspaceTools, name: str, arguments: dict) -> Tuple[s
         protected = (any(part in PROTECTED_PARTS for part in relative.parts)
                      or target.name == ".env" or target.name.startswith(".env."))
         grant = None if protected else "file:" + str(relative)
-        if name == "write_file":
-            content = arguments["content"]
-            if not isinstance(content, str) or len(content.encode("utf-8")) > 1_000_000:
-                raise ValueError("Content must be text of at most 1 MB")
-            verb = "Replace" if target.exists() else "Create"
-            return (f"{verb} {relative} ({len(content.encode('utf-8'))} bytes)",
-                    content, grant, target)
-        old_text, new_text = arguments["old_text"], arguments["new_text"]
-        if not isinstance(old_text, str) or not old_text or not isinstance(new_text, str):
-            raise ValueError("old_text must be nonempty and new_text must be text")
-        if target.stat().st_size > 1_000_000:
-            raise ValueError("File exceeds the 1 MB edit limit")
-        if target.read_text(encoding="utf-8").count(old_text) != 1:
-            raise ValueError("old_text must occur exactly once")
-        return (f"Edit {relative}", f"Replace this exact text:\n{old_text}\n\nWith:\n{new_text}",
-                grant, target)
+        change = prepared_change or tools.prepare_change(name, arguments)
+        if change["path"] != str(relative):
+            raise ValueError("Path changed while preparing approval")
+        verb = "Edit" if name == "edit_file" else ("Replace" if change["existed"] else "Create")
+        preview = change["diff"] or "(No content change)"
+        return (f"{verb} {relative} ({change['after_bytes']} bytes)", preview, grant, target)
     if name == "run_command":
         command = arguments["command"]
         if not isinstance(command, str) or not command.strip() or not shlex.split(command, posix=os.name != "nt"):
@@ -77,6 +68,7 @@ class ApprovalManager:
         self._lock = threading.Lock()
         self._pending: Dict[str, PendingApproval] = {}
         self._grants = set()
+        self._expected: Dict[str, dict] = {}
         self._closed = False
 
     def request(self, request_id: str, tool_call_id: str, name: str, arguments: dict) -> bool:
@@ -84,11 +76,14 @@ class ApprovalManager:
             return True
         if (name == "run_command" and self.full_command) or (name != "run_command" and self.full_write):
             return True
-        summary, preview, grant, target = action_preview(self.tools, name, arguments)
+        proposed = self.tools.prepare_change(name, arguments) if name in {"write_file", "edit_file"} else None
+        summary, preview, grant, target = action_preview(self.tools, name, arguments, proposed)
         with self._lock:
             if self._closed:
                 return False
             if grant is not None and grant in self._grants:
+                if proposed is not None:
+                    self._expected[tool_call_id] = {key: value for key, value in proposed.items() if key != "content"}
                 return True
             approval_id = str(uuid.uuid4())
             pending = PendingApproval(request_id, grant)
@@ -105,12 +100,23 @@ class ApprovalManager:
         # A symlink or path may have changed while the user was deciding.
         if target is not None and self.tools._path(arguments["path"]) != target:
             return False
+        if proposed is not None:
+            current = self.tools.prepare_change(name, arguments)
+            if any(current[key] != proposed[key] for key in ("path", "existed", "before_sha256", "after_sha256")):
+                return False
         if pending.answer == "session" and grant is not None:
             with self._lock:
                 if self._closed:
                     return False
                 self._grants.add(grant)
+        if proposed is not None:
+            with self._lock:
+                self._expected[tool_call_id] = {key: value for key, value in proposed.items() if key != "content"}
         return True
+
+    def take_expected_change(self, tool_call_id: str) -> Optional[dict]:
+        with self._lock:
+            return self._expected.pop(tool_call_id, None)
 
     def resolve(self, approval_id: str, answer: str) -> bool:
         if answer not in {"deny", "once", "session"}:
@@ -131,6 +137,7 @@ class ApprovalManager:
             if self._pending:
                 raise RuntimeError("Cannot reset grants during a pending approval")
             self._grants.clear()
+            self._expected.clear()
 
     def cancel_request(self, request_id: str) -> None:
         resolved = []
@@ -151,3 +158,4 @@ class ApprovalManager:
                 pending.answer = "deny"
                 pending.done.set()
             self._pending.clear()
+            self._expected.clear()

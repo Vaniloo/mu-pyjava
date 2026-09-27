@@ -43,7 +43,8 @@ class Agent:
             on_tool_update: Optional[Callable[[str, str], None]] = None,
             on_tool_artifact: Optional[Callable[[str, str], None]] = None,
             on_tool_event: Optional[Callable[[str, str, Dict[str, Any]], None]] = None,
-            output_dir: Optional[Path] = None) -> Iterator[Tuple[str, str]]:
+            output_dir: Optional[Path] = None,
+            expected_change: Optional[Callable[[str], Optional[Dict[str, Any]]]] = None) -> Iterator[Tuple[str, str]]:
         if not prompt.strip():
             raise ValueError("Prompt is empty")
 
@@ -119,6 +120,9 @@ class Agent:
                             on_artifact=(lambda artifact_id: on_tool_artifact(call_id, artifact_id))
                             if on_tool_artifact else None,
                             output_dir=output_dir,
+                            on_change=(lambda change: on_tool_event(call_id, "tool.change", change))
+                            if on_tool_event else None,
+                            expected_change=expected_change(call_id) if expected_change else None,
                         )
                     except subprocess.TimeoutExpired:
                         if name == "run_command" and on_tool_event is not None:

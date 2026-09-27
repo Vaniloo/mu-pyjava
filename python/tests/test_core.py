@@ -10,6 +10,7 @@ import tempfile
 import threading
 import time
 import unittest
+from unittest.mock import patch
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 
@@ -17,6 +18,8 @@ from mupyjava.agent import Agent
 from mupyjava.cancel import CancellationToken, TurnCancelled
 from mupyjava.judge import DecisionEngine, DecisionPoint, LayaBooleanJudge, LayaHttpBooleanJudge
 from mupyjava.permissions import ApprovalManager
+from mupyjava.permissions import action_preview
+from mupyjava.file_ops import LocalFileOperations
 from mupyjava.sessions import SessionStore
 from mupyjava.tools import WorkspaceTools
 from mupyjava.wire import decode_text, encode_text, event_line, parse_request
@@ -31,6 +34,96 @@ class ScriptedModel:
 
 
 class CoreTests(unittest.TestCase):
+    def test_file_diff_preview_create_replace_edit_and_newline(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            tools = WorkspaceTools(root, allow_write=True)
+            _, preview, _, _ = action_preview(tools, "write_file", {"path": "a.txt", "content": "one\n"})
+            self.assertIn("--- /dev/null", preview)
+            self.assertIn("+one", preview)
+            tools.execute("write_file", {"path": "a.txt", "content": "one\n"})
+            _, preview, _, _ = action_preview(tools, "write_file", {"path": "a.txt", "content": "two"})
+            self.assertIn("-one", preview)
+            self.assertIn("+two", preview)
+            self.assertIn("Final newline: yes → no", preview)
+            _, preview, _, _ = action_preview(tools, "edit_file", {
+                "path": "a.txt", "old_text": "one", "new_text": "three"})
+            self.assertIn("+three", preview)
+            _, preview, _, _ = action_preview(tools, "write_file", {"path": "a.txt", "content": "one\r\n"})
+            self.assertIn("Line-level representation", preview)
+            self.assertIn("Line endings: LF=1 → CRLF=1", preview)
+
+    def test_file_approval_rejects_changed_source_and_atomic_failure_keeps_original(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            path = root / "a.txt"
+            path.write_text("first\n")
+            path.chmod(0o640)
+            tools = WorkspaceTools(root, allow_write=True)
+            events = queue.Queue()
+            manager = ApprovalManager(tools, lambda request_id, kind, payload: events.put((kind, payload)))
+            answers = []
+            thread = threading.Thread(target=lambda: answers.append(manager.request(
+                "turn", "call", "write_file", {"path": "a.txt", "content": "second\n"})))
+            thread.start()
+            _, payload = events.get(timeout=2)
+            path.write_text("external\n")
+            manager.resolve(payload.split("\t")[1], "once")
+            thread.join(timeout=2)
+            self.assertEqual(answers, [False])
+            self.assertEqual(path.read_text(), "external\n")
+            expected = tools.prepare_change("write_file", {"path": "a.txt", "content": "new\n"})
+            path.write_text("newer source\n")
+            with self.assertRaisesRegex(ValueError, "changed since approval"):
+                tools.execute("write_file", {"path": "a.txt", "content": "new\n"}, expected_change=expected)
+            self.assertEqual(path.read_text(), "newer source\n")
+            path.write_text("external\n")
+            with patch("mupyjava.file_ops.os.replace", side_effect=OSError("disk failure")):
+                with self.assertRaisesRegex(OSError, "disk failure"):
+                    tools.execute("write_file", {"path": "a.txt", "content": "new\n"})
+            self.assertEqual(path.read_text(), "external\n")
+            self.assertEqual(list(root.glob(".mupyjava-*")), [])
+            changes = []
+            tools.execute("write_file", {"path": "a.txt", "content": "new\n"}, on_change=changes.append)
+            self.assertEqual(stat.S_IMODE(path.stat().st_mode), 0o640)
+            self.assertEqual(changes[0]["before_bytes"], len("external\n"))
+            self.assertEqual(changes[0]["after_bytes"], len("new\n"))
+            self.assertNotIn("content", changes[0])
+
+    def test_same_path_edits_are_serialized_through_operations_interface(self):
+        class BlockingOperations(LocalFileOperations):
+            def __init__(self):
+                self.entered = threading.Event()
+                self.release = threading.Event()
+
+            def replace_text(self, path, content):
+                if content == "B":
+                    self.entered.set()
+                    self.release.wait(timeout=2)
+                super().replace_text(path, content)
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "a.txt").write_text("A")
+            operations = BlockingOperations()
+            tools = WorkspaceTools(root, allow_write=True, file_ops=operations)
+            errors = []
+            def edit(old, new):
+                try:
+                    tools.execute("edit_file", {"path": "a.txt", "old_text": old, "new_text": new})
+                except Exception as error:
+                    errors.append(error)
+            first = threading.Thread(target=edit, args=("A", "B"))
+            second = threading.Thread(target=edit, args=("B", "C"))
+            first.start()
+            self.assertTrue(operations.entered.wait(timeout=2))
+            second.start()
+            operations.release.set()
+            first.join(timeout=2)
+            second.join(timeout=2)
+            self.assertEqual(errors, [])
+            self.assertEqual((root / "a.txt").read_text(), "C")
+
     @unittest.skipUnless(shutil.which("javac") and shutil.which("java"), "JDK is unavailable")
     def test_java_smoke_cancels_streaming_command_and_marks_turn_interrupted(self):
         command = shlex.quote(sys.executable) + " -u -c " + shlex.quote(
@@ -274,9 +367,16 @@ class CoreTests(unittest.TestCase):
                 if payload["messages"][-1]["role"] == "tool":
                     message = {"role": "assistant", "content": "Finished."}
                 else:
+                    prompt = payload["messages"][-1]["content"]
+                    if prompt == "Edit note.txt":
+                        name, arguments = "edit_file", {"path": "note.txt", "old_text": "created", "new_text": "edited"}
+                    elif prompt == "Replace note.txt":
+                        name, arguments = "write_file", {"path": "note.txt", "content": "replaced"}
+                    else:
+                        name, arguments = "write_file", {"path": "note.txt", "content": "created"}
                     message = {"role": "assistant", "content": None, "tool_calls": [{
-                        "id": "write-1", "type": "function", "function": {"name": "write_file",
-                            "arguments": json.dumps({"path": "note.txt", "content": "created"})},
+                        "id": "write-1", "type": "function", "function": {"name": name,
+                            "arguments": json.dumps(arguments)},
                     }]}
                 body = json.dumps({"choices": [{"message": message}]}).encode("utf-8")
                 self.send_response(200)
@@ -320,6 +420,14 @@ class CoreTests(unittest.TestCase):
                 self.assertIn("history.judge: tool.intent v2", allowed.stdout)
                 self.assertIn("tool: write_file: Wrote note.txt", allowed.stdout)
                 self.assertEqual((Path(directory) / "note.txt").read_text(), "created")
+                for prompt, expected in (("Edit note.txt", "edited"), ("Replace note.txt", "replaced")):
+                    result = subprocess.run(["java", "-cp", str(classes), "dev.mupyjava.Main",
+                                             "--workspace", directory, "--smoke", prompt,
+                                             "--smoke-approval", "once"],
+                                            cwd=repository, env=env, capture_output=True, text=True, timeout=15)
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    self.assertIn("tool.change:", result.stdout)
+                    self.assertEqual((Path(directory) / "note.txt").read_text(), expected)
             finally:
                 server.shutdown()
                 server_thread.join(timeout=5)

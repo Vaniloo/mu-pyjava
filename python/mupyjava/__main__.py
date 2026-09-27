@@ -113,6 +113,12 @@ def main() -> int:
                 store.append("tool.artifact", {"id": artifact_id}, turn_id, call_id)
                 emit(request_id, "tool.artifact", "Full output id: " + artifact_id)
 
+            def save_tool_event(call_id: str, kind: str, payload: dict) -> None:
+                store.append(kind, payload, turn_id, call_id)
+                if kind == "tool.change":
+                    emit(request_id, kind, f"{payload['path']}: {payload['before_bytes']} → "
+                         f"{payload['after_bytes']} bytes\n{payload['diff']}")
+
             for kind, message in agent.run(
                 prompt, approval=lambda call_id, name, arguments:
                     manager.request(request_id, call_id, name, arguments),
@@ -120,8 +126,9 @@ def main() -> int:
                 cancel=cancel,
                 on_tool_update=lambda call_id, chunk: emit(request_id, "tool.update", chunk),
                 on_tool_artifact=save_artifact,
-                on_tool_event=lambda call_id, kind, payload: store.append(kind, payload, turn_id, call_id),
+                on_tool_event=save_tool_event,
                 output_dir=store.output_dir,
+                expected_change=manager.take_expected_change,
             ):
                 if kind == "judge" and agent.judge.last_record is not None:
                     record = dict(agent.judge.last_record)

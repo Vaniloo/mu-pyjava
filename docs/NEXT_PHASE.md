@@ -7,7 +7,7 @@ This is a behavior-oriented plan for the independent Python engine and Java desk
 
 | Area | mu behavior | mu-pyjava today | Gap |
 | --- | --- | --- | --- |
-| Tool access | Read, find, grep, list, edit, write, and shell/PowerShell have rich results, cancellation and operation interfaces; extensions add more tools. | Ten fixed tools cover text read/search, exact edit/write, Git inspection, no-shell process execution and full-output retrieval. Commands stream and can be stopped. | Image reads, shell syntax, structured diffs, atomic/queued mutations, extensibility and remote operations. Tool-name counts hide these differences. |
+| Tool access | Read, find, grep, list, edit, write, and shell/PowerShell have rich results, cancellation and operation interfaces; extensions add more tools. | Ten fixed tools cover text read/search, exact edit/write, Git inspection, no-shell process execution and full-output retrieval. Commands stream and can be stopped. File mutations have unified diff previews, revision checks, a per-path queue, atomic replacement and structured events. | Image reads, shell syntax, custom tools, and remote operations beyond the file-mutation seam. Tool-name counts hide these differences. |
 | Permission boundary | Each tool call passes a permission gate. Modes and grants belong to a conversation; risky or protected operations are evaluated each time, with a human fallback. | The desktop now asks for each mutation, with a per-file grant where safe; CLI flags are explicit broad-access overrides. Active `tool.intent` can veto but cannot grant access; Laya remains shadow-only. | Configurable permission modes and more complete deterministic command-risk rules. |
 | Session runtime | Append-only JSONL session tree, stable entries, resume/branch, tool events and cancellation. | Versioned append-only journal, completed-turn restoration, interruption markers, latest-session resume, new-session action and command lifecycle. | Branch/fork and background tasks. |
 | Context | Tool output is admitted in chunks and archived; stale context can be forgotten or compacted. | Tool result sent to the model is clipped at 60,000 characters; no archive or token budget. | Preserve complete output outside the prompt, expose retrieval, and add deterministic context budgeting before judge-led admission. |
@@ -44,7 +44,7 @@ Add typed question and answer schemas, per-point mode/routing and deterministic 
 
 ## Immediate next slice
 
-The approval gate, durable single-path sessions, dedicated judgment tab, active-turn Stop action and streamed command output are implemented. Long output is retained behind an ID and can be paged back after restart. Branch/fork, provider-side HTTP abort and richer file mutations remain future work.
+The approval gate, durable single-path sessions, dedicated judgment tab, active-turn Stop action and streamed command output are implemented. Long output is retained behind an ID and can be paged back after restart. File write/edit now use approved diffs and atomic serialized replacement through an injectable operations interface. Next: extend the operations seam to read/search/commands, then image reads and additional patch forms. Branch/fork and provider-side HTTP abort remain future work.
 
 ## Source anchors
 

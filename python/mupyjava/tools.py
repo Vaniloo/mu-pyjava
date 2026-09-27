@@ -2,6 +2,8 @@
 
 import json
 import codecs
+import difflib
+import hashlib
 import os
 import fnmatch
 import signal
@@ -16,6 +18,7 @@ from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
 from .cancel import CancellationToken, TurnCancelled
+from .file_ops import FileMutationQueue, FileOperations, LocalFileOperations
 
 
 TOOL_SCHEMAS: List[Dict[str, Any]] = [
@@ -134,13 +137,69 @@ TOOL_SCHEMAS: List[Dict[str, Any]] = [
 
 class WorkspaceTools:
     def __init__(self, root: Path, allow_write: bool = False, allow_command: bool = False,
-                 output_root: Optional[Path] = None):
+                 output_root: Optional[Path] = None, file_ops: Optional[FileOperations] = None):
         self.root = root.resolve(strict=True)
         if not self.root.is_dir():
             raise ValueError("Workspace must be a directory")
         self.allow_write = allow_write
         self.allow_command = allow_command
         self.output_root = output_root or Path(tempfile.gettempdir()) / "mupyjava-output"
+        self.file_ops = file_ops or LocalFileOperations()
+        self.mutations = FileMutationQueue()
+
+    def prepare_change(self, name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
+        """Compute the exact proposed text and a revision for approval/revalidation."""
+        if name not in {"write_file", "edit_file"}:
+            raise ValueError("Not a file mutation: " + name)
+        target = self._path(arguments["path"])
+        relative = str(target.relative_to(self.root))
+        existed = self.file_ops.exists(target)
+        if name == "write_file":
+            updated = arguments["content"]
+            if not isinstance(updated, str) or len(updated.encode("utf-8")) > 1_000_000:
+                raise ValueError("Content must be text of at most 1 MB")
+            original = self.file_ops.read_text(target) if existed else ""
+        else:
+            old_text, new_text = arguments["old_text"], arguments["new_text"]
+            if not isinstance(old_text, str) or not old_text or not isinstance(new_text, str):
+                raise ValueError("old_text must be nonempty and new_text must be text")
+            if self.file_ops.size(target) > 1_000_000:
+                raise ValueError("File exceeds the 1 MB edit limit")
+            original = self.file_ops.read_text(target)
+            if original.count(old_text) != 1:
+                raise ValueError("old_text must occur exactly once")
+            updated = original.replace(old_text, new_text, 1)
+            if len(updated.encode("utf-8")) > 1_000_000:
+                raise ValueError("Edited file exceeds the 1 MB limit")
+        diff = "\n".join(difflib.unified_diff(
+            original.splitlines(), updated.splitlines(), lineterm="",
+            fromfile="a/" + relative if existed else "/dev/null", tofile="b/" + relative,
+        ))
+        if diff:
+            diff += "\n"
+        elif original != updated:
+            diff = "Line-level representation (including endings):\n" + "\n".join(difflib.unified_diff(
+                [repr(line) for line in original.splitlines(keepends=True)],
+                [repr(line) for line in updated.splitlines(keepends=True)],
+                lineterm="", fromfile="a/" + relative if existed else "/dev/null", tofile="b/" + relative,
+            )) + "\n"
+        def line_endings(value: str) -> str:
+            crlf = value.count("\r\n")
+            lf = value.count("\n") - crlf
+            cr = value.count("\r") - crlf
+            kinds = [f"CRLF={crlf}" if crlf else "", f"LF={lf}" if lf else "",
+                     f"CR={cr}" if cr else ""]
+            return ", ".join(part for part in kinds if part) or "none"
+        if line_endings(original) != line_endings(updated):
+            diff += f"Line endings: {line_endings(original)} → {line_endings(updated)}\n"
+        if original.endswith("\n") != updated.endswith("\n"):
+            diff += ("Final newline: " + ("yes" if original.endswith("\n") else "no") +
+                     " → " + ("yes" if updated.endswith("\n") else "no") + "\n")
+        return {"path": relative, "operation": name, "existed": existed,
+                "before_sha256": hashlib.sha256(original.encode("utf-8")).hexdigest() if existed else None,
+                "after_sha256": hashlib.sha256(updated.encode("utf-8")).hexdigest(),
+                "before_bytes": len(original.encode("utf-8")) if existed else 0,
+                "after_bytes": len(updated.encode("utf-8")), "diff": diff, "content": updated}
 
     def _path(self, raw: str) -> Path:
         if not isinstance(raw, str) or not raw.strip():
@@ -255,7 +314,9 @@ class WorkspaceTools:
                 cancel: Optional[CancellationToken] = None,
                 on_update: Optional[Callable[[str], None]] = None,
                 on_artifact: Optional[Callable[[str], None]] = None,
-                output_dir: Optional[Path] = None) -> str:
+                output_dir: Optional[Path] = None,
+                on_change: Optional[Callable[[Dict[str, Any]], None]] = None,
+                expected_change: Optional[Dict[str, Any]] = None) -> str:
         if cancel is not None:
             cancel.raise_if_cancelled()
         if name == "list_files":
@@ -385,33 +446,29 @@ class WorkspaceTools:
                 raise ValueError("staged must be a boolean")
             path = str(selected.relative_to(self.root)) or "."
             return self._git(["diff", "--no-ext-diff", *(["--staged"] if staged else []), "--", path])
-        if name == "write_file":
+        if name in {"write_file", "edit_file"}:
             if not self.allow_write:
                 raise PermissionError("Writing is disabled; restart with --allow-write")
             target = self._path(arguments["path"])
-            content = arguments["content"]
-            if not isinstance(content, str) or len(content.encode("utf-8")) > 1_000_000:
-                raise ValueError("Content must be text of at most 1 MB")
-            target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_text(content, encoding="utf-8")
-            return "Wrote " + str(target.relative_to(self.root))
-        if name == "edit_file":
-            if not self.allow_write:
-                raise PermissionError("Writing is disabled; restart with --allow-write")
-            target = self._path(arguments["path"])
-            old_text, new_text = arguments["old_text"], arguments["new_text"]
-            if not isinstance(old_text, str) or not old_text or not isinstance(new_text, str):
-                raise ValueError("old_text must be nonempty and new_text must be text")
-            if target.stat().st_size > 1_000_000:
-                raise ValueError("File exceeds the 1 MB edit limit")
-            content = target.read_text(encoding="utf-8")
-            if content.count(old_text) != 1:
-                raise ValueError("old_text must occur exactly once")
-            updated = content.replace(old_text, new_text, 1)
-            if len(updated.encode("utf-8")) > 1_000_000:
-                raise ValueError("Edited file exceeds the 1 MB limit")
-            target.write_text(updated, encoding="utf-8")
-            return "Edited " + str(target.relative_to(self.root))
+            with self.mutations.hold(target):
+                change = self.prepare_change(name, arguments)
+                if expected_change is not None and (
+                    change["path"], change["existed"], change["before_sha256"], change["after_sha256"]
+                ) != (
+                    expected_change["path"], expected_change["existed"],
+                    expected_change["before_sha256"], expected_change["after_sha256"]
+                ):
+                    raise ValueError("File changed since approval; review the new diff")
+                if cancel is not None:
+                    cancel.raise_if_cancelled()
+                self.file_ops.replace_text(target, change["content"])
+                if on_change is not None:
+                    try:
+                        on_change({key: value for key, value in change.items() if key != "content"})
+                    except Exception:
+                        # Reporting cannot turn a committed write into an apparent failure.
+                        pass
+            return ("Wrote " if name == "write_file" else "Edited ") + change["path"]
         if name == "run_command":
             return self._run_command(arguments, cancel, on_update, on_artifact, output_dir)
         raise ValueError("Unknown tool: " + name)
