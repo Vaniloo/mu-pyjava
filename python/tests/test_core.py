@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 
 from mupyjava.agent import Agent
-from mupyjava.judge import DecisionEngine, DecisionPoint
+from mupyjava.judge import DecisionEngine, DecisionPoint, LayaBooleanJudge
 from mupyjava.tools import WorkspaceTools
 from mupyjava.wire import decode_text, encode_text, event_line, parse_request
 
@@ -67,6 +67,26 @@ class CoreTests(unittest.TestCase):
             self.assertTrue(DecisionEngine("active", YesJudge(), ledger).decide(point, {}))
             rows = [json.loads(line) for line in ledger.read_text().splitlines()]
             self.assertEqual([row["source"] for row in rows], ["fallback", "judge"])
+
+    def test_laya_adapter_uses_typed_boolean_and_abstains(self):
+        class FakeLaya:
+            probability = 0.9
+
+            def predict(self, state, questions):
+                self.state = state
+                self.questions = questions
+                return {"answers": {"intent": {"noul": self.probability}}}
+
+        fake = FakeLaya()
+        judge = LayaBooleanJudge("unused", agent=fake)
+        state = {"user_request": "Read the file", "tool": "write_file", "arguments": {"path": "x"}}
+        self.assertTrue(judge.answer("Needed?", state))
+        self.assertEqual(fake.questions["intent"]["type"], "noul")
+        self.assertEqual(fake.state, state)
+        fake.probability = 0.5
+        self.assertIsNone(judge.answer("Needed?", state))
+        fake.probability = 0.1
+        self.assertFalse(judge.answer("Needed?", state))
 
     def test_write_judgment_excludes_file_content(self):
         class CapturingJudge:

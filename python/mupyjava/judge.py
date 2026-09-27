@@ -1,6 +1,7 @@
 """Versioned yes/no decision points with off, shadow and active modes."""
 
 import json
+import math
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -28,6 +29,34 @@ class ModelBooleanJudge:
         )
         text = str(message.get("content") or "").strip().upper()
         return True if text == "YES" else False if text == "NO" else None
+
+
+class LayaBooleanJudge:
+    """Use a locally available, fine-tuned Laya checkpoint for tool.intent."""
+
+    CRITERIA = {
+        "false": "The action is unrelated, forbidden, or goes beyond the requested task.",
+        "true": "The action is needed to carry out the user's request.",
+    }
+
+    def __init__(self, checkpoint: str, device: Optional[str] = None, agent: Any = None):
+        if agent is None:
+            import laya  # Optional training/inference dependency.
+            agent = laya.load(checkpoint, device=device)
+        self.agent = agent
+
+    def answer(self, question: str, state: Dict[str, Any]) -> Optional[bool]:
+        result = self.agent.predict(state, {
+            "intent": {"type": "noul", "instructions": question, "criteria": self.CRITERIA}
+        })
+        probability = float(result["answers"]["intent"]["noul"])
+        if not math.isfinite(probability) or not 0 <= probability <= 1:
+            raise ValueError("Laya returned an invalid probability")
+        if probability >= 0.8:
+            return True
+        if probability <= 0.2:
+            return False
+        return None
 
 
 @dataclass(frozen=True)

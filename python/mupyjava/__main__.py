@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 from .agent import Agent
-from .judge import DecisionEngine, ModelBooleanJudge
+from .judge import DecisionEngine, LayaBooleanJudge, ModelBooleanJudge
 from .model import ChatCompletionsModel, model_from_environment
 from .tools import WorkspaceTools
 from .wire import event_line, parse_request
@@ -16,8 +16,11 @@ def build_agent(args: argparse.Namespace) -> Agent:
     model = model_from_environment()
     mode = os.environ.get("MU_JUDGE_MODE", "off")
     judge_model_name = os.environ.get("MU_JUDGE_MODEL")
-    if mode != "off" and not judge_model_name:
-        raise ValueError("Set MU_JUDGE_MODEL when MU_JUDGE_MODE is shadow or active")
+    laya_path = os.environ.get("MU_JUDGE_LAYA_PATH")
+    if mode != "off" and not (judge_model_name or laya_path):
+        raise ValueError("Set MU_JUDGE_MODEL or MU_JUDGE_LAYA_PATH when MU_JUDGE_MODE is shadow or active")
+    if judge_model_name and laya_path:
+        raise ValueError("Set only one of MU_JUDGE_MODEL and MU_JUDGE_LAYA_PATH")
     judge_model = None
     if judge_model_name:
         judge_model = ChatCompletionsModel(
@@ -25,9 +28,12 @@ def build_agent(args: argparse.Namespace) -> Agent:
             os.environ.get("MU_API_KEY", ""),
             judge_model_name,
         )
+    backend = LayaBooleanJudge(laya_path, device=os.environ.get("MU_JUDGE_LAYA_DEVICE")) if laya_path else (
+        ModelBooleanJudge(judge_model) if judge_model else None
+    )
     judge = DecisionEngine(
         mode=mode,
-        backend=ModelBooleanJudge(judge_model) if judge_model else None,
+        backend=backend,
         ledger=Path(args.ledger) if args.ledger else None,
     )
     tools = WorkspaceTools(Path(args.workspace), args.allow_write, args.allow_command)
