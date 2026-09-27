@@ -1,5 +1,7 @@
 import json
+import shlex
 import subprocess
+import sys
 import tempfile
 import threading
 import unittest
@@ -65,9 +67,9 @@ class CoreTests(unittest.TestCase):
             (root / "src" / "Main.java").write_text("class Main { int count = 1; }\n", encoding="utf-8")
             (root / "src" / "worker.py").write_text("count = 1\n", encoding="utf-8")
             tools = WorkspaceTools(root, allow_write=True)
-            self.assertEqual(json.loads(tools.execute("find_files", {"path": ".", "glob": "**/*.java"})),
+            self.assertEqual(json.loads(tools.execute("find_files", {"path": ".", "glob": "**/*.java"}))["paths"],
                              ["src/Main.java"])
-            matches = json.loads(tools.execute("grep_files", {"path": "src", "pattern": "count"}))
+            matches = json.loads(tools.execute("grep_files", {"path": "src", "pattern": "count"}))["matches"]
             self.assertEqual([(m["path"], m["line"]) for m in matches],
                              [("src/Main.java", 1), ("src/worker.py", 1)])
             self.assertEqual(tools.execute("edit_file", {"path": "src/Main.java", "old_text": "count = 1",
@@ -85,7 +87,56 @@ class CoreTests(unittest.TestCase):
                 tools.execute("edit_file", {"path": "a.py", "old_text": "old", "new_text": "new"})
             with self.assertRaises(PermissionError):
                 tools.execute("edit_file", {"path": "external/secret", "old_text": "x", "new_text": "y"})
-            self.assertEqual(json.loads(tools.execute("find_files", {"path": ".", "glob": "**/*"})), ["a.py"])
+            self.assertEqual(json.loads(tools.execute("find_files", {"path": ".", "glob": "**/*"}))["paths"], ["a.py"])
+
+    def test_read_file_pages_large_utf8_text(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "large.py").write_text("".join(f"行 {i}\n" for i in range(2500)), encoding="utf-8")
+            tools = WorkspaceTools(root)
+            first = tools.execute("read_file", {"path": "large.py", "limit": 2})
+            self.assertIn("行 0\n行 1\n", first)
+            self.assertIn("offset=3", first)
+            self.assertEqual(tools.execute("read_file", {"path": "large.py", "offset": 2500}), "行 2499\n")
+            with self.assertRaisesRegex(ValueError, "beyond end"):
+                tools.execute("read_file", {"path": "large.py", "offset": 2501})
+
+    def test_regex_search_respects_gitignore_and_context(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            subprocess.run(["git", "init", "-q", str(root)], check=True)
+            (root / ".gitignore").write_text("ignored.py\n", encoding="utf-8")
+            (root / "keep.py").write_text("count=12\nnext line\n", encoding="utf-8")
+            (root / "ignored.py").write_text("count=99\n", encoding="utf-8")
+            tools = WorkspaceTools(root)
+            self.assertEqual(tools.execute("find_files", {"path": ".", "glob": "**/*.py"}),
+                             '{"paths": ["keep.py"], "truncated": false}')
+            result = json.loads(tools.execute("grep_files", {"path": ".", "pattern": "count=[0-9]+",
+                                                           "glob": "**/*.py", "context": 1}))
+            self.assertEqual([(m["path"], m["line"], m["kind"]) for m in result["matches"]],
+                             [("keep.py", 1, "match"), ("keep.py", 2, "context")])
+            self.assertEqual(json.loads(tools.execute("grep_files", {"path": ".", "pattern": "COUNT=12",
+                                                                  "ignore_case": True}))["matches"][0]["path"], "keep.py")
+
+    def test_search_truncation_keeps_valid_json(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "many.py").write_text("".join(f"match_{i} " + "x" * 150 + "\n" for i in range(200)))
+            output = WorkspaceTools(root).execute("grep_files", {"path": ".", "pattern": "match_"})
+            result = json.loads(output)
+            self.assertTrue(result["truncated"])
+            self.assertLess(len(output.encode("utf-8")), 12_000)
+
+    def test_command_output_is_bounded_and_timeout_is_enforced(self):
+        with tempfile.TemporaryDirectory() as directory:
+            tools = WorkspaceTools(Path(directory), allow_command=True)
+            python = shlex.quote(sys.executable)
+            output = tools.execute("run_command", {"command": python + " -c 'print(\"x\"*20000)'"})
+            self.assertIn("[Output truncated at 12 KB]", output)
+            self.assertLess(len(output), 12_200)
+            with self.assertRaises(subprocess.TimeoutExpired):
+                tools.execute("run_command", {"command": python + " -c 'import time; time.sleep(3)'",
+                                              "timeout": 1})
 
     def test_edit_action_is_judged_without_file_content(self):
         class CapturingJudge:

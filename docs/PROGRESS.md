@@ -8,6 +8,7 @@ This file records what the repository actually does. The goal is a Python agent 
 - [x] Chat Completions model adapter and an explicit offline echo adapter.
 - [x] Read/list tools; write and command tools gated by launch flags.
 - [x] Find, literal grep, exact text edit, and read-only Git status/diff tools, with workspace path checks.
+- [x] Paged UTF-8 reads, ripgrep-backed regex/context search and file discovery, and bounded command output with configurable timeout.
 - [x] Versioned boolean decision point engine with off/shadow/active modes and optional JSONL ledger.
 - [x] Java Swing window and a long-lived Python process connected through a line protocol.
 - [x] Python unit tests, Java compilation, and cross-language smoke test.

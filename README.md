@@ -7,9 +7,10 @@ A small Python + Java coding-agent foundation inspired by [mu](https://github.co
 - Python 3.9 or newer
 - JDK 17 or newer for the desktop window
 - Git for the optional status and diff tools
+- ripgrep (`rg`) for file discovery and content search
 - A Chat Completions-compatible model endpoint for real model use
 
-The prototype uses only the Python and Java standard libraries.
+The Python and Java code uses their standard libraries; Git and ripgrep are optional external executables for their respective tools.
 
 ## Run the offline smoke test
 
@@ -44,7 +45,7 @@ The agent now has nine tools, following mu's basic read/find/grep/edit/write/com
 | --- | --- | --- |
 | `list_files`, `read_file`, `find_files`, `grep_files`, `git_status`, `git_diff` | `write_file`, `edit_file` | `run_command` |
 
-`find_files` uses globs; `grep_files` searches literal text and returns file names and line numbers. `edit_file` replaces text only when the old text appears exactly once. Search results and file edits are limited in size, and file paths stay inside the selected workspace. Commands use an argument list without a shell, run inside the workspace, and have a 30-second timeout. Write and command flags grant broad access during that run; per-action approval is a planned milestone.
+`read_file` accepts `offset` and `limit` to page through large UTF-8 files, returning at most 50 KiB per call. `find_files` uses globs, and `grep_files` supports regex, literal matching, case-insensitive search and surrounding lines. Both use ripgrep and respect `.gitignore` in Git workspaces. Their JSON results include a `truncated` flag. `edit_file` replaces text only when the old text appears exactly once. File paths stay inside the selected workspace. Commands use an argument list without a shell, run inside the workspace, and have a configurable timeout of up to 120 seconds; only the first 12 KiB of output is retained. Write and command flags grant broad access during that run; per-action approval is a planned milestone.
 
 ## Decisions
 
@@ -63,3 +64,5 @@ MU_MODEL_BACKEND=echo java -cp java/out dev.mupyjava.Main --smoke "hello"
 ```
 
 See [progress](docs/PROGRESS.md) for completed work and next milestones. The upstream mu repository uses an MIT license for its agent packages and Apache 2.0 for its desktop app; this repository contains newly written code and does not copy those files. A license for this repository has not been selected yet.
+
+The [tool parity table](docs/TOOL_PARITY.md) tracks which mu behaviors have been reproduced and what remains.
