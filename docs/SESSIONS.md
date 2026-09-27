@@ -8,10 +8,10 @@ Sessions live outside the project workspace in the platform's application state 
 
 Every line is a version 1 event with `event_id`, `session_id`, `turn_id`, `tool_call_id`, timestamp, type and payload. The journal records model-visible messages, display events, approval requests/resolutions and judge records. It therefore contains the text of prompts, model tool arguments and tool results; keep the selected session directory private.
 
-A turn enters the model context after `turn.completed` has been written. If the process stops mid-turn, startup appends `turn.interrupted` and restores only completed turns to the model. The desktop still shows the interrupted turn and a notice. Executed tools are never replayed from the journal. Session-scoped permission grants are cleared on backend restart and when a new session starts.
+A turn enters the model context after `turn.completed` has been written. If the process stops mid-turn, startup appends `turn.interrupted` and restores only completed turns to the model. The desktop still shows the interrupted turn and a notice. Executed tools are never replayed from the journal. Session-scoped permission grants are cleared on backend restart and when a new session starts. Long command output lives in an owner-only `.outputs` directory next to the journal and remains readable by output ID after restart.
 
 ## Line protocol
 
-The existing `EVENT` envelope carries Base64 UTF-8 text. Java sends `CHAT`, `APPROVAL`, `HISTORY` or `NEW` requests. `HISTORY` returns `session.info`, `history.transcript`, `history.judge` and `history.done` events. `NEW` starts an empty session and returns its ID. Tool approval requests and answers remain versioned separately; unknown or repeated approval IDs cannot resume an action.
+The existing `EVENT` envelope carries Base64 UTF-8 text. Java sends `CHAT`, `APPROVAL`, `HISTORY`, `NEW` or `CANCEL` requests. `HISTORY` returns `session.info`, `history.transcript`, `history.judge` and `history.done` events. `NEW` starts an empty session and returns its ID. `CANCEL` addresses the active request ID; command output arrives as `tool.update`, and a stopped turn ends with `cancelled` then `done`. Tool approval requests and answers remain versioned separately; unknown or repeated approval IDs cannot resume an action.
 
 This is the first durable session format. It supports latest-session resume and a new-session action; branch/fork, import/export and context compaction remain future work.

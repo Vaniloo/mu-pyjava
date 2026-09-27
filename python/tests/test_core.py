@@ -8,11 +8,13 @@ import subprocess
 import sys
 import tempfile
 import threading
+import time
 import unittest
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 
 from mupyjava.agent import Agent
+from mupyjava.cancel import CancellationToken, TurnCancelled
 from mupyjava.judge import DecisionEngine, DecisionPoint, LayaBooleanJudge, LayaHttpBooleanJudge
 from mupyjava.permissions import ApprovalManager
 from mupyjava.sessions import SessionStore
@@ -29,6 +31,141 @@ class ScriptedModel:
 
 
 class CoreTests(unittest.TestCase):
+    @unittest.skipUnless(shutil.which("javac") and shutil.which("java"), "JDK is unavailable")
+    def test_java_smoke_cancels_streaming_command_and_marks_turn_interrupted(self):
+        command = shlex.quote(sys.executable) + " -u -c " + shlex.quote(
+            "import time; print('started', flush=True); time.sleep(5)")
+
+        class Handler(BaseHTTPRequestHandler):
+            def do_POST(self):
+                payload = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
+                if payload["messages"][-1]["role"] == "tool":
+                    message = {"role": "assistant", "content": "Finished."}
+                else:
+                    message = {"role": "assistant", "content": None, "tool_calls": [{
+                        "id": "command-1", "type": "function", "function": {"name": "run_command",
+                            "arguments": json.dumps({"command": command})},
+                    }]}
+                body = json.dumps({"choices": [{"message": message}]}).encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+
+            def log_message(self, *args):
+                pass
+
+        with HTTPServer(("127.0.0.1", 0), Handler) as server, tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            server_thread = threading.Thread(target=server.serve_forever, daemon=True)
+            server_thread.start()
+            repository = Path(__file__).resolve().parents[2]
+            classes = root / "classes"
+            classes.mkdir()
+            try:
+                subprocess.run(["javac", "-d", str(classes),
+                                *map(str, (repository / "java/src/main/java/dev/mupyjava").glob("*.java"))],
+                               check=True, capture_output=True, text=True)
+                env = os.environ.copy()
+                env.update({"MU_MODEL": "fixture", "MU_MODEL_BACKEND": "", "MU_JUDGE_MODE": "off",
+                            "MU_PYTHON": sys.executable, "MU_SESSION_DIR": str(root / "sessions"),
+                            "MU_API_BASE": f"http://127.0.0.1:{server.server_port}/v1"})
+                result = subprocess.run(["java", "-cp", str(classes), "dev.mupyjava.Main",
+                                         "--workspace", str(workspace), "--smoke", "Run the command",
+                                         "--smoke-approval", "once", "--smoke-cancel-on-update"],
+                                        cwd=repository, env=env, capture_output=True, text=True, timeout=15)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertIn("tool.update: started", result.stdout)
+                self.assertIn("cancelled: Turn cancelled", result.stdout)
+                self.assertNotIn("assistant: Finished.", result.stdout)
+                store = SessionStore.open(workspace, root / "sessions", resume=True)
+                self.assertEqual(len(store.restore_messages()), 1)
+                kinds = [entry["type"] for entry in store.events()]
+                self.assertIn("tool.started", kinds)
+                self.assertIn("tool.cancelled", kinds)
+                self.assertIn("turn.interrupted", kinds)
+            finally:
+                server.shutdown()
+                server_thread.join(timeout=5)
+
+    def test_streamed_command_output_can_be_read_after_truncation(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            store = SessionStore.open(root, root / "state", resume=False)
+            tools = WorkspaceTools(root, allow_command=True, output_root=store.output_dir)
+            updates = []
+            artifacts = []
+            command = shlex.quote(sys.executable) + " -u -c " + shlex.quote(
+                "import sys; sys.stdout.write('begin\\n' + 'x'*20000); sys.stdout.flush()")
+            output = tools.execute("run_command", {"command": command}, on_update=updates.append,
+                                   on_artifact=artifacts.append)
+            self.assertIn("[Output truncated at 12 KB]", output)
+            self.assertTrue(any("begin" in update for update in updates))
+            output_id = output.split("Full output id: ")[1].strip()
+            self.assertEqual(artifacts, [output_id])
+            full = tools.execute("read_command_output", {"id": output_id, "offset": 0, "limit": 50_000})
+            self.assertEqual(full, "begin\n" + "x" * 20_000)
+            first = tools.execute("read_command_output", {"id": output_id, "offset": 0, "limit": 10})
+            self.assertIn("offset=10", first)
+            self.assertEqual(tools.execute("read_command_output", {"id": output_id, "offset": 10,
+                                                                    "limit": 50_000}), full[10:])
+            reopened = SessionStore.open(root, root / "state", resume=True)
+            resumed_tools = WorkspaceTools(root, output_root=reopened.output_dir)
+            self.assertEqual(resumed_tools.execute("read_command_output", {"id": output_id,
+                                                                             "limit": 50_000}), full)
+
+    def test_cancellation_stops_command_process_group(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            marker = root / "child-ran.txt"
+            child_code = "import time; from pathlib import Path; time.sleep(0.7); Path(" + repr(str(marker)) + ").write_text('ran')"
+            parent_code = ("import subprocess,sys; subprocess.Popen([sys.executable,'-c',"
+                           + repr(child_code) + "]); print('started',flush=True)")
+            command = shlex.quote(sys.executable) + " -u -c " + shlex.quote(parent_code)
+            token = CancellationToken()
+            tools = WorkspaceTools(root, allow_command=True)
+            started = time.monotonic()
+
+            def update(chunk):
+                if "started" in chunk:
+                    token.cancel()
+
+            with self.assertRaises(TurnCancelled):
+                tools.execute("run_command", {"command": command}, cancel=token, on_update=update)
+            self.assertLess(time.monotonic() - started, 2)
+            time.sleep(0.9)
+            self.assertFalse(marker.exists())
+
+    def test_model_wait_can_be_cancelled_without_running_later_tools(self):
+        started = threading.Event()
+
+        class SlowModel:
+            def complete(self, messages, tools):
+                started.set()
+                time.sleep(2)
+                return {"role": "assistant", "content": "late"}
+
+        with tempfile.TemporaryDirectory() as directory:
+            token = CancellationToken()
+            agent = Agent(SlowModel(), WorkspaceTools(Path(directory)), DecisionEngine())
+            errors = []
+
+            def run():
+                try:
+                    list(agent.run("hello", cancel=token))
+                except Exception as error:
+                    errors.append(error)
+
+            worker = threading.Thread(target=run, daemon=True)
+            worker.start()
+            self.assertTrue(started.wait(timeout=1))
+            token.cancel()
+            worker.join(timeout=1)
+            self.assertFalse(worker.is_alive())
+            self.assertIsInstance(errors[0], TurnCancelled)
+
     def test_session_store_restores_completed_turns_and_marks_interruption(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -385,6 +522,23 @@ class CoreTests(unittest.TestCase):
             self.assertFalse(manager.resolve(payload.split("\t")[1], "once"))
             worker.join(timeout=2)
             self.assertEqual(answers, [False])
+
+    def test_cancel_request_denies_pending_approval_without_closing_manager(self):
+        with tempfile.TemporaryDirectory() as directory:
+            emitted = queue.Queue()
+            manager = ApprovalManager(WorkspaceTools(Path(directory), allow_command=True),
+                                      lambda request_id, kind, value: emitted.put((kind, value)))
+            answers = []
+            worker = threading.Thread(target=lambda: answers.append(manager.request(
+                "turn-1", "call-1", "run_command", {"command": "python3 -V"})), daemon=True)
+            worker.start()
+            _, payload = emitted.get(timeout=2)
+            approval_id = payload.split("\t")[1]
+            manager.cancel_request("turn-1")
+            worker.join(timeout=2)
+            self.assertEqual(answers, [False])
+            self.assertFalse(manager.resolve(approval_id, "once"))
+            self.assertEqual(emitted.get(timeout=2)[0], "approval.resolved")
 
     def test_wire_round_trip_preserves_unicode_and_newlines(self):
         message = "你好\nPython + Java"

@@ -78,6 +78,14 @@ public final class BackendClient implements AutoCloseable {
         return sendControl("NEW");
     }
 
+    public synchronized void cancel(String requestId) throws IOException {
+        if (!process.isAlive()) throw new IOException("Python backend has stopped");
+        if (!UUID.fromString(requestId).toString().equals(requestId))
+            throw new IllegalArgumentException("Invalid request id");
+        input.write("CANCEL\t" + requestId + "\n");
+        input.flush();
+    }
+
     private String sendControl(String kind) throws IOException {
         if (!process.isAlive()) throw new IOException("Python backend has stopped");
         String id = UUID.randomUUID().toString();

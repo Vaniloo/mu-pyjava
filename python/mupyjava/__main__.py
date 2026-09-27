@@ -8,6 +8,7 @@ import uuid
 from pathlib import Path
 
 from .agent import Agent
+from .cancel import CancellationToken, TurnCancelled
 from .judge import DecisionEngine, LayaBooleanJudge, LayaHttpBooleanJudge, ModelBooleanJudge
 from .model import ChatCompletionsModel, model_from_environment
 from .permissions import ApprovalManager
@@ -74,8 +75,11 @@ def main() -> int:
     session_root = Path(args.session_dir) if args.session_dir else None
     store = SessionStore.open(agent.tools.root, session_root, resume=not args.new_session)
     agent.messages = store.restore_messages()
+    agent.tools.output_root = store.output_dir
     output_lock = threading.Lock()
     current_turn = None
+    current_request_id = None
+    current_cancel = None
 
     def emit(request_id: str, kind: str, message: str) -> None:
         with output_lock:
@@ -96,8 +100,8 @@ def main() -> int:
     manager = ApprovalManager(agent.tools, emit_action, args.allow_write, args.allow_command)
     worker = None
 
-    def run_chat(request_id: str, prompt: str, turn_id: str) -> None:
-        nonlocal current_turn
+    def run_chat(request_id: str, prompt: str, turn_id: str, cancel: CancellationToken) -> None:
+        nonlocal current_turn, current_request_id, current_cancel
         try:
             store.append("turn.started", {"request_id": request_id}, turn_id)
             store.append("display", {"kind": "you", "text": prompt}, turn_id)
@@ -105,10 +109,19 @@ def main() -> int:
             def save_message(message: dict) -> None:
                 store.append("message", {"message": message}, turn_id, message.get("tool_call_id"))
 
+            def save_artifact(call_id: str, artifact_id: str) -> None:
+                store.append("tool.artifact", {"id": artifact_id}, turn_id, call_id)
+                emit(request_id, "tool.artifact", "Full output id: " + artifact_id)
+
             for kind, message in agent.run(
                 prompt, approval=lambda call_id, name, arguments:
                     manager.request(request_id, call_id, name, arguments),
                 on_message=save_message,
+                cancel=cancel,
+                on_tool_update=lambda call_id, chunk: emit(request_id, "tool.update", chunk),
+                on_tool_artifact=save_artifact,
+                on_tool_event=lambda call_id, kind, payload: store.append(kind, payload, turn_id, call_id),
+                output_dir=store.output_dir,
             ):
                 if kind == "judge" and agent.judge.last_record is not None:
                     record = dict(agent.judge.last_record)
@@ -117,12 +130,18 @@ def main() -> int:
                 store.append("display", {"kind": kind, "text": message}, turn_id)
                 emit(request_id, kind, message)
             store.append("turn.completed", {}, turn_id)
+        except TurnCancelled:
+            store.append("turn.interrupted", {"reason": "cancelled"}, turn_id)
+            agent.messages = store.restore_messages()
+            emit(request_id, "cancelled", "Turn cancelled")
         except Exception as error:
             store.append("turn.interrupted", {"reason": type(error).__name__}, turn_id)
             agent.messages = store.restore_messages()
             emit(request_id, "error", str(error))
         finally:
             current_turn = None
+            current_request_id = None
+            current_cancel = None
             emit(request_id, "done", "")
 
     try:
@@ -130,6 +149,12 @@ def main() -> int:
             fields = raw.rstrip("\n").split("\t")
             if len(fields) == 3 and fields[0] == "APPROVAL":
                 manager.resolve(fields[1], fields[2])
+                continue
+            if len(fields) == 2 and fields[0] == "CANCEL" and fields[1]:
+                if fields[1] == current_request_id and current_cancel is not None:
+                    current_cancel.cancel()
+                    manager.cancel_request(fields[1])
+                    emit(fields[1], "turn.cancel_requested", "Stopping the active turn")
                 continue
             if len(fields) == 2 and fields[0] == "HISTORY" and fields[1]:
                 emit(fields[1], "session.info", store.session_id)
@@ -143,6 +168,7 @@ def main() -> int:
                 else:
                     store = SessionStore.open(agent.tools.root, session_root, resume=False)
                     agent.messages = store.restore_messages()
+                    agent.tools.output_root = store.output_dir
                     manager.reset_grants()
                     emit(fields[1], "session.info", store.session_id)
                 emit(fields[1], "done", "")
@@ -155,7 +181,10 @@ def main() -> int:
                     emit(request_id, "done", "")
                     continue
                 current_turn = str(uuid.uuid4())
-                worker = threading.Thread(target=run_chat, args=(request_id, prompt, current_turn), daemon=True)
+                current_request_id = request_id
+                current_cancel = CancellationToken()
+                worker = threading.Thread(target=run_chat,
+                                          args=(request_id, prompt, current_turn, current_cancel), daemon=True)
                 worker.start()
             except Exception as error:
                 emit(request_id, "error", str(error))

@@ -15,15 +15,16 @@ This file records what the repository actually does. The goal is a Python agent 
 
 ## Next milestones
 
-The ordered gap audit and acceptance criteria are in [NEXT_PHASE.md](NEXT_PHASE.md). Approval and restart recovery are implemented; the next slice is active-turn cancellation and streamed command output.
+The ordered gap audit and acceptance criteria are in [NEXT_PHASE.md](NEXT_PHASE.md). Approval, restart recovery and cancellable streamed commands are implemented; the next tool slice is richer file mutation and pluggable operations.
 
 - [x] Train and evaluate a Laya multilingual fine-tune for the first judge decision; add optional shadow-mode loading.
 - [x] Connect a lab-hosted Laya checkpoint through a loopback HTTP service and SSH tunnel; show shadow verdicts and probabilities in transcripts and ledger.
 - [x] Exercise the real Python agent and Java process protocol with DeepSeek Flash plus the lab judge in shadow mode.
 - [x] Gate individual desktop write, edit and command calls through a versioned approval request/response protocol; deny pending actions on disconnect.
 - [x] Persist completed turns in a versioned local session journal, restore the newest session on restart, and show saved judge records in a dedicated Java tab.
+- [x] Add a desktop Stop action, process-tree cancellation, live bounded command output and a full-output retrieval tool.
 - [ ] Collect independently labeled decisions for all mutating tools, including `edit_file`, and resolve confident false positives before enabling the trained judge.
-- [ ] Add active-turn cancellation and resumable streamed command output; extend sessions with branch/fork only when the single-path format is stable.
+- [ ] Add branch/fork sessions, provider-side HTTP request abort and background jobs after the single-path format is stable.
 - [ ] Typed choice/score decisions, judge routing, and output admission.
 - [ ] LSP diagnostics and project-specific build/test guidance.
 - [ ] Robust packaging of Python and Java runtimes for each platform.

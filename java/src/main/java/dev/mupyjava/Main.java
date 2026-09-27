@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -36,7 +37,8 @@ public final class Main {
             if (smokeApproval == null) smokeApproval = "deny";
             if (!smokeApproval.equals("deny") && !smokeApproval.equals("once"))
                 throw new IllegalArgumentException("--smoke-approval must be deny or once");
-            smoke(repository, workspace, allowWrite, allowCommand, ledger, smoke, smokeApproval);
+            boolean cancelOnUpdate = Arrays.asList(args).contains("--smoke-cancel-on-update");
+            smoke(repository, workspace, allowWrite, allowCommand, ledger, smoke, smokeApproval, cancelOnUpdate);
             return;
         }
         SwingUtilities.invokeLater(() -> show(repository, workspace, allowWrite, allowCommand, ledger));
@@ -50,9 +52,12 @@ public final class Main {
     }
 
     private static void smoke(Path repository, Path workspace, boolean allowWrite,
-                              boolean allowCommand, String ledger, String prompt, String approvalAnswer) throws Exception {
+                              boolean allowCommand, String ledger, String prompt,
+                              String approvalAnswer, boolean cancelOnUpdate) throws Exception {
         CountDownLatch done = new CountDownLatch(1);
         AtomicReference<BackendClient> clientRef = new AtomicReference<>();
+        AtomicReference<String> turnId = new AtomicReference<>();
+        AtomicBoolean cancelled = new AtomicBoolean();
         try (var client = new BackendClient(repository, workspace, allowWrite, allowCommand, ledger, event -> {
             if (event.kind().equals("approval.request")) {
                 try {
@@ -63,15 +68,23 @@ public final class Main {
                     clientRef.get().close();
                 }
             }
+            if (event.kind().equals("tool.update") && cancelOnUpdate && cancelled.compareAndSet(false, true)) {
+                try {
+                    clientRef.get().cancel(turnId.get());
+                } catch (Exception error) {
+                    System.out.println("error: " + error.getMessage());
+                }
+            }
             if (event.kind().equals("assistant") || event.kind().equals("error") ||
                     event.kind().equals("judge") || event.kind().equals("tool") ||
-                    event.kind().equals("history.judge"))
+                    event.kind().equals("history.judge") || event.kind().equals("cancelled") ||
+                    event.kind().equals("tool.update"))
                 System.out.println(event.kind() + ": " + event.text());
             if (event.kind().equals("done") || event.kind().equals("stopped")) done.countDown();
         })) {
             clientRef.set(client);
             client.requestHistory();
-            client.send(prompt);
+            turnId.set(client.send(prompt));
             if (!done.await(90, TimeUnit.SECONDS)) throw new IllegalStateException("Backend did not finish");
         }
     }
@@ -95,11 +108,14 @@ public final class Main {
         var input = new JTextArea(3, 50);
         input.setLineWrap(true);
         var send = new JButton("Send");
+        var stop = new JButton("Stop");
         var newSession = new JButton("New session");
         send.setEnabled(false);
+        stop.setEnabled(false);
         newSession.setEnabled(false);
         var actions = new JPanel(new BorderLayout(4, 4));
         actions.add(send, BorderLayout.NORTH);
+        actions.add(stop, BorderLayout.CENTER);
         actions.add(newSession, BorderLayout.SOUTH);
         var bottom = new JPanel(new BorderLayout(8, 8));
         bottom.add(new JScrollPane(input), BorderLayout.CENTER);
@@ -112,6 +128,7 @@ public final class Main {
 
         try {
             AtomicReference<BackendClient> clientRef = new AtomicReference<>();
+            AtomicReference<String> activeRequest = new AtomicReference<>();
             var client = new BackendClient(repository, workspace, allowWrite, allowCommand, ledger, event ->
                 SwingUtilities.invokeLater(() -> {
                     if (event.kind().equals("approval.request")) {
@@ -130,11 +147,15 @@ public final class Main {
                         return;
                     }
                     if (event.kind().equals("history.transcript")) {
-                        transcript.append(event.text());
+                        appendBounded(transcript, event.text());
                         return;
                     }
                     if (event.kind().equals("history.judge") || event.kind().equals("judge.detail")) {
-                        judgments.append(event.text());
+                        appendBounded(judgments, event.text());
+                        return;
+                    }
+                    if (event.kind().equals("tool.update")) {
+                        appendBounded(transcript, event.text());
                         return;
                     }
                     if (event.kind().equals("history.done")) {
@@ -144,15 +165,18 @@ public final class Main {
                     }
                     if (event.kind().equals("approval.resolved")) return;
                     if (event.kind().equals("done")) {
+                        if (event.id().equals(activeRequest.get())) activeRequest.set(null);
+                        stop.setEnabled(false);
                         send.setEnabled(true);
                         newSession.setEnabled(true);
                         return;
                     }
                     if (event.kind().equals("stopped")) {
                         send.setEnabled(false);
+                        stop.setEnabled(false);
                         newSession.setEnabled(false);
                     }
-                    transcript.append("[" + event.kind() + "] " + event.text() + "\n\n");
+                    appendBounded(transcript, "[" + event.kind() + "] " + event.text() + "\n\n");
                 })
             );
             clientRef.set(client);
@@ -162,14 +186,26 @@ public final class Main {
                 if (text.isEmpty()) return;
                 input.setText("");
                 send.setEnabled(false);
+                stop.setEnabled(true);
                 newSession.setEnabled(false);
-                transcript.append("[you] " + text + "\n\n");
+                appendBounded(transcript, "[you] " + text + "\n\n");
                 try {
-                    client.send(text);
+                    activeRequest.set(client.send(text));
                 } catch (Exception error) {
-                    transcript.append("[error] " + error.getMessage() + "\n\n");
+                    appendBounded(transcript, "[error] " + error.getMessage() + "\n\n");
                     send.setEnabled(true);
+                    stop.setEnabled(false);
                     newSession.setEnabled(true);
+                }
+            });
+            stop.addActionListener(action -> {
+                String id = activeRequest.get();
+                if (id == null) return;
+                stop.setEnabled(false);
+                try {
+                    client.cancel(id);
+                } catch (Exception error) {
+                    appendBounded(transcript, "[error] " + error.getMessage() + "\n\n");
                 }
             });
             newSession.addActionListener(action -> {
@@ -180,7 +216,7 @@ public final class Main {
                     transcript.setText("");
                     judgments.setText("");
                 } catch (Exception error) {
-                    transcript.append("[error] " + error.getMessage() + "\n\n");
+                    appendBounded(transcript, "[error] " + error.getMessage() + "\n\n");
                     send.setEnabled(true);
                     newSession.setEnabled(true);
                 }
@@ -193,6 +229,7 @@ public final class Main {
             transcript.append("[error] Could not start Python backend: " + error.getMessage());
             frame.setVisible(true);
             send.setEnabled(false);
+            stop.setEnabled(false);
             newSession.setEnabled(false);
         }
     }
@@ -212,5 +249,11 @@ public final class Main {
         if (selected == 1) return "once";
         if (selected == 2 && request.sessionOption()) return "session";
         return "deny";
+    }
+
+    private static void appendBounded(JTextArea area, String text) {
+        area.append(text);
+        int extra = area.getDocument().getLength() - 120_000;
+        if (extra > 0) area.replaceRange("", 0, Math.min(extra + 20_000, area.getDocument().getLength()));
     }
 }

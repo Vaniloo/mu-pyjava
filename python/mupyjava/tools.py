@@ -1,15 +1,21 @@
 """Workspace tools. Mutating tools require explicit launch flags."""
 
 import json
+import codecs
 import os
 import fnmatch
 import signal
 import shlex
 import shutil
 import subprocess
+import tempfile
 import threading
+import time
+import uuid
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Callable, Dict, List, Optional
+
+from .cancel import CancellationToken, TurnCancelled
 
 
 TOOL_SCHEMAS: List[Dict[str, Any]] = [
@@ -104,8 +110,18 @@ TOOL_SCHEMAS: List[Dict[str, Any]] = [
     {
         "type": "function",
         "function": {
+            "name": "read_command_output",
+            "description": "Read a truncated command's full output by id. offset and limit are byte counts; continue at next_offset.",
+            "parameters": {"type": "object", "properties": {
+                "id": {"type": "string"}, "offset": {"type": "integer"}, "limit": {"type": "integer"},
+            }, "required": ["id"]},
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "run_command",
-            "description": "Run one command in the workspace without a shell. Requires command permission. Output is bounded.",
+            "description": "Run one command in the workspace without a shell. Requires permission. Long output is kept as a retrievable artifact.",
             "parameters": {
                 "type": "object",
                 "properties": {"command": {"type": "string"}, "timeout": {"type": "integer"}},
@@ -117,12 +133,14 @@ TOOL_SCHEMAS: List[Dict[str, Any]] = [
 
 
 class WorkspaceTools:
-    def __init__(self, root: Path, allow_write: bool = False, allow_command: bool = False):
+    def __init__(self, root: Path, allow_write: bool = False, allow_command: bool = False,
+                 output_root: Optional[Path] = None):
         self.root = root.resolve(strict=True)
         if not self.root.is_dir():
             raise ValueError("Workspace must be a directory")
         self.allow_write = allow_write
         self.allow_command = allow_command
+        self.output_root = output_root or Path(tempfile.gettempdir()) / "mupyjava-output"
 
     def _path(self, raw: str) -> Path:
         if not isinstance(raw, str) or not raw.strip():
@@ -206,12 +224,12 @@ class WorkspaceTools:
                 files.append(str(path.relative_to(self.root)))
         return files, incomplete
 
-    def _read_page(self, path: Path, offset: int, limit: int) -> str:
+    def _read_page(self, path: Path, offset: int, limit: int, errors: str = "strict") -> str:
         lines = []
         byte_count = 0
         last_line = 0
         more = False
-        with path.open(encoding="utf-8") as file:
+        with path.open(encoding="utf-8", errors=errors) as file:
             for number, line in enumerate(file, 1):
                 last_line = number
                 if number < offset:
@@ -233,7 +251,13 @@ class WorkspaceTools:
             return content + ("" if content.endswith("\n") else "\n") + f"[More lines available; use offset={offset + len(lines)}]"
         return content
 
-    def execute(self, name: str, arguments: Dict[str, Any]) -> str:
+    def execute(self, name: str, arguments: Dict[str, Any],
+                cancel: Optional[CancellationToken] = None,
+                on_update: Optional[Callable[[str], None]] = None,
+                on_artifact: Optional[Callable[[str], None]] = None,
+                output_dir: Optional[Path] = None) -> str:
+        if cancel is not None:
+            cancel.raise_if_cancelled()
         if name == "list_files":
             target = self._path(arguments["path"])
             if not target.is_dir():
@@ -244,6 +268,30 @@ class WorkspaceTools:
             offset = self._positive_int(arguments.get("offset", 1), "offset", 10_000_000)
             limit = self._positive_int(arguments.get("limit", 2000), "limit", 2000)
             return self._read_page(target, offset, limit)
+        if name == "read_command_output":
+            raw_id = arguments["id"]
+            if not isinstance(raw_id, str):
+                raise ValueError("Output id must be a UUID")
+            output_id = str(uuid.UUID(raw_id))
+            if raw_id != output_id:
+                raise ValueError("Output id must be a canonical UUID")
+            root = output_dir or self.output_root
+            path = root / (output_id + ".log")
+            if path.resolve().parent != root.resolve():
+                raise PermissionError("Output artifact is outside its directory")
+            offset = arguments.get("offset", 0)
+            limit = arguments.get("limit", 12_000)
+            if isinstance(offset, bool) or not isinstance(offset, int) or not 0 <= offset <= 1_000_000_000_000:
+                raise ValueError("offset must be a byte position from 0 to 1,000,000,000,000")
+            limit = self._positive_int(limit, "limit", 50_000)
+            with path.open("rb") as file:
+                file.seek(offset)
+                data = file.read(limit + 1)
+            more = len(data) > limit
+            text = data[:limit].decode("utf-8", errors="replace")
+            if more:
+                text += f"\n[More output available; use offset={offset + limit}]"
+            return text
         if name == "find_files":
             pattern = arguments["glob"]
             if not isinstance(pattern, str) or not pattern or len(pattern) > 200:
@@ -365,56 +413,145 @@ class WorkspaceTools:
             target.write_text(updated, encoding="utf-8")
             return "Edited " + str(target.relative_to(self.root))
         if name == "run_command":
-            if not self.allow_command:
-                raise PermissionError("Commands are disabled; restart with --allow-command")
-            command = arguments["command"]
-            if not isinstance(command, str) or not command.strip():
-                raise ValueError("Command is required")
-            timeout = self._positive_int(arguments.get("timeout", 30), "timeout", 120)
-            argv = shlex.split(command, posix=os.name != "nt")
-            process = subprocess.Popen(argv, cwd=self.root, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
-                                       stderr=subprocess.STDOUT, start_new_session=os.name != "nt")
-            chunks = []
-            captured = 0
-            truncated = False
+            return self._run_command(arguments, cancel, on_update, on_artifact, output_dir)
+        raise ValueError("Unknown tool: " + name)
 
-            def drain():
-                nonlocal captured, truncated
+    def _run_command(self, arguments: Dict[str, Any], cancel: Optional[CancellationToken],
+                     on_update: Optional[Callable[[str], None]],
+                     on_artifact: Optional[Callable[[str], None]], output_dir: Optional[Path]) -> str:
+        if not self.allow_command:
+            raise PermissionError("Commands are disabled; restart with --allow-command")
+        command = arguments["command"]
+        if not isinstance(command, str) or not command.strip():
+            raise ValueError("Command is required")
+        timeout = self._positive_int(arguments.get("timeout", 30), "timeout", 120)
+        argv = shlex.split(command, posix=os.name != "nt")
+        if not argv:
+            raise ValueError("Command is required")
+        if cancel is not None:
+            cancel.raise_if_cancelled()
+        process = subprocess.Popen(argv, cwd=self.root, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                                   stderr=subprocess.STDOUT, start_new_session=os.name != "nt")
+        tail = bytearray()
+        total = 0
+        artifact_id = None
+        artifact_file = None
+        reader_error = []
+
+        def update(value: str) -> None:
+            if on_update is not None and value:
                 try:
-                    while True:
-                        chunk = process.stdout.read(4096)
-                        if not chunk:
-                            break
-                        room = max(0, 12_000 - captured)
-                        if len(chunk) > room:
-                            truncated = True
-                        if room:
-                            kept = chunk[:room]
-                            chunks.append(kept)
-                            captured += len(kept)
-                except (OSError, ValueError):
+                    on_update(value)
+                except Exception:
+                    # A display failure must not stop draining the child pipe.
                     pass
 
-            reader = threading.Thread(target=drain, daemon=True)
-            reader.start()
+        def drain() -> None:
+            nonlocal total, artifact_id, artifact_file
+            decoder = codecs.getincrementaldecoder("utf-8")("replace")
+            pending = ""
+            last_emit = 0.0
             try:
-                process.wait(timeout=timeout)
-            except subprocess.TimeoutExpired:
-                if os.name != "nt":
+                while True:
+                    chunk = os.read(process.stdout.fileno(), 4096)
+                    if not chunk:
+                        break
+                    if artifact_file is None and total + len(chunk) > 12_000:
+                        directory = output_dir or self.output_root
+                        directory.mkdir(parents=True, exist_ok=True, mode=0o700)
+                        if os.name != "nt":
+                            directory.chmod(0o700)
+                        artifact_id = str(uuid.uuid4())
+                        descriptor = os.open(directory / (artifact_id + ".log"),
+                                             os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+                        artifact_file = os.fdopen(descriptor, "wb")
+                        artifact_file.write(tail)
+                        if on_artifact is not None:
+                            try:
+                                on_artifact(artifact_id)
+                            except Exception:
+                                pass
+                    if artifact_file is not None:
+                        artifact_file.write(chunk)
+                    total += len(chunk)
+                    tail.extend(chunk)
+                    if len(tail) > 12_000:
+                        del tail[:-12_000]
+                    pending += decoder.decode(chunk)
+                    if len(pending) > 8_000:
+                        pending = pending[-8_000:]
+                    now = time.monotonic()
+                    if pending and (last_emit == 0.0 or now - last_emit >= 0.1):
+                        update(pending)
+                        pending = ""
+                        last_emit = now
+                pending += decoder.decode(b"", final=True)
+                update(pending)
+            except Exception as error:
+                reader_error.append(error)
+            finally:
+                if artifact_file is not None:
                     try:
-                        os.killpg(process.pid, signal.SIGKILL)
-                    except ProcessLookupError:
-                        pass
-                else:
-                    process.kill()
+                        artifact_file.flush()
+                        os.fsync(artifact_file.fileno())
+                    except Exception as error:
+                        reader_error.append(error)
+                    finally:
+                        artifact_file.close()
+
+        reader = threading.Thread(target=drain, daemon=True, name="mu-command-output")
+        reader.start()
+        deadline = time.monotonic() + timeout
+        stopped = None
+        try:
+            while True:
+                if cancel is not None and cancel.is_cancelled():
+                    stopped = "cancel"
+                    break
+                if reader_error:
+                    stopped = "output-error"
+                    break
+                if time.monotonic() >= deadline:
+                    stopped = "timeout"
+                    break
+                if process.poll() is not None and not reader.is_alive():
+                    break
+                time.sleep(0.05)
+            if stopped is not None:
+                self._kill_process_tree(process)
                 process.wait()
-                reader.join(timeout=1)
-                process.stdout.close()
-                raise
-            reader.join(timeout=1)
+        finally:
+            reader.join(timeout=2)
             process.stdout.close()
-            output = b"".join(chunks).decode("utf-8", errors="replace")
-            if truncated:
-                output += "\n[Output truncated at 12 KB]"
-            return "Exit code: " + str(process.returncode) + "\n" + output
-        raise ValueError("Unknown tool: " + name)
+        if reader.is_alive():
+            raise OSError("Command output stream did not close")
+        if reader_error:
+            raise OSError("Could not capture command output: " + str(reader_error[0]))
+        if stopped == "cancel" or cancel is not None and cancel.is_cancelled():
+            if artifact_id:
+                update("\n[Command cancelled; full output id: " + artifact_id + "]\n")
+            raise TurnCancelled("Turn cancelled")
+        if stopped == "timeout":
+            if artifact_id:
+                update("\n[Command timed out; full output id: " + artifact_id + "]\n")
+            raise subprocess.TimeoutExpired(argv, timeout)
+        output = bytes(tail).decode("utf-8", errors="replace")
+        if artifact_id:
+            output += "\n[Output truncated at 12 KB]\nFull output id: " + artifact_id
+        return "Exit code: " + str(process.returncode) + "\n" + output
+
+    @staticmethod
+    def _kill_process_tree(process: subprocess.Popen) -> None:
+        if os.name != "nt":
+            try:
+                os.killpg(process.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+        else:
+            try:
+                subprocess.run(["taskkill", "/PID", str(process.pid), "/T", "/F"],
+                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
+            except OSError:
+                pass
+            if process.poll() is None:
+                process.kill()

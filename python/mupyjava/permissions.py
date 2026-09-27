@@ -132,6 +132,18 @@ class ApprovalManager:
                 raise RuntimeError("Cannot reset grants during a pending approval")
             self._grants.clear()
 
+    def cancel_request(self, request_id: str) -> None:
+        resolved = []
+        with self._lock:
+            for approval_id, pending in list(self._pending.items()):
+                if pending.request_id == request_id:
+                    self._pending.pop(approval_id)
+                    pending.answer = "deny"
+                    pending.done.set()
+                    resolved.append(approval_id)
+        for approval_id in resolved:
+            self.emit(request_id, "approval.resolved", "v1\t" + approval_id + "\tdeny")
+
     def close(self) -> None:
         with self._lock:
             self._closed = True

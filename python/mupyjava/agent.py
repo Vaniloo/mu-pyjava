@@ -1,9 +1,14 @@
 """A bounded model/tool loop; workspace access is supplied by WorkspaceTools."""
 
 import json
+import copy
+import queue
 import subprocess
+import threading
+from pathlib import Path
 from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple
 
+from .cancel import CancellationToken, TurnCancelled
 from .judge import DecisionEngine, DecisionPoint
 from .model import ChatModel
 from .tools import TOOL_SCHEMAS, WorkspaceTools
@@ -33,7 +38,12 @@ class Agent:
 
     def run(self, prompt: str,
             approval: Optional[Callable[[str, str, Dict[str, Any]], bool]] = None,
-            on_message: Optional[Callable[[Dict[str, Any]], None]] = None) -> Iterator[Tuple[str, str]]:
+            on_message: Optional[Callable[[Dict[str, Any]], None]] = None,
+            cancel: Optional[CancellationToken] = None,
+            on_tool_update: Optional[Callable[[str, str], None]] = None,
+            on_tool_artifact: Optional[Callable[[str, str], None]] = None,
+            on_tool_event: Optional[Callable[[str, str, Dict[str, Any]], None]] = None,
+            output_dir: Optional[Path] = None) -> Iterator[Tuple[str, str]]:
         if not prompt.strip():
             raise ValueError("Prompt is empty")
 
@@ -44,7 +54,9 @@ class Agent:
 
         append({"role": "user", "content": prompt})
         for _ in range(self.max_steps):
-            response = self.model.complete(self.messages, TOOL_SCHEMAS)
+            if cancel is not None:
+                cancel.raise_if_cancelled()
+            response = self._complete(cancel)
             calls = response.get("tool_calls") or []
             content = response.get("content")
             if not isinstance(calls, list):
@@ -56,6 +68,8 @@ class Agent:
                 return
             append({"role": "assistant", "content": content, "tool_calls": calls})
             for call in calls:
+                if cancel is not None:
+                    cancel.raise_if_cancelled()
                 name = str(call.get("function", {}).get("name", ""))
                 call_id = str(call.get("id", ""))
                 if not call_id:
@@ -76,6 +90,8 @@ class Agent:
                         approved = self.judge.decide(
                             TOOL_INTENT, {"user_request": prompt[:1000], "tool": name, "arguments": judged_arguments}
                         )
+                        if cancel is not None:
+                            cancel.raise_if_cancelled()
                         if self.judge.mode != "off" and self.judge.last_record is not None:
                             record = self.judge.last_record
                             verdict = "would allow" if record["answer"] is True else (
@@ -89,13 +105,67 @@ class Agent:
                         if not approved:
                             raise PermissionError("Judge declined this tool action")
                         if approval is not None and not approval(call_id, name, arguments):
+                            if cancel is not None:
+                                cancel.raise_if_cancelled()
                             raise PermissionError("User did not allow this tool action")
-                    result = self.tools.execute(name, arguments)
+                    if cancel is not None:
+                        cancel.raise_if_cancelled()
+                    if name == "run_command" and on_tool_event is not None:
+                        on_tool_event(call_id, "tool.started", {"tool": name})
+                    try:
+                        result = self.tools.execute(
+                            name, arguments, cancel=cancel,
+                            on_update=(lambda chunk: on_tool_update(call_id, chunk)) if on_tool_update else None,
+                            on_artifact=(lambda artifact_id: on_tool_artifact(call_id, artifact_id))
+                            if on_tool_artifact else None,
+                            output_dir=output_dir,
+                        )
+                    except subprocess.TimeoutExpired:
+                        if name == "run_command" and on_tool_event is not None:
+                            on_tool_event(call_id, "tool.timed_out", {"tool": name})
+                        raise
+                    except Exception as error:
+                        if name == "run_command" and on_tool_event is not None:
+                            on_tool_event(call_id, "tool.cancelled" if isinstance(error, TurnCancelled)
+                                          else "tool.failed", {"tool": name, "error": type(error).__name__})
+                        raise
+                    if name == "run_command" and on_tool_event is not None:
+                        on_tool_event(call_id, "tool.completed", {"tool": name})
+                    if cancel is not None:
+                        cancel.raise_if_cancelled()
                 except (KeyError, TypeError, ValueError, PermissionError, OSError, subprocess.TimeoutExpired) as error:
                     result = "Tool error: " + str(error)
                 tool_content = result if len(result) <= 60_000 else result[:59_900] + "\n[Tool result clipped at 60,000 characters]"
                 append({"role": "tool", "tool_call_id": call_id, "content": tool_content})
-                yield "tool", name + ": " + result[:500]
+                display = result[:500]
+                if name == "run_command" and "Full output id:" in result:
+                    display = result[:120] + "\n" + result[result.rfind("[Output truncated at 12 KB]"):]
+                yield "tool", name + ": " + display
         answer = "Stopped after the maximum number of tool steps."
         append({"role": "assistant", "content": answer})
         yield "assistant", answer
+
+    def _complete(self, cancel: Optional[CancellationToken]) -> Dict[str, Any]:
+        if cancel is None:
+            return self.model.complete(self.messages, TOOL_SCHEMAS)
+        cancel.raise_if_cancelled()
+        result: "queue.Queue[Tuple[bool, Any]]" = queue.Queue(maxsize=1)
+        messages = copy.deepcopy(self.messages)
+
+        def call_model() -> None:
+            try:
+                result.put((True, self.model.complete(messages, TOOL_SCHEMAS)))
+            except Exception as error:
+                result.put((False, error))
+
+        threading.Thread(target=call_model, daemon=True, name="mu-model-request").start()
+        while True:
+            cancel.raise_if_cancelled()
+            try:
+                success, value = result.get(timeout=0.05)
+            except queue.Empty:
+                continue
+            cancel.raise_if_cancelled()
+            if success:
+                return value
+            raise value

@@ -39,17 +39,19 @@ PYTHONPATH=python python3 -m mupyjava --workspace . --prompt "Summarize this pro
 
 The adapter uses the [Chat Completions function-call format](https://developers.openai.com/api/docs/guides/function-calling). Other endpoints may need a separate adapter. A model key is never stored in this repository.
 
-The agent now has nine tools, following mu's basic read/find/grep/edit/write/command workflow and adding direct Git inspection:
+The agent now has ten tools, following mu's basic read/find/grep/edit/write/command workflow and adding direct Git inspection and full command-output retrieval:
 
 | Read-only, always available | Desktop approval; CLI requires `--allow-write` | Desktop approval; CLI requires `--allow-command` |
 | --- | --- | --- |
-| `list_files`, `read_file`, `find_files`, `grep_files`, `git_status`, `git_diff` | `write_file`, `edit_file` | `run_command` |
+| `list_files`, `read_file`, `find_files`, `grep_files`, `git_status`, `git_diff`, `read_command_output` | `write_file`, `edit_file` | `run_command` |
 
-`read_file` accepts `offset` and `limit` to page through large UTF-8 files, returning at most 50 KiB per call. `find_files` uses globs, and `grep_files` supports regex, literal matching, case-insensitive search and surrounding lines. Both use ripgrep and respect `.gitignore` in Git workspaces. Their JSON results include a `truncated` flag. `edit_file` replaces text only when the old text appears exactly once. File paths stay inside the selected workspace. Commands use an argument list without a shell, run inside the workspace, and have a configurable timeout of up to 120 seconds; only the first 12 KiB of output is retained.
+`read_file` accepts `offset` and `limit` to page through large UTF-8 files, returning at most 50 KiB per call. `find_files` uses globs, and `grep_files` supports regex, literal matching, case-insensitive search and surrounding lines. Both use ripgrep and respect `.gitignore` in Git workspaces. Their JSON results include a `truncated` flag. `edit_file` replaces text only when the old text appears exactly once. File paths stay inside the selected workspace. Commands use an argument list without a shell, run inside the workspace, and have a configurable timeout of up to 120 seconds. Output streams live to the desktop. The final result keeps the last 12 KiB; longer output receives an ID that `read_command_output` can page through by byte offset, including after restart.
 
 The Java desktop now asks before each write, edit or command. A file action can be allowed once, allowed for the same file during this conversation, or denied; commands and protected files are approved one at a time. Denial returns a tool result to the model. Closing the backend denies pending requests. In noninteractive CLI mode, `--allow-write` and `--allow-command` still explicitly grant broad access for that process; passing those flags to the desktop also bypasses its approval dialog. The `--smoke` test path denies actions unless `--smoke-approval once` is supplied for an automated test.
 
 The desktop now restores the latest conversation for the selected workspace on restart. **New session** starts an empty one; the **Judgments** tab shows saved verdicts, probabilities and fallback details. Sessions are local JSONL journals containing prompts, tool arguments and results. Set `MU_SESSION_DIR` to choose their storage directory. Interrupted turns are shown but excluded from restored model context, so tool actions are not replayed. See [session format and protocol](docs/SESSIONS.md).
+
+**Stop** cancels the active turn. It terminates a running command and its process group, and discards a model response that arrives after cancellation. The underlying model HTTP request may remain open until its timeout; the agent does not use its late response. Command starts, completions, timeouts, cancellations and full-output IDs are recorded in the session journal.
 
 ## Decisions
 

@@ -10,9 +10,9 @@ This project follows the tool workflow in [mu's coding-agent tool definitions](h
 | `ls` | `list_files`: one directory, 200 entries | Pagination and metadata |
 | `edit`: targeted replacement | `edit_file`: one exact match, workspace path and size checks | Diff previews, file mutation queue, broader patch forms |
 | `write` | `write_file`: bounded UTF-8 write inside workspace | Atomic replacement and rich change preview |
-| `bash` / `powershell` | `run_command`: no-shell process, bounded output, timeout and process-group kill on Unix | Shell syntax, streamed output, cancellation from UI, PowerShell |
+| `bash` / `powershell` | `run_command`: no-shell process, live bounded updates, timeout, UI cancellation, process-tree kill, full-output artifact and paged retrieval | Shell syntax, PowerShell, remote execution and richer command metadata |
 | Extensible tool definitions | Fixed built-in tool schemas | Custom tools and remote operations |
 
-Additional read-only `git_status` and `git_diff` tools are provided so basic inspection does not require general command permission. The Java desktop now asks for each write, edit and command; CLI flags remain explicit broad-access overrides for noninteractive use. The experimental Laya judge remains in shadow mode.
+Additional read-only `git_status`, `git_diff` and `read_command_output` tools are provided so inspection does not require general command permission. The Java desktop asks for each write, edit and command and can stop an active turn; CLI flags remain explicit broad-access overrides for noninteractive use. The experimental Laya judge remains in shadow mode.
 
 The new read/search behavior was checked in Python tests and in a temporary Git project with DeepSeek Flash: it located `src/Main.java:1` for a `TODO` followed by a number, excluded a Git-ignored Java file, and read lines 2050–2052 from a 2500-line text file by offset. This is a small workflow smoke test, not a complete compatibility suite.

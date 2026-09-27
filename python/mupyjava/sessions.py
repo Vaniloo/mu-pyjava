@@ -33,6 +33,10 @@ class SessionStore:
         self.session_id = session_id
         self._lock = threading.Lock()
 
+    @property
+    def output_dir(self) -> Path:
+        return self.path.parent / (self.session_id + ".outputs")
+
     @classmethod
     def open(cls, workspace: Path, root: Optional[Path] = None, resume: bool = True) -> "SessionStore":
         workspace = workspace.resolve()
@@ -131,6 +135,8 @@ class SessionStore:
                                 + str(payload.get("text")) + "\n\n"))
             elif kind == "judge.record":
                 history.append(("history.judge", format_judgment(payload)))
+            elif kind == "tool.artifact":
+                history.append(("history.transcript", "[output] Full output id: " + str(payload.get("id")) + "\n\n"))
             elif kind == "turn.interrupted":
                 history.append(("history.transcript", "[session] Previous turn was interrupted; its actions were not replayed.\n\n"))
         return history
