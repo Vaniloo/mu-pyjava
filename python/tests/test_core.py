@@ -370,6 +370,8 @@ class CoreTests(unittest.TestCase):
                     prompt = payload["messages"][-1]["content"]
                     if prompt == "Edit note.txt":
                         name, arguments = "edit_file", {"path": "note.txt", "old_text": "created", "new_text": "edited"}
+                    elif prompt == "Fail edit note.txt":
+                        name, arguments = "edit_file", {"path": "note.txt", "old_text": "missing", "new_text": "bad"}
                     elif prompt == "Replace note.txt":
                         name, arguments = "write_file", {"path": "note.txt", "content": "replaced"}
                     else:
@@ -428,6 +430,13 @@ class CoreTests(unittest.TestCase):
                     self.assertEqual(result.returncode, 0, result.stderr)
                     self.assertIn("tool.change:", result.stdout)
                     self.assertEqual((Path(directory) / "note.txt").read_text(), expected)
+                failed = subprocess.run(["java", "-cp", str(classes), "dev.mupyjava.Main",
+                                         "--workspace", directory, "--smoke", "Fail edit note.txt",
+                                         "--smoke-approval", "once"],
+                                        cwd=repository, env=env, capture_output=True, text=True, timeout=15)
+                self.assertEqual(failed.returncode, 0, failed.stderr)
+                self.assertIn("old_text must occur exactly once", failed.stdout)
+                self.assertEqual((Path(directory) / "note.txt").read_text(), "replaced")
             finally:
                 server.shutdown()
                 server_thread.join(timeout=5)
