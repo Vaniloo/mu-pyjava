@@ -101,6 +101,23 @@ class CoreTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "beyond end"):
                 tools.execute("read_file", {"path": "large.py", "offset": 2501})
 
+    def test_agent_passes_complete_read_page_to_model(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "large.txt").write_text("line with data\n" * 1300, encoding="utf-8")
+            model = ScriptedModel([
+                {"role": "assistant", "content": None, "tool_calls": [{
+                    "id": "read-large", "type": "function", "function": {
+                        "name": "read_file", "arguments": json.dumps({"path": "large.txt"}),
+                    },
+                }]},
+                {"role": "assistant", "content": "Read."},
+            ])
+            agent = Agent(model, WorkspaceTools(root), DecisionEngine())
+            list(agent.run("Read large.txt"))
+            self.assertGreater(len(agent.messages[-2]["content"]), 12_000)
+            self.assertIn("line with data", agent.messages[-2]["content"][-100:])
+
     def test_regex_search_respects_gitignore_and_context(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

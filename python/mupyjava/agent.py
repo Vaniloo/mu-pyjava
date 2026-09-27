@@ -85,5 +85,6 @@ class Agent:
                 except (KeyError, TypeError, ValueError, PermissionError, OSError, subprocess.TimeoutExpired) as error:
                     result = "Tool error: " + str(error)
                     yield "tool", name + ": " + result
-                self.messages.append({"role": "tool", "tool_call_id": call_id, "content": result[:12_000]})
+                tool_content = result if len(result) <= 60_000 else result[:59_900] + "\n[Tool result clipped at 60,000 characters]"
+                self.messages.append({"role": "tool", "tool_call_id": call_id, "content": tool_content})
         yield "assistant", "Stopped after the maximum number of tool steps."
