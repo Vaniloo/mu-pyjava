@@ -15,6 +15,8 @@ This file records what the repository actually does. The goal is a Python agent 
 
 ## Next milestones
 
+The ordered gap audit and acceptance criteria are in [NEXT_PHASE.md](NEXT_PHASE.md). The immediate implementation slice is per-action approval with a versioned event envelope.
+
 - [x] Train and evaluate a Laya multilingual fine-tune for the first judge decision; add optional shadow-mode loading.
 - [x] Connect a lab-hosted Laya checkpoint through a loopback HTTP service and SSH tunnel; show shadow verdicts and probabilities in transcripts and ledger.
 - [x] Exercise the real Python agent and Java process protocol with DeepSeek Flash plus the lab judge in shadow mode.
