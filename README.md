@@ -43,7 +43,7 @@ The default tools are `list_files` and `read_file`. To enable changes or command
 
 `tool.intent` is the first decision point. It asks whether a proposed write or command serves the latest user request. The default mode is `off`; `shadow` asks and records without changing behavior; `active` applies the answer. Explicit tool permission flags remain mandatory in every mode. A separate judge model can be configured with `MU_JUDGE_MODEL`, `MU_JUDGE_MODE=shadow|active`, and an optional `--ledger path/to/ledger.jsonl` argument.
 
-A fine-tuned Laya checkpoint can instead be loaded with `MU_JUDGE_LAYA_PATH=/path/to/checkpoint` and optionally `MU_JUDGE_LAYA_DEVICE=cpu|cuda`. Install `laya==0.3.20` and its runtime dependencies in the Python environment first. Set `MU_JUDGE_MODE=shadow` while gathering real, independently labeled decisions. The current small evaluation found two confident errors, so this checkpoint is not ready to control tools. See [training results](training/results-lab.md).
+A fine-tuned Laya checkpoint can instead be loaded with `MU_JUDGE_LAYA_PATH=/path/to/checkpoint` and optionally `MU_JUDGE_LAYA_DEVICE=cpu|cuda`. Install `laya==0.3.20` and its runtime dependencies in the Python environment first. The experimental Laya backend currently supports `MU_JUDGE_MODE=shadow` only. The small evaluation found confident errors, so it cannot yet control tools. See [training results](training/results-lab.md).
 
 The intent question sends the latest request and tool metadata to the configured judge. For a write, it sends the path and content size, not the file content. The ledger stores verdict metadata, not the submitted state.
 

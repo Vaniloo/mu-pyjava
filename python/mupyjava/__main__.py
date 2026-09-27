@@ -17,6 +17,8 @@ def build_agent(args: argparse.Namespace) -> Agent:
     mode = os.environ.get("MU_JUDGE_MODE", "off")
     judge_model_name = os.environ.get("MU_JUDGE_MODEL")
     laya_path = os.environ.get("MU_JUDGE_LAYA_PATH")
+    if laya_path and mode == "active":
+        raise ValueError("The experimental Laya judge is shadow-only until independently validated")
     if mode != "off" and not (judge_model_name or laya_path):
         raise ValueError("Set MU_JUDGE_MODEL or MU_JUDGE_LAYA_PATH when MU_JUDGE_MODE is shadow or active")
     if judge_model_name and laya_path:
