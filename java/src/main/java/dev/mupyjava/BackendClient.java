@@ -21,7 +21,7 @@ public final class BackendClient implements AutoCloseable {
     private final Thread errors;
 
     public BackendClient(Path repository, Path workspace, boolean allowWrite, boolean allowCommand,
-                         Consumer<Event> onEvent) throws IOException {
+                         String ledger, Consumer<Event> onEvent) throws IOException {
         String python = System.getenv().getOrDefault("MU_PYTHON", "python3");
         var command = new java.util.ArrayList<String>();
         command.add(python);
@@ -32,6 +32,10 @@ public final class BackendClient implements AutoCloseable {
         command.add(workspace.toAbsolutePath().toString());
         if (allowWrite) command.add("--allow-write");
         if (allowCommand) command.add("--allow-command");
+        if (ledger != null) {
+            command.add("--ledger");
+            command.add(ledger);
+        }
         var builder = new ProcessBuilder(command);
         builder.directory(repository.toFile());
         builder.environment().put("PYTHONPATH", repository.resolve("python").toAbsolutePath().toString());

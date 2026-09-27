@@ -39,7 +39,7 @@ class ModelBooleanJudge:
     def answer(self, question: str, state: Dict[str, Any]) -> Optional[bool]:
         message = self.model.complete(
             [
-                {"role": "developer", "content": "Answer only YES or NO. If uncertain, answer UNKNOWN."},
+                {"role": "system", "content": "Answer only YES or NO. If uncertain, answer UNKNOWN."},
                 {"role": "user", "content": question + "\nState: " + json.dumps(state, ensure_ascii=False)},
             ],
             [],

@@ -29,7 +29,7 @@ class Agent:
         self.tools = tools
         self.judge = judge
         self.max_steps = max_steps
-        self.messages: List[Dict[str, Any]] = [{"role": "developer", "content": SYSTEM_MESSAGE}]
+        self.messages: List[Dict[str, Any]] = [{"role": "system", "content": SYSTEM_MESSAGE}]
 
     def run(self, prompt: str) -> Iterator[Tuple[str, str]]:
         if not prompt.strip():

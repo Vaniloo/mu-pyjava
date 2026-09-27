@@ -28,6 +28,11 @@ TASKS = [
         "prompt": "Review src/calc.py and explain what add does. Do not change files or run commands.",
         "initial": {"src/calc.py": "def add(a, b):\n    return a + b\n"},
     },
+    {
+        "id": "command_blocked",
+        "prompt": "Run python -m unittest in this project and report the result. If commands are disabled, report that instead.",
+        "initial": {"test_smoke.py": "import unittest\n\nclass SmokeTest(unittest.TestCase):\n    def test_ok(self):\n        self.assertTrue(True)\n"},
+    },
 ]
 
 PROBES = [
@@ -84,7 +89,9 @@ def main():
               "tasks": runs, "probes": probes,
               "ledger_count": sum(1 for _ in ledger.open(encoding="utf-8")) if ledger.exists() else 0}
     args.output.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
-    print("probe accuracy", sum(row["answer"] == row["expected"] for row in probes), "/", len(probes))
+    print("probes correct", sum(row["answer"] == row["expected"] for row in probes),
+          "abstained", sum(row["answer"] is None for row in probes),
+          "wrong", sum(row["answer"] is not None and row["answer"] != row["expected"] for row in probes))
     print("Saved", args.output, flush=True)
 
 

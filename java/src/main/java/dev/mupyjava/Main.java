@@ -26,12 +26,13 @@ public final class Main {
                 ? repository : Path.of(valueAfter(args, "--workspace"));
         boolean allowWrite = Arrays.asList(args).contains("--allow-write");
         boolean allowCommand = Arrays.asList(args).contains("--allow-command");
+        String ledger = valueAfter(args, "--ledger");
         String smoke = valueAfter(args, "--smoke");
         if (smoke != null) {
-            smoke(repository, workspace, allowWrite, allowCommand, smoke);
+            smoke(repository, workspace, allowWrite, allowCommand, ledger, smoke);
             return;
         }
-        SwingUtilities.invokeLater(() -> show(repository, workspace, allowWrite, allowCommand));
+        SwingUtilities.invokeLater(() -> show(repository, workspace, allowWrite, allowCommand, ledger));
     }
 
     private static String valueAfter(String[] args, String name) {
@@ -42,19 +43,20 @@ public final class Main {
     }
 
     private static void smoke(Path repository, Path workspace, boolean allowWrite,
-                              boolean allowCommand, String prompt) throws Exception {
+                              boolean allowCommand, String ledger, String prompt) throws Exception {
         CountDownLatch done = new CountDownLatch(1);
-        try (var client = new BackendClient(repository, workspace, allowWrite, allowCommand, event -> {
-            if (event.kind().equals("assistant") || event.kind().equals("error"))
+        try (var client = new BackendClient(repository, workspace, allowWrite, allowCommand, ledger, event -> {
+            if (event.kind().equals("assistant") || event.kind().equals("error") ||
+                    event.kind().equals("judge") || event.kind().equals("tool"))
                 System.out.println(event.kind() + ": " + event.text());
             if (event.kind().equals("done") || event.kind().equals("stopped")) done.countDown();
         })) {
             client.send(prompt);
-            if (!done.await(20, TimeUnit.SECONDS)) throw new IllegalStateException("Backend did not finish");
+            if (!done.await(90, TimeUnit.SECONDS)) throw new IllegalStateException("Backend did not finish");
         }
     }
 
-    private static void show(Path repository, Path workspace, boolean allowWrite, boolean allowCommand) {
+    private static void show(Path repository, Path workspace, boolean allowWrite, boolean allowCommand, String ledger) {
         var frame = new JFrame("mu-pyjava");
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         var transcript = new JTextArea();
@@ -75,7 +77,7 @@ public final class Main {
         frame.setLocationRelativeTo(null);
 
         try {
-            var client = new BackendClient(repository, workspace, allowWrite, allowCommand, event ->
+            var client = new BackendClient(repository, workspace, allowWrite, allowCommand, ledger, event ->
                 SwingUtilities.invokeLater(() -> {
                     if (event.kind().equals("done")) {
                         send.setEnabled(true);

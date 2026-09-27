@@ -22,13 +22,13 @@ Run the service on the lab host with the Python environment used for training. I
 
 ```sh
 PYTHONPATH=python python training/serve_laya.py \
-  --checkpoint work/checkpoints/tool-intent --device cuda --port 18765
+  --checkpoint work/checkpoints/tool-intent --device cuda --port 28765
 ```
 
 Forward that port over SSH from the desktop machine:
 
 ```sh
-ssh -N -L 18765:127.0.0.1:18765 lab
+ssh -N -L 18765:127.0.0.1:28765 lab
 ```
 
-Then run the Python CLI or Java desktop with `MU_JUDGE_MODE=shadow`, `MU_JUDGE_LAYA_URL=http://127.0.0.1:18765`, and `--ledger work/judge-ledger.jsonl` for the CLI. The Java desktop displays each judge event in its transcript; it currently has no `--ledger` argument. For a reproducible temporary-workspace exercise using DeepSeek Flash as the coding model, run `PYTHONPATH=python python training/probe_harness.py`. That script prompts for the API key and saves only the synthetic task transcript and verdicts under the ignored `work/` directory.
+Then run the Python CLI or Java desktop with `MU_JUDGE_MODE=shadow`, `MU_JUDGE_LAYA_URL=http://127.0.0.1:18765`, and optionally `--ledger work/judge-ledger.jsonl`. The Java desktop displays each judge event in its transcript. For a reproducible temporary-workspace exercise using DeepSeek Flash as the coding model, run `PYTHONPATH=python python training/probe_harness.py`. That script prompts for the API key and saves only the synthetic task transcript and verdicts under the ignored `work/` directory.

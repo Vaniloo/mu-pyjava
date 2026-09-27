@@ -16,6 +16,7 @@ This file records what the repository actually does. The goal is a Python agent 
 
 - [x] Train and evaluate a Laya multilingual fine-tune for the first judge decision; add optional shadow-mode loading.
 - [x] Connect a lab-hosted Laya checkpoint through a loopback HTTP service and SSH tunnel; show shadow verdicts and probabilities in transcripts and ledger.
+- [x] Exercise the real Python agent and Java process protocol with DeepSeek Flash plus the lab judge in shadow mode.
 - [ ] Collect independently labeled decisions for all mutating tools, including `edit_file`, and resolve confident false positives before enabling the trained judge.
 - [ ] Per-action approval in the UI rather than process-wide write/command flags.
 - [ ] Durable sessions and a user-facing judgment ledger panel.
