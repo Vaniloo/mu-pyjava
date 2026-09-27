@@ -11,7 +11,7 @@ from .tools import TOOL_SCHEMAS, WorkspaceTools
 
 TOOL_INTENT = DecisionPoint(
     "tool.intent",
-    1,
+    2,
     "Does the user's latest request clearly call for this tool action?",
     True,
 )
@@ -56,11 +56,15 @@ class Agent:
                     arguments = json.loads(call["function"]["arguments"])
                     if not isinstance(arguments, dict):
                         raise ValueError("Tool arguments must be an object")
-                    judged_arguments = (
-                        {"path": arguments.get("path"), "content_bytes": len(str(arguments.get("content", "")).encode("utf-8"))}
-                        if name == "write_file" else arguments
-                    )
-                    if name in {"write_file", "run_command"} and not self.judge.decide(
+                    judged_arguments = arguments
+                    if name == "write_file":
+                        judged_arguments = {"path": arguments.get("path"),
+                                            "content_bytes": len(str(arguments.get("content", "")).encode("utf-8"))}
+                    elif name == "edit_file":
+                        judged_arguments = {"path": arguments.get("path"),
+                                            "old_text_bytes": len(str(arguments.get("old_text", "")).encode("utf-8")),
+                                            "new_text_bytes": len(str(arguments.get("new_text", "")).encode("utf-8"))}
+                    if name in {"write_file", "edit_file", "run_command"} and not self.judge.decide(
                         TOOL_INTENT, {"user_request": prompt[:1000], "tool": name, "arguments": judged_arguments}
                     ):
                         raise PermissionError("Judge declined this tool action")

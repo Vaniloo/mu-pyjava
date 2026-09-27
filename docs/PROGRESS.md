@@ -7,6 +7,7 @@ This file records what the repository actually does. The goal is a Python agent 
 - [x] Python package with a bounded model/tool loop.
 - [x] Chat Completions model adapter and an explicit offline echo adapter.
 - [x] Read/list tools; write and command tools gated by launch flags.
+- [x] Find, literal grep, exact text edit, and read-only Git status/diff tools, with workspace path checks.
 - [x] Versioned boolean decision point engine with off/shadow/active modes and optional JSONL ledger.
 - [x] Java Swing window and a long-lived Python process connected through a line protocol.
 - [x] Python unit tests, Java compilation, and cross-language smoke test.
@@ -14,7 +15,7 @@ This file records what the repository actually does. The goal is a Python agent 
 ## Next milestones
 
 - [x] Train and evaluate a Laya multilingual fine-tune for the first judge decision; add optional shadow-mode loading.
-- [ ] Collect independently labeled real tool decisions and resolve confident false positives before enabling the trained judge.
+- [ ] Collect independently labeled decisions for all mutating tools, including `edit_file`, and resolve confident false positives before enabling the trained judge.
 - [ ] Per-action approval in the UI rather than process-wide write/command flags.
 - [ ] Durable sessions and a user-facing judgment ledger panel.
 - [ ] Typed choice/score decisions, judge routing, and output admission.

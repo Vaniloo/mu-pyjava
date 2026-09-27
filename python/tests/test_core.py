@@ -1,4 +1,5 @@
 import json
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -54,6 +55,96 @@ class CoreTests(unittest.TestCase):
             events = list(agent.run("Read note.txt"))
             self.assertEqual(events[-1], ("assistant", "The note says hello."))
             self.assertEqual(agent.messages[-2]["content"], "hello")
+
+    def test_find_grep_and_edit_across_languages(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "src").mkdir()
+            (root / "src" / "Main.java").write_text("class Main { int count = 1; }\n", encoding="utf-8")
+            (root / "src" / "worker.py").write_text("count = 1\n", encoding="utf-8")
+            tools = WorkspaceTools(root, allow_write=True)
+            self.assertEqual(json.loads(tools.execute("find_files", {"path": ".", "glob": "**/*.java"})),
+                             ["src/Main.java"])
+            matches = json.loads(tools.execute("grep_files", {"path": "src", "pattern": "count"}))
+            self.assertEqual([(m["path"], m["line"]) for m in matches],
+                             [("src/Main.java", 1), ("src/worker.py", 1)])
+            self.assertEqual(tools.execute("edit_file", {"path": "src/Main.java", "old_text": "count = 1",
+                                                         "new_text": "count = 2"}), "Edited src/Main.java")
+            self.assertIn("count = 2", (root / "src" / "Main.java").read_text())
+
+    def test_edit_rejects_ambiguous_match_and_outside_symlink(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / "workspace"
+            root.mkdir()
+            (root / "a.py").write_text("old old", encoding="utf-8")
+            (root / "external").symlink_to(Path(directory))
+            tools = WorkspaceTools(root, allow_write=True)
+            with self.assertRaisesRegex(ValueError, "exactly once"):
+                tools.execute("edit_file", {"path": "a.py", "old_text": "old", "new_text": "new"})
+            with self.assertRaises(PermissionError):
+                tools.execute("edit_file", {"path": "external/secret", "old_text": "x", "new_text": "y"})
+            self.assertEqual(json.loads(tools.execute("find_files", {"path": ".", "glob": "**/*"})), ["a.py"])
+
+    def test_edit_action_is_judged_without_file_content(self):
+        class CapturingJudge:
+            state = None
+
+            def answer(self, question, state):
+                self.state = state
+                return True
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "note.py").write_text("private_old = 1", encoding="utf-8")
+            judge = CapturingJudge()
+            model = ScriptedModel([
+                {"role": "assistant", "content": None, "tool_calls": [{
+                    "id": "edit-1", "type": "function", "function": {"name": "edit_file", "arguments": json.dumps({
+                        "path": "note.py", "old_text": "private_old = 1", "new_text": "private_new = 2",
+                    })},
+                }]},
+                {"role": "assistant", "content": "Done."},
+            ])
+            agent = Agent(model, WorkspaceTools(root, allow_write=True), DecisionEngine("shadow", judge))
+            self.assertEqual(list(agent.run("Change note.py"))[-1], ("assistant", "Done."))
+            self.assertEqual(judge.state["tool"], "edit_file")
+            self.assertNotIn("private_old", json.dumps(judge.state))
+            self.assertIn("private_new", (root / "note.py").read_text())
+
+    def test_active_judge_can_decline_edit_before_mutation(self):
+        class NoJudge:
+            def answer(self, question, state):
+                return False
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "note.py").write_text("value = 1", encoding="utf-8")
+            model = ScriptedModel([
+                {"role": "assistant", "content": None, "tool_calls": [{
+                    "id": "edit-2", "type": "function", "function": {"name": "edit_file", "arguments": json.dumps({
+                        "path": "note.py", "old_text": "value = 1", "new_text": "value = 2",
+                    })},
+                }]},
+                {"role": "assistant", "content": "Done."},
+            ])
+            events = list(Agent(model, WorkspaceTools(root, allow_write=True),
+                                DecisionEngine("active", NoJudge())).run("Explain note.py without editing"))
+            self.assertIn("Judge declined", events[0][1])
+            self.assertEqual((root / "note.py").read_text(), "value = 1")
+
+    def test_git_inspection_needs_no_command_permission(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            subprocess.run(["git", "init", "-q", str(root)], check=True)
+            file = root / "Main.java"
+            file.write_text("class Main {}\n", encoding="utf-8")
+            subprocess.run(["git", "add", "Main.java"], cwd=root, check=True)
+            file.write_text("class Main { int n; }\n", encoding="utf-8")
+            tools = WorkspaceTools(root)
+            self.assertIn("Main.java", tools.execute("git_status", {}))
+            self.assertIn("+class Main { int n; }", tools.execute("git_diff", {"path": "Main.java"}))
+            with self.assertRaises(PermissionError):
+                tools.execute("run_command", {"command": "git diff"})
 
     def test_judge_shadow_and_active_modes_record_distinct_outcomes(self):
         class YesJudge:
