@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 from .agent import SYSTEM_MESSAGE
+from .judge import format_judgment
 from .context import context_status, format_context
 
 
@@ -378,14 +379,3 @@ class SessionStore:
         if last_context is not None:
             history.append(("context.status", context_status(last_context)))
         return history
-
-
-def format_judgment(record: Dict[str, Any]) -> str:
-    answer = record.get("answer")
-    verdict = "allow" if answer is True else "decline" if answer is False else "undecided"
-    probability = record.get("probability")
-    confidence = f" (p={probability:.3f})" if isinstance(probability, (float, int)) else ""
-    failure = f"; fallback reason: {record['failure']}" if record.get("failure") else ""
-    return (f"{record.get('point')} v{record.get('version')} · {record.get('tool')}: {verdict}{confidence}\n"
-            f"Outcome: {record.get('outcome')} ({record.get('source')}, {record.get('mode')})"
-            f"; {record.get('latency_ms')} ms{failure}\n\n")

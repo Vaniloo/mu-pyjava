@@ -11,13 +11,13 @@
 | 命令 | bash 与 PowerShell 共用流式命令机制，支持取消、超时、输出归档和操作注入 | 直接进程与 Bash/PowerShell 工具，共用审批、流式输出、停止、超时、归档及结构化元数据 | 原生 PowerShell 测试需安装环境；实际远程传输尚缺 |
 | 权限 | [三种会话权限模式](https://github.com/qybaihe/mu/blob/2dfd59ca9cc71d45b289b0d91cc95254de73f3b6/packages/kyrn-judge/src/extension/features/permissions.ts)、风险规则、会话授权与 Jev 判定 | 桌面逐次审批、同文件会话授权、受保护路径强制再问；`tool.intent` 只能否决，Laya 保持 shadow | 丰富风险规则和权限模式；独立校准后才考虑让 Jev 执行审批 |
 | 上下文 | [压缩](https://github.com/qybaihe/mu/blob/2dfd59ca9cc71d45b289b0d91cc95254de73f3b6/packages/coding-agent/src/core/compaction/compaction.ts)结合用量、预算、近期历史和摘要；[工具输出准入](https://github.com/qybaihe/mu/blob/2dfd59ca9cc71d45b289b0d91cc95254de73f3b6/packages/kyrn-judge/src/extension/features/admission.ts)保留首尾、归档分块并可用 Jev 判断 | 可配置输入/回答/工具/图片预算估算；整轮历史省略、首尾文本投影、全文归档回读和 Java 记录；保留原始历史 | 实际 tokenizer/用量校准、任务事实保留/自动摘要、Jev 按语义筛选分块 |
-| 会话与判断 | [树形 JSONL 会话](https://github.com/qybaihe/mu/blob/2dfd59ca9cc71d45b289b0d91cc95254de73f3b6/packages/coding-agent/src/core/session-manager.ts) 支持分支/派生；[决策规格](https://github.com/qybaihe/mu/blob/2dfd59ca9cc71d45b289b0d91cc95254de73f3b6/packages/kyrn-judge/src/decision.ts) 支持 boolean/choice/score、逐点模式与路由 | 树形持久会话、已完成轮次分支选择、独立派生及 Java 历史浏览；一个 boolean 决策点和全局模式 | 任意条目导航/完整树展示、自动总结和类型化判断 |
+| 会话与判断 | [树形 JSONL 会话](https://github.com/qybaihe/mu/blob/2dfd59ca9cc71d45b289b0d91cc95254de73f3b6/packages/coding-agent/src/core/session-manager.ts) 支持分支/派生；[决策规格](https://github.com/qybaihe/mu/blob/2dfd59ca9cc71d45b289b0d91cc95254de73f3b6/packages/kyrn-judge/src/decision.ts) 支持 boolean/choice/score、逐点模式与路由 | 树形持久会话、已完成轮次分支选择、独立派生及 Java 历史浏览；boolean/choice/score 注册、逐点模式、按序路由和回退；intent 加两个默认关闭的本项目探针 | mu 动态多问题规格/策略聚合、任务约束、用量/能力路由、校准回放；任意条目导航和自动总结 |
 
 ## 排序依据
 
 1. **已完成本轮：多处编辑。** 它直接减少重复工具调用，仍沿用现有审批、版本复查和原子提交。
 2. **已完成接口阶段。** 读、列目录、写入、编辑、搜索、Git 和命令均可注入操作，完整虚拟工作区流程已通过审批和输出回读验证；当前工具参数和 Java 协议保持稳定。mu 的各工具接口提供了结构参考，但不能把“有接口”误记为已经有完整远程工作区。当前替代接口测试使用内存数据，没有连接 SSH；接口及传输要求见 [OPERATIONS.md](OPERATIONS.md)。
-3. **结果结构与 Shell 已接入。** 已提供文本内容块、结构化 details、错误标记及截断/续读元数据，并支持 Bash/PowerShell 工具。图片内容块、模型能力适配与显式工具注册已接入，审批和取消仍有效；patch/导航元数据和显式模糊匹配也已接入，并通过 Git 回放和 Java 审批/恢复验证；实现边界见 [EDITING.md](EDITING.md)。分支会话已接入：可从已完成轮次继续、保留兄弟路径、独立复制输出归档，重启恢复选中路径；不会重放工具或回滚工作区。与 mu 的任意条目导航和完整树展示仍有差距，见 [SESSIONS.md](SESSIONS.md)。上下文预算、全文归档/回读和 Java 用量记录已接入；与 mu 的 Jev 分块语义筛选和自动总结仍有差距，见 [CONTEXT.md](CONTEXT.md)。接下来推进逐点类型化判断与路由。PowerShell 原生测试仍需要安装环境。
+3. **结果结构与 Shell 已接入。** 已提供文本内容块、结构化 details、错误标记及截断/续读元数据，并支持 Bash/PowerShell 工具。图片内容块、模型能力适配与显式工具注册已接入，审批和取消仍有效；patch/导航元数据和显式模糊匹配也已接入，并通过 Git 回放和 Java 审批/恢复验证；实现边界见 [EDITING.md](EDITING.md)。分支会话已接入：可从已完成轮次继续、保留兄弟路径、独立复制输出归档，重启恢复选中路径；不会重放工具或回滚工作区。与 mu 的任意条目导航和完整树展示仍有差距，见 [SESSIONS.md](SESSIONS.md)。上下文预算、全文归档/回读和 Java 用量记录已接入；与 mu 的 Jev 分块语义筛选和自动总结仍有差距，见 [CONTEXT.md](CONTEXT.md)。逐点类型化判断与路由已接入，包括超时、取消、低置信度回退及 Java 历史；选项审查/风险评分是本项目探针，不能算作 mu 的约束/风险规格复现，见 [JUDGING.md](JUDGING.md)。接下来补动态多问题策略与任务约束，再推进语义输出准入。PowerShell 原生测试仍需要安装环境。
 4. **最后：判断与会话增强。** Jev 的既有误判先解决；不能因为 mu 有更多决策点就直接放开自动审批。
 
 mu 的 `write` 目前调用文件写入操作，本项目的同目录临时文件加原子替换是额外的本地可靠性措施，不应为追求逐行一致而退回普通覆盖写入。

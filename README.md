@@ -63,7 +63,9 @@ Before every model call, the engine reserves answer space, includes tool definit
 
 A fine-tuned Laya checkpoint can be loaded locally with `MU_JUDGE_LAYA_PATH=/path/to/checkpoint`, or reached through an SSH tunnel with `MU_JUDGE_LAYA_URL=http://127.0.0.1:18765`. The local option needs `laya==0.3.20` and its runtime dependencies in the Python environment. The experimental Laya backend supports `MU_JUDGE_MODE=shadow` only. Its training covered version 1's `write_file` and `run_command`; `edit_file`, `bash` and `powershell` verdicts are exploratory until new data and evaluation cover them. The small evaluation found confident errors, so it cannot yet control tools. See [training results](training/results-lab.md) and [lab connection steps](training/README.md).
 
-The intent question sends the latest request and tool metadata to the configured judge. For a write or edit, it sends the path and text sizes, not the file content. The ledger stores the verdict, probability, timing, and tool name, not the submitted state. Shadow verdicts appear as `judge` events in the CLI and desktop transcript.
+The intent question sends the latest request and tool metadata to the configured judge. For a write or edit, it sends the path and text sizes, not the file content. The ledger stores decision metadata, not the submitted state. Shadow verdicts appear as `judge` events in the CLI and desktop transcript.
+
+The kernel now also supports typed choices/scores, a frozen decision registry, per-point modes and ordered backend routes with confidence thresholds, timeout/cancel and declared fallbacks. Set `MU_JUDGE_CONFIG` to a JSON configuration for named routes. Optional `tool.review` (choice veto) and `tool.risk_score` (shadow observation) hooks default to off; these are project probes and do not reproduce mu's multi-question constraint/risk specifications. Laya remains restricted to shadow `tool.intent` even inside a route. Java restores individual records with backend attempts and fallback details. See [configuration, contracts and remaining gaps](docs/JUDGING.md).
 
 ## Tests
 

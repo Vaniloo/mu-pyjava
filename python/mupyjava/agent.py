@@ -11,19 +11,13 @@ from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple
 from .cancel import CancellationToken, TurnCancelled
 from .capabilities import ModelCapabilities
 from .context import ContextBudget, ContextOverflow, ContextSettings, format_context, validate_calls
-from .judge import DecisionEngine, DecisionPoint
+from .judge import DecisionEngine, format_judgment
+from .decision_points import ACTION_POINTS, TOOL_INTENT, TOOL_REVIEW
 from .model import ChatCompletionsModel, ChatModel
 from .tools import WorkspaceTools
 from .tool_policy import COMMAND_TOOLS
 from .tool_result import ToolResult, ImageContent
 
-
-TOOL_INTENT = DecisionPoint(
-    "tool.intent",
-    2,
-    "Does the user's latest request clearly call for this tool action?",
-    True,
-)
 
 SYSTEM_MESSAGE = (
     "You are a coding assistant. Work only within the supplied workspace. "
@@ -39,6 +33,10 @@ class Agent:
         self.tools = tools
         self.tools.registry.freeze()
         self.judge = judge
+        for point in ACTION_POINTS:
+            self.judge.registry.register(point)
+            self.judge.policy_for(point)
+        self.judge.registry.freeze()
         self.max_steps = max_steps
         self.context = ContextBudget(context_settings)
         self.messages: List[Dict[str, Any]] = [{"role": "system", "content": SYSTEM_MESSAGE}]
@@ -52,7 +50,8 @@ class Agent:
             on_tool_event: Optional[Callable[[str, str, Dict[str, Any]], None]] = None,
             output_dir: Optional[Path] = None,
             expected_change: Optional[Callable[[str], Optional[Dict[str, Any]]]] = None,
-            on_context: Optional[Callable[[Dict[str, Any]], None]] = None) -> Iterator[Tuple[str, str]]:
+            on_context: Optional[Callable[[Dict[str, Any]], None]] = None,
+            on_judgment: Optional[Callable[[Dict[str, Any]], None]] = None) -> Iterator[Tuple[str, str]]:
         if not prompt.strip():
             raise ValueError("Prompt is empty")
 
@@ -124,24 +123,22 @@ class Agent:
                                             "new_text_bytes": sum(len(str(edit.get("new_text", "")).encode("utf-8"))
                                                                   for edit in edits if isinstance(edit, dict))}
                     if self.tools.is_mutating(name):
-                        approved = self.judge.decide(
-                            TOOL_INTENT, {"user_request": prompt[:1000], "tool": name,
-                                          "arguments": copy.deepcopy(judged_arguments)}
-                        )
-                        if cancel is not None:
-                            cancel.raise_if_cancelled()
-                        if self.judge.mode != "off" and self.judge.last_record is not None:
-                            record = self.judge.last_record
-                            verdict = "would allow" if record["answer"] is True else (
-                                "would decline" if record["answer"] is False else "undecided"
+                        for point in ACTION_POINTS:
+                            policy = self.judge.policy_for(point)
+                            if point != TOOL_INTENT and policy.mode == "off":
+                                continue
+                            outcome = self.judge.decide(
+                                point, {"user_request": prompt[:1000], "tool": name,
+                                        "arguments": copy.deepcopy(judged_arguments)}, cancel=cancel,
+                                on_record=on_judgment if policy.mode != "off" else None,
                             )
-                            probability = record["probability"]
-                            detail = f" (p={probability:.3f})" if probability is not None else ""
-                            if record["failure"]:
-                                detail += f" ({record['failure']})"
-                            yield "judge", f"{name}: {verdict}{detail}; {record['mode']} mode, {record['latency_ms']} ms"
-                        if not approved:
-                            raise PermissionError("Judge declined this tool action")
+                            if policy.mode != "off" and self.judge.last_record is not None:
+                                yield "judge", format_judgment(self.judge.last_record).strip()
+                            if cancel is not None:
+                                cancel.raise_if_cancelled()
+                            if (point == TOOL_INTENT and outcome is False
+                                    or point == TOOL_REVIEW and outcome == "decline"):
+                                raise PermissionError("Judge declined this tool action")
                         if approval is not None and not approval(call_id, name, copy.deepcopy(arguments)):
                             if cancel is not None:
                                 cancel.raise_if_cancelled()

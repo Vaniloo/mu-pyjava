@@ -10,8 +10,8 @@ from pathlib import Path
 from .agent import Agent
 from .cancel import CancellationToken, TurnCancelled
 from .context import ContextSettings, context_status, format_context
-from .judge import DecisionEngine, LayaBooleanJudge, LayaHttpBooleanJudge, ModelBooleanJudge
-from .model import ChatCompletionsModel, model_from_environment
+from .judge_config import engine_from_environment
+from .model import model_from_environment
 from .permissions import ApprovalManager
 from .sessions import SessionStore, format_judgment
 from .tools import WorkspaceTools
@@ -22,31 +22,7 @@ from .wire import decode_text, encode_text, event_line, parse_request
 def build_agent(args: argparse.Namespace) -> Agent:
     context_settings = ContextSettings.from_environment()
     model = model_from_environment(max_output_tokens=context_settings.reserve_tokens)
-    mode = os.environ.get("MU_JUDGE_MODE", "off")
-    judge_model_name = os.environ.get("MU_JUDGE_MODEL")
-    laya_path = os.environ.get("MU_JUDGE_LAYA_PATH")
-    laya_url = os.environ.get("MU_JUDGE_LAYA_URL")
-    if (laya_path or laya_url) and mode == "active":
-        raise ValueError("The experimental Laya judge is shadow-only until independently validated")
-    if mode != "off" and not (judge_model_name or laya_path or laya_url):
-        raise ValueError("Set MU_JUDGE_MODEL, MU_JUDGE_LAYA_PATH or MU_JUDGE_LAYA_URL for a judge mode")
-    if sum(bool(value) for value in (judge_model_name, laya_path, laya_url)) > 1:
-        raise ValueError("Set only one judge backend")
-    judge_model = None
-    if judge_model_name:
-        judge_model = ChatCompletionsModel(
-            os.environ.get("MU_API_BASE", "https://api.openai.com/v1"),
-            os.environ.get("MU_API_KEY", ""),
-            judge_model_name,
-        )
-    backend = (LayaHttpBooleanJudge(laya_url) if laya_url else
-               LayaBooleanJudge(laya_path, device=os.environ.get("MU_JUDGE_LAYA_DEVICE")) if laya_path else
-               ModelBooleanJudge(judge_model) if judge_model else None)
-    judge = DecisionEngine(
-        mode=mode,
-        backend=backend,
-        ledger=Path(args.ledger) if args.ledger else None,
-    )
+    judge = engine_from_environment(Path(args.ledger) if args.ledger else None)
     # The interactive server gates each call before reaching these tool methods.
     tools = WorkspaceTools(Path(args.workspace), args.allow_write or args.server,
                            args.allow_command or args.server,
@@ -141,6 +117,10 @@ def main() -> int:
                 emit(request_id, "context.status", context_status(record))
                 emit(request_id, "context.detail", format_context(record))
 
+            def save_judgment(record: dict) -> None:
+                store.append("judge.record", record, turn_id)
+                emit(request_id, "judge.detail", format_judgment(record))
+
             for kind, message in agent.run(
                 prompt, approval=lambda call_id, name, arguments:
                     manager.request(request_id, call_id, name, arguments),
@@ -152,11 +132,8 @@ def main() -> int:
                 output_dir=store.output_dir,
                 expected_change=manager.take_expected_change,
                 on_context=save_context,
+                on_judgment=save_judgment,
             ):
-                if kind == "judge" and agent.judge.last_record is not None:
-                    record = dict(agent.judge.last_record)
-                    store.append("judge.record", record, turn_id)
-                    emit(request_id, "judge.detail", format_judgment(record))
                 store.append("display", {"kind": kind, "text": message}, turn_id)
                 emit(request_id, kind, message)
             store.append("turn.completed", {}, turn_id)

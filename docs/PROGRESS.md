@@ -35,7 +35,8 @@ The ordered gap audit and acceptance criteria are in [NEXT_PHASE.md](NEXT_PHASE.
 - [x] Add parent-linked session trees, completed-turn selection, independent forks with copied output artifacts, selected-path restart and a Java session browser.
 - [x] Add deterministic request/tool/image budgets, immutable canonical history, full-text admission archives, general retrieval and Java Context history/status.
 - [ ] Add provider usage calibration, summarized/task-preserving compaction, semantic chunk admission, provider-side HTTP request abort and background jobs.
-- [ ] Typed choice/score decisions, judge routing, and output admission.
+- [x] Typed boolean/choice/score registry, per-point modes and ordered backend routing, strict answers, bounded timeout/cancel and individual saved records.
+- [ ] Mu's dynamic multi-question constraint/risk policies, independently calibrated decisions and semantic output admission.
 - [ ] LSP diagnostics and project-specific build/test guidance.
 - [ ] Robust packaging of Python and Java runtimes for each platform.
 - [ ] Add GitHub Actions after a GitHub credential with workflow permission is available.
@@ -52,3 +53,7 @@ Python journals now retain sibling paths and restore the selected ancestry. The 
 ## Milestone 9 — request budgets and tool text admission
 
 Every model preflight now estimates the request including tool definitions/arguments and configured image costs, reserves the answer limit, omits earlier whole turns when needed and shortens tool text with archive pointers. Canonical history is preserved; impossible mandatory input blocks that request. The Java Context tab/status restores selected-path records, and archived text remains readable after independent forks. Full validation ran 95 tests (94 passed; native PowerShell skipped). The estimate is heuristic and whole-turn omission has no task summary; semantic Jev admission and generated compaction summaries remain gaps. See [CONTEXT.md](CONTEXT.md).
+
+## Milestone 10 — typed judgment kernel and per-point routes
+
+The kernel validates boolean/choice/score specifications and answers, freezes registered action points and applies independent modes, confidence thresholds, ordered backend routes and declared fallbacks. Invalid/uncertain/low-confidence answers, errors and timeouts fall through; cancellation stops the turn before approval or mutation, and late answers cannot change completed records. Laya is intrinsically shadow-only for `tool.intent`. Two optional project probes (`tool.review` and `tool.risk_score`) demonstrate choices and scores; they default to off and do not reproduce mu's multi-question risk/constraint policies. Each enabled action hook saves an explicit session record, and Java restores typed answers with route attempts on restart. Full validation ran 114 tests (113 passed; native PowerShell skipped), including real Python/Java processes against local HTTP fixtures. Judge accuracy, calibration/replay, task-frame retention, dynamic question sets and semantic admission remain gaps. See [JUDGING.md](JUDGING.md).
