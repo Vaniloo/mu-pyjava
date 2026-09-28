@@ -14,18 +14,18 @@ can register their own points before freezing a separate registry.
 | `tool.review` v1 | choice: continue / decline / unknown | off | Active decline vetoes. An escape answer or outage falls back to continue, preserving existing permission checks. |
 | `tool.risk_score` v1 | score within 0–1 | off; only off/shadow allowed | Observational only. Fallback 0.5 is a placeholder, not a measured risk estimate. |
 
-Hooks cover writes, edits, commands, shells and registered mutation tools. They
+These three hooks cover writes, edits, commands, shells and registered mutation tools. They
 do not run for read-only calls. A veto stops later hooks for that action. File
 content is replaced with path and size metadata for write/edit judgments; the
 latest request is limited to 1,000 characters. Command and custom-tool arguments
-are sent to the configured judge. This is limited evidence: there is no retained
-task frame, complete file diff, extracted hard-constraint list or full dialogue
-in the judgment input.
+are sent to the configured judge. The newer task frame retains verbatim user constraints separately. These three
+legacy/probe inputs still contain only the latest request and action metadata,
+not a complete file diff or full dialogue.
 
 The two new probes are **mu-pyjava specifications**, not copies of mu's
 `tool.constraint` or `tool.risk`. Mu asks a boolean question per hard constraint;
-its risk specification combines two boolean questions into allow/confirm. Those
-multi-question specifications and their task-frame integration remain future work.
+its risk specification combines two boolean questions into allow/confirm. Actual multi-question constraint/risk policy hooks and bounded branch-local task
+frames are now implemented separately; see [TASK_POLICIES.md](TASK_POLICIES.md).
 
 ## Configuration
 
@@ -82,7 +82,7 @@ fields, duplicate JSON keys, nonfinite values, unsupported modes, unknown points
 and missing routes fail at startup. Enabled points require a nonempty route
 list. A legacy environment backend is named `default`; defining another backend
 with that name at the same time is rejected. A global/default mode applies only
-to points that inherit it: enabling `tool.intent` does not enable the new probes.
+to points that inherit it: enabling `tool.intent` does not enable the new probes or task/constraint/risk points.
 
 Backend types are `model`, `laya_http` and `laya` (the latter has `checkpoint`
 and optional `device`). Laya HTTP remains loopback-only. Both Laya adapters are
@@ -117,7 +117,8 @@ If no route produces an accepted answer, the declared fallback applies. Off
 never calls a backend. Shadow records the accepted answer but applies the
 fallback. Active applies an accepted answer; mutation hooks can only veto.
 Human approvals, scoped grants, workspace containment and deterministic tool
-permissions still run. The CLI's existing broad-access flags retain their meaning.
+permissions still run. Explicitly enabling active `tool.risk` can add a fresh
+confirmation even with a broad command flag; see [TASK_POLICIES.md](TASK_POLICIES.md).
 
 The policy timeout is per route, separate from the backend's HTTP timeout. Stop
 interrupts the waiting turn within the polling interval, and late answers cannot
@@ -147,9 +148,9 @@ independent label/calibration tooling remain future work.
 
 Compared with mu at `2dfd59c`:
 
-- [Decision specification and engine](https://github.com/qybaihe/mu/blob/2dfd59ca9cc71d45b289b0d91cc95254de73f3b6/packages/kyrn-judge/src/decision.ts): typed specs, modes, routes and fallbacks inform this kernel. Dynamic question sets, policy aggregation, usage accounting, capability-based routing and judge batching are not reproduced.
+- [Decision specification and engine](https://github.com/qybaihe/mu/blob/2dfd59ca9cc71d45b289b0d91cc95254de73f3b6/packages/kyrn-judge/src/decision.ts): typed specs, modes, routes and fallbacks inform this kernel. Static/dynamic question sets and partial-answer cascades with policy aggregation are now supported. Usage accounting, capability-based routing and large-set fan-out are not reproduced.
 - [Policies](https://github.com/qybaihe/mu/blob/2dfd59ca9cc71d45b289b0d91cc95254de73f3b6/packages/kyrn-judge/src/policy.ts): three-zone booleans and escape options inform validation. Our scores use explicit numeric bounds; mu's scores use rubric levels.
-- [Constraint](https://github.com/qybaihe/mu/blob/2dfd59ca9cc71d45b289b0d91cc95254de73f3b6/packages/kyrn-judge/src/decisions/tool-constraint.ts) and [risk](https://github.com/qybaihe/mu/blob/2dfd59ca9cc71d45b289b0d91cc95254de73f3b6/packages/kyrn-judge/src/decisions/tool-risk.ts): actual specifications remain gaps; the new probes do not count as their reproduction.
+- [Constraint](https://github.com/qybaihe/mu/blob/2dfd59ca9cc71d45b289b0d91cc95254de73f3b6/packages/kyrn-judge/src/decisions/tool-constraint.ts) and [risk](https://github.com/qybaihe/mu/blob/2dfd59ca9cc71d45b289b0d91cc95254de73f3b6/packages/kyrn-judge/src/decisions/tool-risk.ts): separate hooks now reproduce their question structure and outcome policies with documented input/permission differences. The older probes remain distinct.
 
 Tests cover typed validation, frozen registry conflicts, per-point modes,
 low-confidence/escape/error/timeout cascades, isolated state, late answers,
@@ -158,3 +159,5 @@ strict configuration, non-bypassable Laya restrictions and the human/tool
 permission floor. A local HTTP fixture verifies typed model requests through
 the real Python server and Java client, including saved history on restart.
 This verifies harness behavior; it does not measure real judge accuracy.
+
+Multi-question JSON envelopes, schema-v3 records, actual constraint/risk hooks and task frames are documented in [TASK_POLICIES.md](TASK_POLICIES.md).

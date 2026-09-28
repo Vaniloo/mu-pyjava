@@ -85,7 +85,8 @@ public final class Main {
                     event.kind().equals("history.judge") || event.kind().equals("cancelled") ||
                     event.kind().equals("tool.update") || event.kind().equals("tool.change") ||
                     event.kind().equals("tool.detail") || event.kind().equals("context.detail") ||
-                    event.kind().equals("history.context"))
+                    event.kind().equals("history.context") || event.kind().equals("frame.detail") ||
+                    event.kind().equals("history.frame"))
                 System.out.println(event.kind() + ": " + event.text());
             if (event.kind().equals("done") || event.kind().equals("stopped")) done.countDown();
         })) {
@@ -112,10 +113,13 @@ public final class Main {
         var context = new JTextArea();
         context.setEditable(false); context.setLineWrap(true); context.setWrapStyleWord(true);
         var contextStatus = new JLabel("Conversation budget: ready");
+        var task = new JTextArea();
+        task.setEditable(false); task.setLineWrap(true); task.setWrapStyleWord(true);
         var tabs = new JTabbedPane();
         tabs.addTab("Conversation", new JScrollPane(transcript));
         tabs.addTab("Judgments", new JScrollPane(judgments));
         tabs.addTab("Context", new JScrollPane(context));
+        tabs.addTab("Task", new JScrollPane(task));
         var input = new JTextArea(3, 50);
         input.setLineWrap(true);
         var send = new JButton("Send");
@@ -159,7 +163,7 @@ public final class Main {
                     if (event.kind().startsWith("session.") && !event.kind().equals("session.info")
                             && !event.kind().equals("session.reset")) return;
                     if (event.kind().equals("session.reset")) {
-                        transcript.setText(""); judgments.setText(""); context.setText("");
+                        transcript.setText(""); judgments.setText(""); context.setText(""); task.setText("");
                         contextStatus.setText("Conversation budget: ready"); return;
                     }
                     if (event.kind().equals("context.status")) {
@@ -169,6 +173,9 @@ public final class Main {
                     }
                     if (event.kind().equals("context.detail") || event.kind().equals("history.context")) {
                         appendBounded(context, event.text() + "\n\n"); return;
+                    }
+                    if (event.kind().equals("frame.detail") || event.kind().equals("history.frame")) {
+                        appendBounded(task, event.text()); return;
                     }
                     if (event.kind().equals("approval.request")) {
                         try {

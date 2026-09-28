@@ -668,7 +668,7 @@ class CoreTests(unittest.TestCase):
                     process.stdin.write("CHAT\t" + turn + "\t" + encode_text("Write note.txt") + "\n")
                     process.stdin.flush()
                     request_id, kind, payload = read_event()
-                    while kind.startswith("context."):
+                    while kind.startswith("context.") or kind == "frame.detail":
                         request_id, kind, payload = read_event()
                     self.assertEqual((request_id, kind), (turn, "approval.request"))
                     approval_id = payload.split("\t")[1]

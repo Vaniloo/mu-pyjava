@@ -14,6 +14,7 @@ from .judge_config import engine_from_environment
 from .model import model_from_environment
 from .permissions import ApprovalManager
 from .sessions import SessionStore, format_judgment
+from .task_frame import format_frame
 from .tools import WorkspaceTools
 from .tool_result import format_result_details
 from .wire import decode_text, encode_text, event_line, parse_request
@@ -61,6 +62,7 @@ def main() -> int:
     session_root = Path(args.session_dir) if args.session_dir else None
     store = SessionStore.open(agent.tools.root, session_root, resume=not args.new_session)
     agent.messages = store.restore_messages()
+    agent.frame = store.restore_frame()
     agent.tools.output_root = store.output_dir
     output_lock = threading.Lock()
     current_turn = None
@@ -121,6 +123,10 @@ def main() -> int:
                 store.append("judge.record", record, turn_id)
                 emit(request_id, "judge.detail", format_judgment(record))
 
+            def save_frame(record: dict) -> None:
+                store.append("task.frame", record, turn_id)
+                emit(request_id, "frame.detail", format_frame(record))
+
             for kind, message in agent.run(
                 prompt, approval=lambda call_id, name, arguments:
                     manager.request(request_id, call_id, name, arguments),
@@ -133,6 +139,9 @@ def main() -> int:
                 expected_change=manager.take_expected_change,
                 on_context=save_context,
                 on_judgment=save_judgment,
+                on_frame=save_frame,
+                risk_approval=lambda call_id, name, arguments, flag: manager.request(
+                    request_id, call_id, name, arguments, force_confirmation=True, risk_flag=flag),
             ):
                 store.append("display", {"kind": kind, "text": message}, turn_id)
                 emit(request_id, kind, message)
@@ -140,10 +149,12 @@ def main() -> int:
         except TurnCancelled:
             store.append("turn.interrupted", {"reason": "cancelled"}, turn_id)
             agent.messages = store.restore_messages()
+            agent.frame = store.restore_frame()
             emit(request_id, "cancelled", "Turn cancelled")
         except Exception as error:
             store.append("turn.interrupted", {"reason": type(error).__name__}, turn_id)
             agent.messages = store.restore_messages()
+            agent.frame = store.restore_frame()
             emit(request_id, "error", str(error))
         finally:
             current_turn = None
@@ -194,9 +205,11 @@ def main() -> int:
                                 candidate = (source.fork(fields[3], activate=False) if kind == "FORK"
                                              else source.select(fields[3], persist=False))
                             messages = candidate.restore_messages()
+                            task_state = candidate.restore_frame()
                             candidate.activate()
                             store = candidate
                             agent.messages = messages
+                            agent.frame = task_state
                             agent.tools.output_root = store.output_dir
                             manager.reset_grants()
                             emit(request_id, "session.reset", "")

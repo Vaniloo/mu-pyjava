@@ -6,7 +6,7 @@ import re
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-from .decision_points import ACTION_POINTS, builtin_registry
+from .decision_points import BUILTIN_POINTS, builtin_registry
 from .judge import (DecisionEngine, DecisionPolicy, LayaBooleanJudge,
                     LayaHttpBooleanJudge, ModelBooleanJudge, ModelTypedJudge)
 from .model import ChatCompletionsModel
@@ -82,7 +82,8 @@ def engine_from_environment(ledger: Optional[Path] = None,
         if not isinstance(routes, list):
             raise ValueError("Judge routes must be an array")
         policy = DecisionPolicy(value.get("mode", point.default_mode or mode), tuple(routes),
-                                value.get("min_confidence", 0.0), value.get("timeout_seconds", 4.0))
+                                value.get("min_confidence", getattr(point, "min_confidence", 0.0)),
+                                value.get("timeout_seconds", 4.0))
         if policy.mode not in point.allowed_modes:
             raise ValueError("Mode is not allowed for " + point_id)
         policies[point_id] = policy
@@ -126,7 +127,7 @@ def engine_from_environment(ledger: Optional[Path] = None,
             if descriptor.get("device") is not None:
                 _text(descriptor["device"], "device")
 
-    for point in ACTION_POINTS:
+    for point in BUILTIN_POINTS:
         policy = policies.get(point.id, DecisionPolicy(point.default_mode or mode))
         if policy.mode != "off" and not policy.routes:
             raise ValueError("Enabled decision points require a backend route")

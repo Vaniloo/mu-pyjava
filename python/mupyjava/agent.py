@@ -12,7 +12,10 @@ from .cancel import CancellationToken, TurnCancelled
 from .capabilities import ModelCapabilities
 from .context import ContextBudget, ContextOverflow, ContextSettings, format_context, validate_calls
 from .judge import DecisionEngine, format_judgment
-from .decision_points import ACTION_POINTS, TOOL_INTENT, TOOL_REVIEW
+from .decision_points import (ACTION_POINTS, BUILTIN_POINTS, TASK_FRAME, TOOL_CONSTRAINT,
+                              TOOL_INTENT, TOOL_REVIEW, TOOL_RISK)
+from .task_frame import TaskFrame
+from .command_risk import risk_flag
 from .model import ChatCompletionsModel, ChatModel
 from .tools import WorkspaceTools
 from .tool_policy import COMMAND_TOOLS
@@ -33,12 +36,13 @@ class Agent:
         self.tools = tools
         self.tools.registry.freeze()
         self.judge = judge
-        for point in ACTION_POINTS:
+        for point in BUILTIN_POINTS:
             self.judge.registry.register(point)
             self.judge.policy_for(point)
         self.judge.registry.freeze()
         self.max_steps = max_steps
         self.context = ContextBudget(context_settings)
+        self.frame = TaskFrame()
         self.messages: List[Dict[str, Any]] = [{"role": "system", "content": SYSTEM_MESSAGE}]
 
     def run(self, prompt: str,
@@ -51,7 +55,9 @@ class Agent:
             output_dir: Optional[Path] = None,
             expected_change: Optional[Callable[[str], Optional[Dict[str, Any]]]] = None,
             on_context: Optional[Callable[[Dict[str, Any]], None]] = None,
-            on_judgment: Optional[Callable[[Dict[str, Any]], None]] = None) -> Iterator[Tuple[str, str]]:
+            on_judgment: Optional[Callable[[Dict[str, Any]], None]] = None,
+            on_frame: Optional[Callable[[Dict[str, Any]], None]] = None,
+            risk_approval: Optional[Callable[[str, str, Dict[str, Any], str], bool]] = None) -> Iterator[Tuple[str, str]]:
         if not prompt.strip():
             raise ValueError("Prompt is empty")
 
@@ -62,18 +68,40 @@ class Agent:
 
         self.context.begin_turn()
         append({"role": "user", "content": prompt})
+        change = "none"
+        if self.frame.version and self.judge.policy_for(TASK_FRAME).mode != "off":
+            change = self.judge.decide(TASK_FRAME, {"user_message": prompt[:600],
+                "task_frame": self.frame.judge_state(), "recent_turns": [str(message.get("content", ""))[:300]
+                for message in self.messages[:-1] if message.get("role") == "user"][-2:]},
+                cancel=cancel, on_record=on_judgment)
+            yield "judge", format_judgment(self.judge.last_record).strip()
+        if cancel is not None:
+            cancel.raise_if_cancelled()
+        self.frame = self.frame.advance(prompt, change)
+        if on_frame is not None:
+            on_frame(self.frame.payload())
         for _ in range(self.max_steps):
             if cancel is not None:
                 cancel.raise_if_cancelled()
             try:
-                projection = self.context.prepare(self.messages, self.tools.schemas,
+                request_messages = self.messages
+                note = self.frame.note()
+                if note:
+                    request_messages = [self.messages[0], {"role": "system", "content": note}, *self.messages[1:]]
+                projection = self.context.prepare(request_messages, self.tools.schemas,
                     output_dir or self.tools.output_root,
                     getattr(self.model, "capabilities", ModelCapabilities()), cancel)
             except ContextOverflow as error:
+                if note:
+                    for item in error.record["shortened_tools"]:
+                        item["source_message_index"] -= 1
                 if on_context is not None:
                     on_context(error.record)
                 yield "context", format_context(error.record)
                 raise
+            if note:
+                for item in projection.record["shortened_tools"]:
+                    item["source_message_index"] -= 1
             for call_id, artifact_id in projection.artifacts:
                 if on_tool_artifact is not None:
                     on_tool_artifact(call_id, artifact_id)
@@ -123,6 +151,25 @@ class Agent:
                                             "new_text_bytes": sum(len(str(edit.get("new_text", "")).encode("utf-8"))
                                                                   for edit in edits if isinstance(edit, dict))}
                     if self.tools.is_mutating(name):
+                        if self.frame.constraints and self.judge.policy_for(TOOL_CONSTRAINT).mode != "off":
+                            constraints = [item.text for item in self.frame.constraints[-6:]]
+                            # Retain the existing file-content privacy boundary. Mu includes
+                            # the start of file text; this implementation supplies sizes.
+                            call_description = json.dumps(judged_arguments, ensure_ascii=False)[:500]
+                            if name in COMMAND_TOOLS:
+                                call_description = str(arguments.get("command", ""))[:500]
+                            outcome = self.judge.decide(TOOL_CONSTRAINT, {"tool": name,
+                                "call": call_description, "constraints": constraints,
+                                "frame_version": self.frame.version,
+                                "constraint_offset": max(0, len(self.frame.constraints) - 6)}, cancel=cancel,
+                                on_record=on_judgment)
+                            yield "judge", format_judgment(self.judge.last_record).strip()
+                            if cancel is not None:
+                                cancel.raise_if_cancelled()
+                            if outcome["broken"]:
+                                sentences = "; ".join(repr(constraints[index]) for index in outcome["broken"])
+                                raise PermissionError("This action conflicts with the user's instruction: " + sentences
+                                                      + ". Use another approach or ask whether the instruction still holds.")
                         for point in ACTION_POINTS:
                             policy = self.judge.policy_for(point)
                             if point != TOOL_INTENT and policy.mode == "off":
@@ -139,6 +186,26 @@ class Agent:
                             if (point == TOOL_INTENT and outcome is False
                                     or point == TOOL_REVIEW and outcome == "decline"):
                                 raise PermissionError("Judge declined this tool action")
+                        confirm_flag = None
+                        if name in COMMAND_TOOLS and self.judge.policy_for(TOOL_RISK).mode != "off":
+                            flag = risk_flag(arguments["command"])
+                            if flag:
+                                outcome = self.judge.decide(TOOL_RISK, {"tool": name,
+                                    "command": arguments["command"], "user_request": prompt, "flag": flag,
+                                    "frame_version": self.frame.version},
+                                    cancel=cancel, on_record=on_judgment)
+                                yield "judge", format_judgment(self.judge.last_record).strip()
+                                if cancel is not None:
+                                    cancel.raise_if_cancelled()
+                                if self.judge.policy_for(TOOL_RISK).mode == "active" and outcome == "confirm":
+                                    confirm_flag = flag
+                        if confirm_flag:
+                            if risk_approval is None or not risk_approval(call_id, name, copy.deepcopy(arguments), confirm_flag):
+                                if cancel is not None:
+                                    cancel.raise_if_cancelled()
+                                raise PermissionError("Risk confirmation required or declined: " + confirm_flag)
+                        if cancel is not None:
+                            cancel.raise_if_cancelled()
                         if approval is not None and not approval(call_id, name, copy.deepcopy(arguments)):
                             if cancel is not None:
                                 cancel.raise_if_cancelled()

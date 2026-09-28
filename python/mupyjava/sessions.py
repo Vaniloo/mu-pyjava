@@ -13,6 +13,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from .agent import SYSTEM_MESSAGE
 from .judge import format_judgment
 from .context import context_status, format_context
+from .task_frame import restore_frame, format_frame
 
 
 def default_session_root() -> Path:
@@ -358,10 +359,16 @@ class SessionStore:
                     messages.append(message)
         return messages
 
+    def restore_frame(self):
+        return restore_frame(self.branch_events())
+
     def history(self) -> List[Tuple[str, str]]:
         history = []
         last_context = None
-        for item in self.branch_events():
+        entries = self.branch_events()
+        frames = {}
+        restore_frame(entries, lambda event_id, frame: frames.update({event_id: frame}))
+        for item in entries:
             kind = item["type"]
             payload = item["payload"]
             if kind == "display":
@@ -372,6 +379,9 @@ class SessionStore:
                 last_context = payload
             elif kind == "judge.record":
                 history.append(("history.judge", format_judgment(payload)))
+            elif kind == "task.frame":
+                if item["event_id"] in frames:
+                    history.append(("history.frame", format_frame(frames[item["event_id"]].payload())))
             elif kind == "tool.artifact":
                 history.append(("history.transcript", "[output] Full output id: " + str(payload.get("id")) + "\n\n"))
             elif kind == "turn.interrupted":

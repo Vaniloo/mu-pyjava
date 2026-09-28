@@ -1,6 +1,7 @@
 """Per-action permission gate used by the interactive backend."""
 
 import base64
+import hashlib
 import json
 import os
 import shlex
@@ -85,15 +86,30 @@ class ApprovalManager:
         self._pending: Dict[str, PendingApproval] = {}
         self._grants = set()
         self._expected: Dict[str, dict] = {}
+        self._confirmed: Dict[Tuple[str, str], Tuple[str, str]] = {}
         self._closed = False
 
-    def request(self, request_id: str, tool_call_id: str, name: str, arguments: dict) -> bool:
+    def request(self, request_id: str, tool_call_id: str, name: str, arguments: dict,
+                *, force_confirmation: bool = False, risk_flag: Optional[str] = None) -> bool:
         if not self.tools.is_mutating(name):
             return True
-        if (name in COMMAND_TOOLS and self.full_command) or (name in FILE_MUTATIONS and self.full_write):
+        fingerprint = hashlib.sha256(json.dumps(arguments, sort_keys=True, ensure_ascii=False,
+                                                separators=(",", ":")).encode("utf-8")).hexdigest()
+        with self._lock:
+            if self._closed:
+                return False
+            if not force_confirmation:
+                confirmed = self._confirmed.pop((request_id, tool_call_id), None)
+                if confirmed == (name, fingerprint):
+                    return True  # Consume the same action's fresh human confirmation once.
+        if not force_confirmation and ((name in COMMAND_TOOLS and self.full_command)
+                                       or (name in FILE_MUTATIONS and self.full_write)):
             return True
         proposed = self.tools.prepare_change(name, arguments) if name in {"write_file", "edit_file"} else None
         summary, preview, grant, target = action_preview(self.tools, name, arguments, proposed)
+        if force_confirmation:
+            grant = None
+            summary = "Confirm risk: " + (risk_flag or "additional review") + " · " + summary
         with self._lock:
             if self._closed:
                 return False
@@ -128,6 +144,11 @@ class ApprovalManager:
         if proposed is not None:
             with self._lock:
                 self._expected[tool_call_id] = {key: value for key, value in proposed.items() if key != "content"}
+        if force_confirmation and name in COMMAND_TOOLS:
+            with self._lock:
+                if self._closed:
+                    return False
+                self._confirmed[(request_id, tool_call_id)] = (name, fingerprint)
         return True
 
     def take_expected_change(self, tool_call_id: str) -> Optional[dict]:
@@ -154,10 +175,12 @@ class ApprovalManager:
                 raise RuntimeError("Cannot reset grants during a pending approval")
             self._grants.clear()
             self._expected.clear()
+            self._confirmed.clear()
 
     def cancel_request(self, request_id: str) -> None:
         resolved = []
         with self._lock:
+            self._confirmed = {key: value for key, value in self._confirmed.items() if key[0] != request_id}
             for approval_id, pending in list(self._pending.items()):
                 if pending.request_id == request_id:
                     self._pending.pop(approval_id)
@@ -175,3 +198,4 @@ class ApprovalManager:
                 pending.done.set()
             self._pending.clear()
             self._expected.clear()
+            self._confirmed.clear()

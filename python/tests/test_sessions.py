@@ -319,7 +319,7 @@ class SessionProtocolTests(unittest.TestCase):
                 # New branch requires an approval even though the source path held a grant.
                 request = send("CHAT", encode_text("write branch"))
                 approval = read()
-                while approval[1].startswith("context."):
+                while approval[1].startswith("context.") or approval[1] == "frame.detail":
                     approval = read()
                 self.assertEqual(approval[1], "approval.request")
                 for kind, fields in (("SELECT", (first_id, original_tip)), ("FORK", (first_id, first_point)), ("NEW", ())):
