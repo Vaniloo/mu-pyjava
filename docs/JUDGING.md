@@ -147,8 +147,10 @@ The server saves an explicit snapshot for each enabled hook. Java's existing
 Judgments panel receives the full formatted record and restores it through
 selected-path history after restart or fork. Old boolean records remain readable.
 Live callbacks receive copies and cannot change the engine's record. JSONL
-records do not contain enough input to rerun judgments: state-bearing replay and
-independent label/calibration tooling remain future work.
+metadata records alone do not contain enough input to rerun judgments. Opt-in
+private raw sampling, reviewed annotation schemas, recorded/fresh-shadow replay
+and frozen intent-v2 exports are now available; see [JUDGE_EVALUATION.md](JUDGE_EVALUATION.md).
+Independent real labels and actual retraining/calibration remain pending.
 
 ## Upstream comparison and validation
 

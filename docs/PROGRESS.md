@@ -32,6 +32,7 @@ The ordered gap audit and acceptance criteria are in [NEXT_PHASE.md](NEXT_PHASE.
 - [x] Add trusted custom-tool modules with validated schemas, fresh mutation approvals, judge/cancel/result handling and Java process coverage.
 - [x] Add replayable standard patches, numbered display diffs and navigation metadata; implement explicit fuzzy normalization with fresh approvals, ambiguity checks, untouched-line preservation and Java history coverage.
 - [ ] Collect independently labeled decisions for all mutating tools, including `edit_file`, and resolve confident false positives before enabling the trained judge.
+- [x] Opt-in exact judge input sampling, reviewed annotation schema, offline/fresh-shadow replay and frozen group-isolated intent-v2 exports with separate calibration/test partitions.
 - [x] Add parent-linked session trees, completed-turn selection, independent forks with copied output artifacts, selected-path restart and a Java session browser.
 - [x] Add deterministic request/tool/image budgets, immutable canonical history, full-text admission archives, general retrieval and Java Context history/status.
 - [x] Add default-off semantic output-kind admission and bounded source-grounded summaries of omitted turns, with optional model excerpt selection and selected-path restoration.
@@ -86,3 +87,26 @@ admission/summary tests include the actual Java/Python HTTP-fixture flow.
 See [SEMANTIC_CONTEXT.md](SEMANTIC_CONTEXT.md) for configuration and limits. Free-form
 compaction/frame writing, asynchronous shadow, exact provider usage, mu test-log repetition
 handling, independent accuracy/calibration and HTTP abort remain gaps.
+
+## Milestone 13 — judge data and evaluation pipeline
+
+Completed decisions can optionally save private raw inputs, resolved dynamic questions,
+policy thresholds and observed route replies. Explicit task/repository groups and source
+IDs are separate from reviewed labels; metadata ledgers keep only sample references.
+The CLI creates pending annotations, validates provenance/input binding, replays pure
+policies without tools, optionally runs fresh shadow inference, and exports frozen intent-v2
+data with duplicate-connected groups in train/validation/calibration/test partitions.
+Reports distinguish accepted errors, abstention and existing permission fallbacks, including
+constraint misses, harmful admission classifications, Brier and score error.
+
+The trainer rejects partition/input leaks and frozen-manifest drift before loading weights.
+For v2 it selects on validation, fits temperature on calibration and evaluates test afterwards;
+the old 20-case manual set is an inspected regression set. Runtime 0.2/0.8 metrics and matching
+training/serving sequence bounds are recorded. Laya remains intrinsically intent/shadow-only.
+
+Full validation: **187 tests, 186 passed and native PowerShell skipped**; 23 new tests include
+actual Java/Python HTTP sampling, permission denial, restart/source identity and pipeline CLI.
+No paid model call, independent new labels, GPU run or retraining occurred in this milestone.
+Next: gather and review diverse real decisions, freeze an independent holdout, compare the
+existing checkpoint, then train intent v2. See [JUDGE_EVALUATION.md](JUDGE_EVALUATION.md).
+GitHub tracking: [milestone 13](https://github.com/Vaniloo/mu-pyjava/issues/13).

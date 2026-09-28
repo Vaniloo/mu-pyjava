@@ -8,13 +8,17 @@ On a CUDA host with Python 3.10+, PyTorch, Transformers, Safetensors, Hugging Fa
 
 ```sh
 python training/build_data.py work/tool-intent.jsonl --augment training/deepseek_reviewed.jsonl
-python training/train_laya.py \
+PYTHONPATH=python python training/train_laya.py \
   --data work/tool-intent.jsonl \
   --manual-eval training/manual_eval.jsonl \
   --output work/checkpoints/tool-intent
 ```
 
-The script pins the base checkpoint revision, reports baseline and fine-tuned results, fits yes/no temperature on validation data, and saves `metrics.json` with dataset hashes. Checkpoints are intentionally excluded from Git.
+The script pins the base checkpoint revision, reports baseline and fine-tuned results, and saves `metrics.json` with dataset hashes and runtime abstention/false-allow metrics. Legacy v1 data fits temperature on validation; intent-v2 exports require separate calibration and test partitions plus the frozen manifest. Checkpoints are intentionally excluded from Git.
+
+## Intent-v2 data and evaluation
+
+Opt-in exact-input sampling, annotation templates, tool-free recorded/fresh-shadow replay and group-isolated exports are implemented. Follow [JUDGE_EVALUATION.md](../docs/JUDGE_EVALUATION.md). Predictions and permission approvals never become gold labels automatically. No new training or independently measured accuracy is included in milestone 13.
 
 ## Connect the lab checkpoint to the app
 

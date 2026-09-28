@@ -74,6 +74,8 @@ class Agent:
 
         self.context.begin_turn()
         self.summaries.begin_turn()
+        if self.judge.sampler is not None:
+            self.judge.sampler.begin_turn()
         append({"role": "user", "content": prompt})
         change = "none"
         if self.frame.version and self.judge.policy_for(TASK_FRAME).mode != "off":

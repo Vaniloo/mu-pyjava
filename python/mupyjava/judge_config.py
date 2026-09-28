@@ -10,6 +10,7 @@ from .decision_points import BUILTIN_POINTS, builtin_registry
 from .judge import (DecisionEngine, DecisionPolicy, LayaBooleanJudge,
                     LayaHttpBooleanJudge, ModelBooleanJudge, ModelTypedJudge)
 from .model import ChatCompletionsModel
+from .judge_samples import JudgeSampler
 
 
 def _object(value: Any, keys: set, label: str) -> dict:
@@ -156,4 +157,10 @@ def engine_from_environment(ledger: Optional[Path] = None,
         else:
             backends[name] = LayaBooleanJudge(descriptor["checkpoint"], descriptor.get("device"))
     registry.freeze()
-    return DecisionEngine(mode, ledger=ledger, backends=backends, policies=policies, registry=registry)
+    sampler = None
+    if env.get("MU_JUDGE_SAMPLES"):
+        sampler = JudgeSampler(env["MU_JUDGE_SAMPLES"], env.get("MU_JUDGE_SAMPLE_GROUP"))
+        if ledger is not None and Path(ledger).resolve() == sampler.path.resolve():
+            raise ValueError("Raw judge samples and metadata ledger must use different files")
+    return DecisionEngine(mode, ledger=ledger, backends=backends, policies=policies,
+                          registry=registry, sampler=sampler)

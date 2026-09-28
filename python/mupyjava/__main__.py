@@ -105,6 +105,8 @@ def main() -> int:
     def run_chat(request_id: str, prompt: str, turn_id: str, cancel: CancellationToken) -> None:
         nonlocal current_turn, current_request_id, current_cancel
         try:
+            if agent.judge.sampler is not None:
+                agent.judge.sampler.context = {"session_id": store.session_id, "request_id": request_id}
             store.append("turn.started", {"request_id": request_id}, turn_id)
             store.append("display", {"kind": "you", "text": prompt}, turn_id)
 

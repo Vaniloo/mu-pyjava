@@ -376,12 +376,15 @@ class ModelTypedJudge:
 class DecisionEngine:
     def __init__(self, mode: str = "off", backend: Optional[BooleanJudge] = None, ledger: Optional[Path] = None,
                  *, backends: Optional[Dict[str, Any]] = None, policies: Optional[Dict[str, DecisionPolicy]] = None,
-                 registry: Optional[DecisionRegistry] = None):
+                 registry: Optional[DecisionRegistry] = None, sampler: Any = None):
         if not isinstance(mode, str) or mode not in MODES:
             raise ValueError("Judge mode must be off, shadow or active")
         self.mode = mode
         self.backend = backend
         self.ledger = ledger
+        self.sampler = sampler
+        if sampler is not None and ledger is not None and Path(ledger).resolve() == sampler.path.resolve():
+            raise ValueError("Raw judge samples and metadata ledger must use different files")
         self.backends = dict(backends or {})
         if backend is not None:
             if "default" in self.backends:
@@ -475,6 +478,7 @@ class DecisionEngine:
         policy = self.policy_for(point)
         if cancel is not None:
             cancel.raise_if_cancelled()
+        sample = self._sample(point, state, state, (point,), policy)
         answer = None
         probability = None
         confidence = None
@@ -539,10 +543,27 @@ class DecisionEngine:
                                if policy.mode != "active" or answer is None else None,
             "latency_ms": round((time.perf_counter() - started) * 1000, 1),
         }
-        self._publish(record, on_record)
+        self._publish(record, on_record, sample)
         return outcome
 
-    def _publish(self, record, on_record):
+    def _sample(self, point, inputs, state, questions, policy):
+        if self.sampler is None:
+            return None
+        try:
+            return self.sampler.snapshot(point, inputs, state, questions, policy)
+        except Exception as error:
+            return {"sample_failure": type(error).__name__}
+
+    def _publish(self, record, on_record, sample=None):
+        if sample is not None:
+            if "sample_failure" in sample:
+                record.update(sample)
+            else:
+                record["sample_id"] = sample["sample_id"]
+                try:
+                    self.sampler.write(sample, record)
+                except Exception as error:
+                    record["sample_failure"] = type(error).__name__
         self.last_record = record
         if self.ledger is not None:
             try:
@@ -562,6 +583,7 @@ class DecisionEngine:
         inputs = copy.deepcopy(input_state)
         answers, attempts, questions = {}, [], ()
         failure = None
+        sample = None
         try:
             built_questions = spec.questions_for(copy.deepcopy(inputs)) if spec.questions_for else spec.questions
             validate_questions(built_questions)
@@ -569,6 +591,7 @@ class DecisionEngine:
             state = spec.build_state(copy.deepcopy(inputs)) if spec.build_state else inputs
             if not isinstance(state, dict):
                 raise ValueError("Decision state builder must return an object")
+            sample = self._sample(spec, inputs, state, questions, policy)
             if policy.mode != "off" and questions:
                 for route in policy.routes:
                     pending = tuple(question for question in questions if question.id not in answers)
@@ -632,7 +655,7 @@ class DecisionEngine:
         for key in ("frame_version", "constraint_offset"):
             if type(inputs.get(key)) is int and inputs[key] >= 0:
                 record[key] = inputs[key]
-        self._publish(record, on_record)
+        self._publish(record, on_record, sample)
         return copy.deepcopy(outcome)
 
 def format_judgment(record: Dict[str, Any]) -> str:

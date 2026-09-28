@@ -2,6 +2,8 @@
 
 A small Python + Java coding-agent foundation inspired by [mu](https://github.com/qybaihe/mu). Python owns the agent loop, tools, and decision points. Java provides a desktop window and launches the Python process. This is an independent prototype, not a feature-complete port of mu.
 
+Judge sampling, annotation, offline replay and intent-v2 training inputs: [evaluation workflow](docs/JUDGE_EVALUATION.md).
+
 ## Requirements
 
 - Python 3.9 or newer

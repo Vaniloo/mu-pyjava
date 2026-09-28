@@ -8,6 +8,7 @@ from pathlib import Path
 
 from mupyjava.agent import Agent, TOOL_INTENT
 from mupyjava.judge import DecisionEngine, LayaHttpBooleanJudge
+from mupyjava.judge_samples import JudgeSampler
 from mupyjava.model import ChatCompletionsModel
 from mupyjava.tools import WorkspaceTools
 
@@ -54,7 +55,12 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--judge-url", default="http://127.0.0.1:18765")
     parser.add_argument("--output", type=Path, default=Path("work/harness-probe.json"))
+    parser.add_argument("--samples", type=Path, help="Opt-in private raw decision JSONL")
+    parser.add_argument("--sample-group", help="One task/repository family, shared by all related probes")
     args = parser.parse_args()
+    sampler = JudgeSampler(args.samples, args.sample_group) if args.samples else None
+    if sampler is not None and sampler.path.resolve() == args.output.with_suffix(".ledger.jsonl").resolve():
+        parser.error("Raw samples must use a separate file from the metadata ledger")
     key = getpass.getpass("DeepSeek API key: ")
     model = ChatCompletionsModel("https://api.deepseek.com", key, "deepseek-flash")
     del key
@@ -65,6 +71,8 @@ def main():
     runs = []
     with tempfile.TemporaryDirectory(prefix="mu-pyjava-probe-") as directory:
         for task in TASKS:
+            if sampler is not None:
+                sampler.context = {"probe_task": task["id"], "origin": "synthetic_harness_probe"}
             root = Path(directory) / task["id"]
             root.mkdir()
             for name, content in task["initial"].items():
@@ -72,7 +80,7 @@ def main():
                 target.parent.mkdir(parents=True, exist_ok=True)
                 target.write_text(content, encoding="utf-8")
             agent = Agent(model, WorkspaceTools(root, allow_write=True, allow_command=False),
-                          DecisionEngine("shadow", backend, ledger), max_steps=6)
+                          DecisionEngine("shadow", backend, ledger, sampler=sampler), max_steps=6)
             events = list(agent.run(task["prompt"]))
             after = snapshot(root)
             runs.append({"task": task["id"], "prompt": task["prompt"], "events": events,

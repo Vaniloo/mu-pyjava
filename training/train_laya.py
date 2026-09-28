@@ -15,10 +15,12 @@ from transformers import AutoTokenizer
 
 from laya.agent import _fix_tokenizer_config
 from laya.common import QTYPES, build_model, build_sequence
+from mupyjava.judge_data import read_jsonl, training_partitions, validate_manifest
+from mupyjava.judge_samples import digest
 
 
 def read_rows(path):
-    return [json.loads(line) for line in Path(path).read_text(encoding="utf-8").splitlines() if line.strip()]
+    return read_jsonl(path)
 
 
 def prepare(rows, tokenizer, config):
@@ -33,7 +35,7 @@ def prepare(rows, tokenizer, config):
             tokenizer,
             row["state"],
             {"t": "noul", "ins": question, "crit": criteria},
-            min(config.get("max_len", 1024), 512),
+            config.get("max_len", 512),
             config.get("head_max_len", 256),
         )
         if len(markers) != 2:
@@ -77,12 +79,21 @@ def predict(model, items, pad_id, device, batch_size, temperature=1.0):
     labels = torch.cat(labels_all)
     probabilities = torch.softmax(logits / temperature, dim=-1)[:, 1]
     predicted = (probabilities >= 0.5).long()
+    accepted = (probabilities >= 0.8) | (probabilities <= 0.2)
+    positive = probabilities >= 0.8
+    negative = probabilities <= 0.2
     return logits, labels, {
         "n": len(labels),
         "accuracy": round((predicted == labels).float().mean().item(), 4),
         "false_positives": int(((predicted == 1) & (labels == 0)).sum()),
         "false_negatives": int(((predicted == 0) & (labels == 1)).sum()),
         "brier": round(((probabilities - labels.float()) ** 2).mean().item(), 4),
+        "runtime_coverage": round(accepted.float().mean().item(), 4),
+        "runtime_abstained": int((~accepted).sum()),
+        "runtime_false_allow": int((positive & (labels == 0)).sum()),
+        "runtime_false_decline": int((negative & (labels == 1)).sum()),
+        "runtime_selective_accuracy": round((predicted[accepted] == labels[accepted]).float().mean().item(), 4)
+                                      if accepted.any() else None,
     }
 
 
@@ -111,6 +122,19 @@ def main():
     parser.add_argument("--batch-size", type=int, default=8)
     parser.add_argument("--device", default="cuda")
     args = parser.parse_args()
+    rows = read_rows(args.data)
+    partitions, versioned = training_partitions(rows)
+    if versioned:
+        manifest = json.loads(args.data.with_name("manifest.json").read_text(encoding="utf-8"))
+        validate_manifest(rows, manifest)
+    manual_rows = read_rows(args.manual_eval)
+    if not manual_rows or any(type(row.get("label")) is not bool for row in manual_rows):
+        raise ValueError("Manual regression set must contain Boolean labels")
+    if versioned:
+        regression = {digest({"state": row["state"], "question": row.get("question",
+            "Does the user's latest request clearly call for this tool action?")}) for row in manual_rows}
+        if any(digest({"state": row["state"], "question": row["question"]}) in regression for row in rows):
+            raise ValueError("Intent-v2 data overlaps the previously inspected manual regression set")
     random.seed(20260927)
     torch.manual_seed(20260927)
     device = torch.device(args.device)
@@ -120,6 +144,8 @@ def main():
     source = snapshot_download(args.model, revision=args.revision)
     _fix_tokenizer_config(source)
     config = json.loads((Path(source) / "rl_agent_config.json").read_text())
+    # Export the same sequence bound used in training so serving uses it too.
+    config["max_len"] = min(config.get("max_len", 1024), 512)
     tokenizer = AutoTokenizer.from_pretrained(str(Path(source) / "tokenizer"))
     model = build_model(config, encoder_dir=str(Path(source) / "encoder"))
     model.load_state_dict(load_file(str(Path(source) / "model.safetensors")), strict=True)
@@ -127,10 +153,11 @@ def main():
     model.encoder.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False})
     model.head_checkpointing = True
 
-    rows = read_rows(args.data)
-    train = prepare([row for row in rows if row["split"] == "train"], tokenizer, config)
-    validation = prepare([row for row in rows if row["split"] == "validation"], tokenizer, config)
-    manual = prepare(read_rows(args.manual_eval), tokenizer, config)
+    train = prepare(partitions["train"], tokenizer, config)
+    validation = prepare(partitions["validation"], tokenizer, config)
+    calibration = prepare(partitions["calibration"], tokenizer, config) if versioned else validation
+    test = prepare(partitions["test"], tokenizer, config) if versioned else []
+    manual = prepare(manual_rows, tokenizer, config)
     if not train or not validation or not manual:
         raise ValueError("Train, validation and manual evaluation must all be nonempty")
     baseline_validation = predict(model, validation, tokenizer.pad_token_id, device, args.batch_size)[2]
@@ -172,10 +199,11 @@ def main():
     if best_state is None:
         raise RuntimeError("No checkpoint was selected")
     model.load_state_dict(best_state, strict=True)
-    val_logits, val_labels, _ = predict(model, validation, tokenizer.pad_token_id, device, args.batch_size)
-    temperature = fit_temperature(val_logits, val_labels)
+    calibration_logits, calibration_labels, _ = predict(model, calibration, tokenizer.pad_token_id, device, args.batch_size)
+    temperature = fit_temperature(calibration_logits, calibration_labels)
     trained_validation = predict(model, validation, tokenizer.pad_token_id, device, args.batch_size, temperature)[2]
     trained_manual = predict(model, manual, tokenizer.pad_token_id, device, args.batch_size, temperature)[2]
+    trained_test = predict(model, test, tokenizer.pad_token_id, device, args.batch_size, temperature)[2] if test else None
 
     args.output.mkdir(parents=True, exist_ok=True)
     save_file({key: value.contiguous() for key, value in best_state.items()}, str(args.output / "model.safetensors"))
@@ -197,10 +225,14 @@ def main():
         "train_count": len(train),
         "validation_count": len(validation),
         "manual_count": len(manual),
+        "calibration_count": len(calibration),
+        "test_count": len(test),
+        "calibration_split": "calibration" if versioned else "validation_legacy",
         "baseline_validation": baseline_validation,
         "baseline_manual": baseline_manual,
         "trained_validation": trained_validation,
         "trained_manual": trained_manual,
+        "trained_test": trained_test,
         "noul_temperature": temperature,
         "best_validation_loss": best_loss,
     }
