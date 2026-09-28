@@ -10,8 +10,9 @@ from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple
 
 from .cancel import CancellationToken, TurnCancelled
 from .capabilities import ModelCapabilities
+from .context import ContextBudget, ContextOverflow, ContextSettings, format_context, validate_calls
 from .judge import DecisionEngine, DecisionPoint
-from .model import ChatModel
+from .model import ChatCompletionsModel, ChatModel
 from .tools import WorkspaceTools
 from .tool_policy import COMMAND_TOOLS
 from .tool_result import ToolResult, ImageContent
@@ -32,12 +33,14 @@ SYSTEM_MESSAGE = (
 
 
 class Agent:
-    def __init__(self, model: ChatModel, tools: WorkspaceTools, judge: DecisionEngine, max_steps: int = 8):
+    def __init__(self, model: ChatModel, tools: WorkspaceTools, judge: DecisionEngine, max_steps: int = 8,
+                 context_settings: Optional[ContextSettings] = None):
         self.model = model
         self.tools = tools
         self.tools.registry.freeze()
         self.judge = judge
         self.max_steps = max_steps
+        self.context = ContextBudget(context_settings)
         self.messages: List[Dict[str, Any]] = [{"role": "system", "content": SYSTEM_MESSAGE}]
 
     def run(self, prompt: str,
@@ -48,7 +51,8 @@ class Agent:
             on_tool_artifact: Optional[Callable[[str, str], None]] = None,
             on_tool_event: Optional[Callable[[str, str, Dict[str, Any]], None]] = None,
             output_dir: Optional[Path] = None,
-            expected_change: Optional[Callable[[str], Optional[Dict[str, Any]]]] = None) -> Iterator[Tuple[str, str]]:
+            expected_change: Optional[Callable[[str], Optional[Dict[str, Any]]]] = None,
+            on_context: Optional[Callable[[Dict[str, Any]], None]] = None) -> Iterator[Tuple[str, str]]:
         if not prompt.strip():
             raise ValueError("Prompt is empty")
 
@@ -57,11 +61,28 @@ class Agent:
                 on_message(message)
             self.messages.append(message)
 
+        self.context.begin_turn()
         append({"role": "user", "content": prompt})
         for _ in range(self.max_steps):
             if cancel is not None:
                 cancel.raise_if_cancelled()
-            response = self._complete(cancel)
+            try:
+                projection = self.context.prepare(self.messages, self.tools.schemas,
+                    output_dir or self.tools.output_root,
+                    getattr(self.model, "capabilities", ModelCapabilities()), cancel)
+            except ContextOverflow as error:
+                if on_context is not None:
+                    on_context(error.record)
+                yield "context", format_context(error.record)
+                raise
+            for call_id, artifact_id in projection.artifacts:
+                if on_tool_artifact is not None:
+                    on_tool_artifact(call_id, artifact_id)
+            if on_context is not None:
+                on_context(projection.record)
+            if projection.record["omitted_turns"] or projection.record["shortened_tools"]:
+                yield "context", format_context(projection.record)
+            response = self._complete(cancel, projection.messages)
             calls = response.get("tool_calls") or []
             content = response.get("content")
             if not isinstance(calls, list):
@@ -71,6 +92,7 @@ class Agent:
                 append({"role": "assistant", "content": answer})
                 yield "assistant", answer
                 return
+            validate_calls(calls)
             append({"role": "assistant", "content": content, "tool_calls": calls})
             for call in calls:
                 if cancel is not None:
@@ -166,8 +188,7 @@ class Agent:
                     result += "\nFuzzy normalization used on lines: " + json.dumps(change.get("normalized_line_ranges", []))
                 if on_tool_event is not None:
                     on_tool_event(call_id, "tool.result", {"tool": name, **structured_result.to_payload()})
-                tool_content = result if len(result) <= 60_000 else result[:59_900] + "\n[Tool result clipped at 60,000 characters]"
-                tool_message = {"role": "tool", "tool_call_id": call_id, "content": tool_content}
+                tool_message = {"role": "tool", "tool_call_id": call_id, "content": result}
                 images = [block.to_payload() for block in structured_result.content if isinstance(block, ImageContent)]
                 if images:
                     tool_message["image_blocks"] = images
@@ -180,17 +201,19 @@ class Agent:
         append({"role": "assistant", "content": answer})
         yield "assistant", answer
 
-    def _complete(self, cancel: Optional[CancellationToken]) -> Dict[str, Any]:
+    def _complete(self, cancel: Optional[CancellationToken], messages: List[Dict[str, Any]]) -> Dict[str, Any]:
+        options = ({"max_output_tokens": self.context.settings.reserve_tokens}
+                   if isinstance(self.model, ChatCompletionsModel) else {})
         if cancel is None:
-            return self.model.complete(self.messages, self.tools.schemas)
+            return self.model.complete(messages, self.tools.schemas, **options)
         cancel.raise_if_cancelled()
         result: "queue.Queue[Tuple[bool, Any]]" = queue.Queue(maxsize=1)
-        messages = copy.deepcopy(self.messages)
+        messages = copy.deepcopy(messages)
         schemas = self.tools.schemas
 
         def call_model() -> None:
             try:
-                result.put((True, self.model.complete(messages, schemas)))
+                result.put((True, self.model.complete(messages, schemas, **options)))
             except Exception as error:
                 result.put((False, error))
 

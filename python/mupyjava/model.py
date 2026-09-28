@@ -3,7 +3,7 @@
 import copy
 import json
 import os
-from typing import Any, Dict, List, Protocol
+from typing import Any, Dict, List, Optional, Protocol
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
@@ -64,7 +64,7 @@ class EchoModel:
 
 class ChatCompletionsModel:
     def __init__(self, base_url: str, api_key: str, model: str, timeout: int = 60,
-                 capabilities: ModelCapabilities = ModelCapabilities()):
+                 capabilities: ModelCapabilities = ModelCapabilities(), max_output_tokens: Optional[int] = None):
         if not base_url.startswith(("https://", "http://localhost:", "http://127.0.0.1:")):
             raise ValueError("MU_API_BASE must use HTTPS or a local HTTP address")
         self.endpoint = base_url.rstrip("/") + "/chat/completions"
@@ -72,9 +72,13 @@ class ChatCompletionsModel:
         self.model = model
         self.timeout = timeout
         self.capabilities = capabilities
+        if max_output_tokens is not None and (isinstance(max_output_tokens, bool)
+                or not isinstance(max_output_tokens, int) or max_output_tokens < 1):
+            raise ValueError("max_output_tokens must be a positive integer")
+        self.max_output_tokens = max_output_tokens
 
     @classmethod
-    def from_environment(cls) -> "ChatCompletionsModel":
+    def from_environment(cls, max_output_tokens=None) -> "ChatCompletionsModel":
         model = os.environ.get("MU_MODEL")
         if not model:
             raise ValueError("Set MU_MODEL, or set MU_MODEL_BACKEND=echo for an offline smoke test")
@@ -86,12 +90,19 @@ class ChatCompletionsModel:
             os.environ.get("MU_API_KEY", ""),
             model,
             capabilities=ModelCapabilities(supports_images=image_setting == "true"),
+            max_output_tokens=max_output_tokens,
         )
 
-    def complete(self, messages: List[Dict[str, Any]], tools: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def complete(self, messages: List[Dict[str, Any]], tools: List[Dict[str, Any]],
+                 max_output_tokens: Optional[int] = None) -> Dict[str, Any]:
         payload: Dict[str, Any] = {"model": self.model, "messages": prepare_messages(messages, self.capabilities)}
         if tools:
             payload["tools"] = tools
+        output_limit = self.max_output_tokens if max_output_tokens is None else max_output_tokens
+        if output_limit is not None:
+            if isinstance(output_limit, bool) or not isinstance(output_limit, int) or output_limit < 1:
+                raise ValueError("max_output_tokens must be a positive integer")
+            payload["max_tokens"] = output_limit
         body = json.dumps(payload).encode("utf-8")
         headers = {"Content-Type": "application/json"}
         if self.api_key:
@@ -113,7 +124,7 @@ class ChatCompletionsModel:
             raise RuntimeError("Model returned an invalid Chat Completions response") from error
 
 
-def model_from_environment() -> ChatModel:
+def model_from_environment(max_output_tokens=None) -> ChatModel:
     if os.environ.get("MU_MODEL_BACKEND") == "echo":
         return EchoModel()
-    return ChatCompletionsModel.from_environment()
+    return ChatCompletionsModel.from_environment(max_output_tokens=max_output_tokens)

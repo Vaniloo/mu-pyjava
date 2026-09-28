@@ -37,7 +37,18 @@ public final class SessionClientSmoke {
         try (var client = new BackendClient(repository, workspace, false, false, null, events::add)) {
             String source = sessionId(read(client.requestHistory(), "history.done"));
             String first = "<html>第一轮\t🌱\ncontinued";
-            read(client.send(first), "done");
+            var firstBatch = read(client.send(first), "done");
+            var budget = BackendClient.parseContextStatus(firstBatch.stream()
+                    .filter(e -> e.kind().equals("context.status")).findFirst().orElseThrow().text());
+            require(!budget.blocked() && budget.usedTokens() <= budget.inputLimit(), "Invalid context budget");
+            require(budget.label().contains("Conversation budget"), "Missing readable status");
+            for (String invalid : List.of("v2\t1\t100\t50\t0\t0\tfalse", "v1\t-1\t100\t50\t0\t0\tfalse",
+                    "v1\t1\t0\t50\t0\t0\tfalse", "v1\t1\t100\t50\t0\t0\tmaybe")) {
+                try { BackendClient.parseContextStatus(invalid); throw new AssertionError("Malformed status accepted"); }
+                catch (IllegalArgumentException expected) { }
+            }
+            require(BackendClient.parseContextStatus("v1\t200\t100\t50\t0\t0\ttrue").label()
+                    .contains("too large to send"), "Missing blocked status");
             read(client.send("original second"), "done");
             var summaries = read(client.requestSessions(), "done").stream()
                     .filter(e -> e.kind().equals("session.item"))
@@ -72,6 +83,7 @@ public final class SessionClientSmoke {
             var restored = read(client.requestHistory(), "history.done");
             require(sessionId(restored).equals(copiedId), "Restart lost selection");
             require(history(restored).contains("original second"), "Restart lost context");
+            require(restored.stream().anyMatch(e -> e.kind().equals("history.context")), "Restart lost budget history");
             var fresh = read(client.newSession(), "done");
             require(fresh.get(0).kind().equals("session.reset") && history(fresh).isEmpty(), "New session reset failed");
             require(!sessionId(fresh).equals(copiedId), "New session id reused");

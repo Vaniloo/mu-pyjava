@@ -13,6 +13,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -75,11 +76,16 @@ public final class Main {
                     System.out.println("error: " + error.getMessage());
                 }
             }
+            if (event.kind().equals("context.status")) {
+                try { System.out.println("context.status: " + BackendClient.parseContextStatus(event.text()).label()); }
+                catch (IllegalArgumentException error) { System.out.println("error: Invalid context status"); }
+            }
             if (event.kind().equals("assistant") || event.kind().equals("error") ||
                     event.kind().equals("judge") || event.kind().equals("tool") ||
                     event.kind().equals("history.judge") || event.kind().equals("cancelled") ||
                     event.kind().equals("tool.update") || event.kind().equals("tool.change") ||
-                    event.kind().equals("tool.detail"))
+                    event.kind().equals("tool.detail") || event.kind().equals("context.detail") ||
+                    event.kind().equals("history.context"))
                 System.out.println(event.kind() + ": " + event.text());
             if (event.kind().equals("done") || event.kind().equals("stopped")) done.countDown();
         })) {
@@ -103,9 +109,13 @@ public final class Main {
         judgments.setLineWrap(true);
         judgments.setWrapStyleWord(true);
         judgments.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 13));
+        var context = new JTextArea();
+        context.setEditable(false); context.setLineWrap(true); context.setWrapStyleWord(true);
+        var contextStatus = new JLabel("Conversation budget: ready");
         var tabs = new JTabbedPane();
         tabs.addTab("Conversation", new JScrollPane(transcript));
         tabs.addTab("Judgments", new JScrollPane(judgments));
+        tabs.addTab("Context", new JScrollPane(context));
         var input = new JTextArea(3, 50);
         input.setLineWrap(true);
         var send = new JButton("Send");
@@ -126,6 +136,7 @@ public final class Main {
         var bottom = new JPanel(new BorderLayout(8, 8));
         bottom.add(new JScrollPane(input), BorderLayout.CENTER);
         bottom.add(actions, BorderLayout.EAST);
+        bottom.add(contextStatus, BorderLayout.NORTH);
         frame.add(tabs, BorderLayout.CENTER);
         frame.add(bottom, BorderLayout.SOUTH);
         frame.setPreferredSize(new Dimension(760, 560));
@@ -148,7 +159,16 @@ public final class Main {
                     if (event.kind().startsWith("session.") && !event.kind().equals("session.info")
                             && !event.kind().equals("session.reset")) return;
                     if (event.kind().equals("session.reset")) {
-                        transcript.setText(""); judgments.setText(""); return;
+                        transcript.setText(""); judgments.setText(""); context.setText("");
+                        contextStatus.setText("Conversation budget: ready"); return;
+                    }
+                    if (event.kind().equals("context.status")) {
+                        try { contextStatus.setText(BackendClient.parseContextStatus(event.text()).label()); }
+                        catch (IllegalArgumentException error) { appendBounded(context, "Invalid context status\n\n"); }
+                        return;
+                    }
+                    if (event.kind().equals("context.detail") || event.kind().equals("history.context")) {
+                        appendBounded(context, event.text() + "\n\n"); return;
                     }
                     if (event.kind().equals("approval.request")) {
                         try {

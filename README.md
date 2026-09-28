@@ -39,11 +39,11 @@ PYTHONPATH=python python3 -m mupyjava --workspace . --prompt "Summarize this pro
 
 The adapter uses the [Chat Completions function-call format](https://developers.openai.com/api/docs/guides/function-calling). Other endpoints may need a separate adapter. A model key is never stored in this repository.
 
-The agent has twelve built-in tools and an explicit custom-tool registry, following mu's read/find/grep/edit/write/shell workflow and adding direct Git inspection and full command-output retrieval:
+The agent has thirteen built-in tool names (including two names for output retrieval) and an explicit custom-tool registry, following mu's read/find/grep/edit/write/shell workflow and adding direct Git inspection and full command-output retrieval:
 
 | Read-only, always available | Desktop approval; CLI requires `--allow-write` | Desktop approval; CLI requires `--allow-command` |
 | --- | --- | --- |
-| `list_files`, `read_file`, `find_files`, `grep_files`, `git_status`, `git_diff`, `read_command_output` | `write_file`, `edit_file` | `run_command`, `bash`, `powershell` |
+| `list_files`, `read_file`, `find_files`, `grep_files`, `git_status`, `git_diff`, `read_command_output`, `read_tool_output` | `write_file`, `edit_file` | `run_command`, `bash`, `powershell` |
 
 `read_file` accepts `offset` and `limit` to page through large UTF-8 files, returning at most 50 KiB per call. `find_files` uses globs, and `grep_files` supports regex, literal matching, case-insensitive search and surrounding lines. Both use ripgrep and respect `.gitignore` in Git workspaces. Their JSON results include a `truncated` flag. `edit_file` supports multiple unique, disjoint replacements against original text, preserving BOM/CRLF and committing atomically after diff approval. Changes include a replayable patch, numbered diff and first changed line. Optional `allow_fuzzy=true` enables Unicode/trailing-space normalization; actual fallback requires a fresh desktop approval, including for a previously granted file. File tool paths stay inside the selected workspace. `run_command` executes an argument vector; `bash` and `powershell` accept complete shell scripts with pipelines and redirection. All start in the workspace and have a configurable timeout of up to 120 seconds. Output streams live to the desktop. The final result keeps the last 12 KB; longer output receives an ID that `read_command_output` can page through by byte offset, including after restart.
 
@@ -52,6 +52,10 @@ The Java desktop now asks before each write, edit or command. A file action can 
 The desktop restores the selected conversation path for the workspace on restart. **New session** starts an empty one. **Saved conversations** lets you continue from the beginning or a completed turn, or copy that path into an independent conversation. Sibling histories are retained; workspace files keep their current contents and remembered tool permissions are cleared on each switch; the **Judgments** tab shows saved verdicts, probabilities and fallback details. Sessions are local JSONL journals containing prompts, tool arguments and results. Set `MU_SESSION_DIR` to choose their storage directory. Interrupted turns are shown but excluded from restored model context, so tool actions are not replayed. See [session format and protocol](docs/SESSIONS.md).
 
 **Stop** cancels the active turn. It terminates a running command and its process group, and discards a model response that arrives after cancellation. The underlying model HTTP request may remain open until its timeout; the agent does not use its late response. Command starts, completions, timeouts, cancellations and full-output IDs are recorded in the session journal.
+
+## Context budgets
+
+Before every model call, the engine reserves answer space, includes tool definitions/images in its estimate, and fits the request by omitting older complete turns and shortening tool text with explicit full-text retrieval IDs. Canonical session history is preserved. **Context** shows saved estimates and omissions in Java. Defaults are `MU_CONTEXT_TOKENS=65536`, `MU_RESPONSE_TOKENS=8192`, `MU_TOOL_RESULT_TOKENS=8192` and `MU_IMAGE_TOKENS=4096`. These are estimates and manually configured limits, not a discovered provider tokenizer/window. Mandatory input that cannot fit blocks that request. Automatic summaries and Jev semantic admission remain future work. See [context behavior, configuration and limits](docs/CONTEXT.md).
 
 ## Decisions
 

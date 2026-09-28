@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 from .agent import SYSTEM_MESSAGE
+from .context import context_status, format_context
 
 
 def default_session_root() -> Path:
@@ -358,18 +359,24 @@ class SessionStore:
 
     def history(self) -> List[Tuple[str, str]]:
         history = []
+        last_context = None
         for item in self.branch_events():
             kind = item["type"]
             payload = item["payload"]
             if kind == "display":
                 history.append(("history.transcript", "[" + str(payload.get("kind")) + "] "
                                 + str(payload.get("text")) + "\n\n"))
+            elif kind == "context.budget" and payload.get("version") == 1:
+                history.append(("history.context", format_context(payload)))
+                last_context = payload
             elif kind == "judge.record":
                 history.append(("history.judge", format_judgment(payload)))
             elif kind == "tool.artifact":
                 history.append(("history.transcript", "[output] Full output id: " + str(payload.get("id")) + "\n\n"))
             elif kind == "turn.interrupted":
                 history.append(("history.transcript", "[session] Previous turn was interrupted; its actions were not replayed.\n\n"))
+        if last_context is not None:
+            history.append(("context.status", context_status(last_context)))
         return history
 
 

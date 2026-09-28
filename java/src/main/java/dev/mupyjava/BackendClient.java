@@ -20,6 +20,29 @@ public final class BackendClient implements AutoCloseable {
     public record SessionItem(String sessionId, String title, String updatedAt, String parentSessionId) {}
     public record SessionPoint(String pointId, String title, String at) {}
 
+    public record ContextStatus(long usedTokens, long inputLimit, long reserveTokens,
+                                long omittedTurns, long shortenedTools, boolean blocked) {
+        public String label() {
+            if (blocked) return "Conversation is too large to send. See Context for details.";
+            long percent = Math.min(100, Math.round(100.0 * usedTokens / inputLimit));
+            return "Conversation budget: about " + percent + "% used · " + omittedTurns +
+                    " earlier turns left out · " + shortenedTools + " outputs shortened";
+        }
+    }
+    public static ContextStatus parseContextStatus(String text) {
+        String[] fields = text.split("\t", -1);
+        if (fields.length != 7 || !fields[0].equals("v1") ||
+                (!fields[6].equals("true") && !fields[6].equals("false")))
+            throw new IllegalArgumentException("Invalid context status");
+        long[] numbers = new long[5];
+        for (int i = 0; i < numbers.length; i++) {
+            numbers[i] = Long.parseLong(fields[i + 1]);
+            if (numbers[i] < 0) throw new IllegalArgumentException("Invalid context count");
+        }
+        if (numbers[1] == 0 || numbers[2] == 0) throw new IllegalArgumentException("Invalid context budget");
+        return new ContextStatus(numbers[0], numbers[1], numbers[2], numbers[3], numbers[4], fields[6].equals("true"));
+    }
+
     private final Process process;
     private final BufferedWriter input;
     private final Thread reader;

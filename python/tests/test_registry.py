@@ -59,7 +59,7 @@ class RegistryTests(unittest.TestCase):
                 on_tool_event=lambda call, kind, payload: events.append((kind, payload))))
             self.assertIn(("tool", "custom: 4"), transcript)
             self.assertEqual(updates, ["checking"])
-            self.assertEqual(len(model.schemas), 13)
+            self.assertEqual(len(model.schemas), 14)
             self.assertEqual([kind for kind, _ in events], ["tool.started", "tool.completed", "tool.result"])
             self.assertEqual(events[-1][1]["details"]["count"], 1)
             with self.assertRaisesRegex(ValueError, "frozen"):

@@ -39,3 +39,7 @@ For patch fields, navigation coordinates and exact/opt-in fuzzy edit behavior, s
 The workspace is the starting directory, not an operating-system sandbox. Scripts execute with the user's filesystem/network permissions. The desktop displays the full script before approval. Shell calls cannot inherit a write-only grant or a file session grant. The experimental trained judge remains shadow-only; its dataset does not yet cover these shell tools.
 
 Verification: Bash pipeline/redirection, denied execution, background-child cancellation, timeout, large output retrieval, structured metadata and Java approval are tested. PowerShell argv/UTF-8 setup and alternate transport are tested. The native PowerShell test runs only when an executable is installed; it was skipped on the development Mac.
+
+## Request shaping
+
+Full tool results and canonical messages remain journaled. Only the outgoing request projection can shorten tool text, with full-text archives and `read_tool_output` byte paging. Images stay attached for compatible models and receive a configured budget estimate; tool definitions and arguments are also counted. Request projection is recorded separately as `context.budget`, not as a tool failure or judgment. See [CONTEXT.md](CONTEXT.md).

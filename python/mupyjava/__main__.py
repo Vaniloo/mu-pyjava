@@ -9,6 +9,7 @@ from pathlib import Path
 
 from .agent import Agent
 from .cancel import CancellationToken, TurnCancelled
+from .context import ContextSettings, context_status, format_context
 from .judge import DecisionEngine, LayaBooleanJudge, LayaHttpBooleanJudge, ModelBooleanJudge
 from .model import ChatCompletionsModel, model_from_environment
 from .permissions import ApprovalManager
@@ -19,7 +20,8 @@ from .wire import decode_text, encode_text, event_line, parse_request
 
 
 def build_agent(args: argparse.Namespace) -> Agent:
-    model = model_from_environment()
+    context_settings = ContextSettings.from_environment()
+    model = model_from_environment(max_output_tokens=context_settings.reserve_tokens)
     mode = os.environ.get("MU_JUDGE_MODE", "off")
     judge_model_name = os.environ.get("MU_JUDGE_MODEL")
     laya_path = os.environ.get("MU_JUDGE_LAYA_PATH")
@@ -53,7 +55,7 @@ def build_agent(args: argparse.Namespace) -> Agent:
     modules.extend(name.strip() for name in os.environ.get("MU_TOOL_MODULES", "").split(",") if name.strip())
     for name in dict.fromkeys(modules):
         tools.registry.load_module(name)
-    return Agent(model, tools, judge)
+    return Agent(model, tools, judge, context_settings=context_settings)
 
 
 def main() -> int:
@@ -134,6 +136,11 @@ def main() -> int:
                         store.append("display", {"kind": "tool.detail", "text": summary}, turn_id, call_id)
                         emit(request_id, "tool.detail", summary)
 
+            def save_context(record: dict) -> None:
+                store.append("context.budget", record, turn_id)
+                emit(request_id, "context.status", context_status(record))
+                emit(request_id, "context.detail", format_context(record))
+
             for kind, message in agent.run(
                 prompt, approval=lambda call_id, name, arguments:
                     manager.request(request_id, call_id, name, arguments),
@@ -144,6 +151,7 @@ def main() -> int:
                 on_tool_event=save_tool_event,
                 output_dir=store.output_dir,
                 expected_change=manager.take_expected_change,
+                on_context=save_context,
             ):
                 if kind == "judge" and agent.judge.last_record is not None:
                     record = dict(agent.judge.last_record)

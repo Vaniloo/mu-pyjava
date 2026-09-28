@@ -25,7 +25,7 @@ An atomically replaced `.active.json` in the workspace catalog records the activ
 
 A fork preserves only the selected ancestry. Its header contains `forked_from: {session_id, point_id}`; copied events receive fresh IDs and parents, while their original turn and tool-call IDs remain meaningful within that new journal. Saved image blocks, judgment history and tool results are preserved.
 
-Visible command-output artifacts are copied byte-for-byte to the new session's owner-only `.outputs` directory with the same retrieval IDs. The copy remains readable through `read_command_output` after the source outputs disappear. Missing artifacts fail the operation and remove its temporary journal and output directory; the selected session remains unchanged. Journal copying is staged as `.pending` until artifacts are ready. An abrupt exit can leave staging files, but they are excluded from browsing and resume. Cleanup of abandoned staging files is manual for now.
+Visible command-output and context-text artifacts are copied byte-for-byte to the new session's owner-only `.outputs` directory with the same retrieval IDs. The copy remains readable through `read_command_output` or `read_tool_output` after the source outputs disappear. Missing artifacts fail the operation and remove its temporary journal and output directory; the selected session remains unchanged. Journal copying is staged as `.pending` until artifacts are ready. An abrupt exit can leave staging files, but they are excluded from browsing and resume. Cleanup of abandoned staging files is manual for now.
 
 ## Line protocol
 
@@ -54,3 +54,5 @@ Session and point IDs are validated before opening any journal; a header must ma
 Tests cover sibling-path isolation, beginning checkpoints, old journal compatibility, selected-session restart, stale cursor recovery, interrupted branches, invalid IDs/workspaces, independent image/judgment/output copies, missing-artifact rollback, hidden interrupted forks, and the actual Java/Python catalog/select/fork/restart connection. A local HTTP model fixture verifies mutation grants are reset, busy switches are rejected and selection/forking never rerun file writes or commands.
 
 Arbitrary-entry branch navigation, a graphical tree, pagination beyond the displayed limits, import/export, cross-process writers, background turns, context compaction and provider-side HTTP abort remain separate work.
+
+Context-budget records and summaries are saved on the selected path and restored in the Java Context tab. They do not replace canonical messages: request shaping is recomputed using current settings after resume/selection/fork. See [CONTEXT.md](CONTEXT.md).

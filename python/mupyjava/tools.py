@@ -128,6 +128,15 @@ TOOL_SCHEMAS: List[Dict[str, Any]] = [
         },
     },
     {
+        "type": "function", "function": {
+            "name": "read_tool_output",
+            "description": "Read archived tool text by id after context shaping. offset and limit are UTF-8 byte counts; continue at next_offset. Also accepts command output IDs.",
+            "parameters": {"type": "object", "properties": {
+                "id": {"type": "string"}, "offset": {"type": "integer"}, "limit": {"type": "integer"},
+            }, "required": ["id"]},
+        },
+    },
+    {
         "type": "function",
         "function": {
             "name": "run_command",
@@ -412,7 +421,7 @@ class WorkspaceTools:
             offset = self._positive_int(arguments.get("offset", 1), "offset", 10_000_000)
             limit = self._positive_int(arguments.get("limit", 2000), "limit", 2000)
             return self._read_page(target, offset, limit, cancel, details)
-        if name == "read_command_output":
+        if name in {"read_command_output", "read_tool_output"}:
             raw_id = arguments["id"]
             if not isinstance(raw_id, str):
                 raise ValueError("Output id must be a UUID")

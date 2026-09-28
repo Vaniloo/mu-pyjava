@@ -33,7 +33,8 @@ The ordered gap audit and acceptance criteria are in [NEXT_PHASE.md](NEXT_PHASE.
 - [x] Add replayable standard patches, numbered display diffs and navigation metadata; implement explicit fuzzy normalization with fresh approvals, ambiguity checks, untouched-line preservation and Java history coverage.
 - [ ] Collect independently labeled decisions for all mutating tools, including `edit_file`, and resolve confident false positives before enabling the trained judge.
 - [x] Add parent-linked session trees, completed-turn selection, independent forks with copied output artifacts, selected-path restart and a Java session browser.
-- [ ] Add deterministic context budgets, provider-side HTTP request abort and background jobs.
+- [x] Add deterministic request/tool/image budgets, immutable canonical history, full-text admission archives, general retrieval and Java Context history/status.
+- [ ] Add provider usage calibration, summarized/task-preserving compaction, semantic chunk admission, provider-side HTTP request abort and background jobs.
 - [ ] Typed choice/score decisions, judge routing, and output admission.
 - [ ] LSP diagnostics and project-specific build/test guidance.
 - [ ] Robust packaging of Python and Java runtimes for each platform.
@@ -47,3 +48,7 @@ The echo adapter only checks wiring. An API-backed run needs a configured Chat C
 ## Milestone 8 — branch sessions and independent copies
 
 Python journals now retain sibling paths and restore the selected ancestry. The Java browser can select a completed turn or copy its prefix; tools are never replayed, files keep their current state and permission grants reset. Old linear journals remain readable without rewriting. Forks include image blocks, judgments and independent output archives; incomplete copies stay outside the catalog. See [SESSIONS.md](SESSIONS.md) for the protocol, recovery behavior, display limits and remaining gaps.
+
+## Milestone 9 — request budgets and tool text admission
+
+Every model preflight now estimates the request including tool definitions/arguments and configured image costs, reserves the answer limit, omits earlier whole turns when needed and shortens tool text with archive pointers. Canonical history is preserved; impossible mandatory input blocks that request. The Java Context tab/status restores selected-path records, and archived text remains readable after independent forks. Full validation ran 95 tests (94 passed; native PowerShell skipped). The estimate is heuristic and whole-turn omission has no task summary; semantic Jev admission and generated compaction summaries remain gaps. See [CONTEXT.md](CONTEXT.md).
