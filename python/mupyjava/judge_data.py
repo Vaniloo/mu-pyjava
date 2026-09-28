@@ -245,7 +245,8 @@ def evaluate(samples, labels, engine=None, allow_synthetic_eval=False):
             "replays": replays}
 
 
-def export_intent(samples, labels, seed="intent-v2", allow_synthetic_eval=False, split_by_group=None):
+def export_intent(samples, labels, seed="intent-v2", allow_synthetic_eval=False, split_by_group=None,
+                  include_unknown=False):
     """Whole groups plus duplicate-connected groups are kept in one partition."""
     parents = {sample["group_id"]: sample["group_id"] for sample in samples}
 
@@ -287,7 +288,8 @@ def export_intent(samples, labels, seed="intent-v2", allow_synthetic_eval=False,
             excluded["other_point"] += 1
             continue
         annotation = labels.get(sample["sample_id"])
-        if not annotation or not annotation["reviewed"] or annotation["answers"][spec.id] is None:
+        if (not annotation or not annotation["reviewed"]
+                or annotation["answers"][spec.id] is None and not include_unknown):
             excluded["unreviewed_or_unknown"] += 1
             continue
         split = partitions[sample["group_id"]]
@@ -317,20 +319,27 @@ def export_intent(samples, labels, seed="intent-v2", allow_synthetic_eval=False,
                 "excluded": dict(excluded), "dataset_digest": digest(rows),
                 "evaluation_basis": "synthetic_experiment" if allow_synthetic_eval else "manual_only",
                 "ready_for_training": all(counts[split] > 0 for split in ("train", "validation", "calibration", "test"))}
+    if include_unknown:
+        manifest["unknown_target"] = "uniform_boolean_distribution"
     return rows, manifest
 
 
-def training_partitions(rows, allow_synthetic_eval=False):
+def training_partitions(rows, allow_synthetic_eval=False, train_unknown=False):
     """Preflight before loading GPU weights or downloading a checkpoint."""
     versioned = any(row.get("schema_version") == 2 for row in rows)
     partitions = {name: [] for name in ("train", "validation", "calibration", "test")}
     groups, fingerprints = {}, {}
     for row in rows:
-        if type(row.get("label")) is not bool or row.get("split") not in partitions:
+        if row.get("label") is None and not versioned:
+            raise ValueError("Unknown targets require versioned data and a frozen manifest")
+        if ("label" not in row or not (type(row["label"]) is bool or train_unknown and row["label"] is None)
+                or row.get("split") not in partitions):
             raise ValueError("Training rows require Boolean labels and known splits")
         if versioned:
             if (row.get("schema_version") != 2 or row.get("point") != "tool.intent"
-                    or row.get("version") != builtin_registry().resolve("tool.intent").version):
+                    or row.get("version") != builtin_registry().resolve("tool.intent").version
+                    or row.get("question") != builtin_registry().resolve("tool.intent").question
+                    or row.get("criteria") != LayaBooleanJudge.CRITERIA):
                 raise ValueError("Intent-v2 data cannot mix legacy rows or different specifications")
             group = row.get("group_id")
             if not isinstance(group, str) or not group.strip():
@@ -352,7 +361,10 @@ def training_partitions(rows, allow_synthetic_eval=False):
     return partitions, versioned
 
 
-def validate_manifest(rows, manifest, allow_synthetic_eval=False):
+def validate_manifest(rows, manifest, allow_synthetic_eval=False, train_unknown=False):
+    if any(row.get("label") is None for row in rows) and (
+            not train_unknown or manifest.get("unknown_target") != "uniform_boolean_distribution"):
+        raise ValueError("Unknown labels require explicit uniform-target training and manifest")
     if manifest.get("evaluation_basis") == "synthetic_experiment" and not allow_synthetic_eval:
         raise ValueError("Synthetic experiment requires explicit --allow-synthetic-eval")
     if (manifest.get("schema_version") != 1 or manifest.get("dataset_digest") != digest(rows)

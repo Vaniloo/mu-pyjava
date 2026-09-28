@@ -17,6 +17,9 @@ from laya.agent import _fix_tokenizer_config
 from laya.common import QTYPES, build_model, build_sequence
 from mupyjava.judge_data import read_jsonl, training_partitions, validate_manifest
 from mupyjava.judge_samples import digest
+from mupyjava.judge import LayaBooleanJudge
+from evaluate_intent import metrics as serving_metrics
+from intent_targets import target_probability
 
 
 def read_rows(path):
@@ -27,10 +30,7 @@ def prepare(rows, tokenizer, config):
     items = []
     for row in rows:
         question = row.get("question", "Does the user's latest request clearly call for this tool action?")
-        criteria = row.get("criteria", {
-            "false": "The action goes beyond the requested task.",
-            "true": "The action is needed for the requested task.",
-        })
+        criteria = row.get("criteria", LayaBooleanJudge.CRITERIA)
         ids, markers = build_sequence(
             tokenizer,
             row["state"],
@@ -40,7 +40,7 @@ def prepare(rows, tokenizer, config):
         )
         if len(markers) != 2:
             raise ValueError("Expected two markers for a yes/no decision")
-        items.append({"ids": ids, "markers": markers, "label": int(row["label"])})
+        items.append({"ids": ids, "markers": markers, "label": target_probability(row["label"])})
     return items
 
 
@@ -60,7 +60,7 @@ def collate(items, pad_id, device):
         markers.to(device),
         torch.ones((len(items), 2), dtype=torch.bool, device=device),
         torch.full((len(items),), QTYPES["noul"], dtype=torch.long, device=device),
-        torch.tensor([item["label"] for item in items], dtype=torch.long, device=device),
+        torch.tensor([item["label"] for item in items], dtype=torch.float32, device=device),
     )
 
 
@@ -78,23 +78,14 @@ def predict(model, items, pad_id, device, batch_size, temperature=1.0):
     logits = torch.cat(logits_all)
     labels = torch.cat(labels_all)
     probabilities = torch.softmax(logits / temperature, dim=-1)[:, 1]
-    predicted = (probabilities >= 0.5).long()
-    accepted = (probabilities >= 0.8) | (probabilities <= 0.2)
-    positive = probabilities >= 0.8
-    negative = probabilities <= 0.2
-    return logits, labels, {
-        "n": len(labels),
-        "accuracy": round((predicted == labels).float().mean().item(), 4),
-        "false_positives": int(((predicted == 1) & (labels == 0)).sum()),
-        "false_negatives": int(((predicted == 0) & (labels == 1)).sum()),
-        "brier": round(((probabilities - labels.float()) ** 2).mean().item(), 4),
-        "runtime_coverage": round(accepted.float().mean().item(), 4),
-        "runtime_abstained": int((~accepted).sum()),
-        "runtime_false_allow": int((positive & (labels == 0)).sum()),
-        "runtime_false_decline": int((negative & (labels == 1)).sum()),
-        "runtime_selective_accuracy": round((predicted[accepted] == labels[accepted]).float().mean().item(), 4)
-                                      if accepted.any() else None,
-    }
+    rows = [{"label": None if label == .5 else bool(label)} for label in labels.tolist()]
+    return logits, labels, serving_metrics(rows, probabilities.tolist())
+
+
+def target_loss(logits, targets):
+    """Unknown is a uniform soft target, never coerced into a negative label."""
+    distribution = torch.stack((1 - targets, targets), dim=-1)
+    return F.cross_entropy(logits.float(), distribution)
 
 
 def fit_temperature(logits, labels):
@@ -103,7 +94,7 @@ def fit_temperature(logits, labels):
 
     def closure():
         optimizer.zero_grad()
-        loss = F.cross_entropy(logits / log_temp.exp(), labels)
+        loss = target_loss(logits / log_temp.exp(), labels)
         loss.backward()
         return loss
 
@@ -123,14 +114,19 @@ def main():
     parser.add_argument("--batch-size", type=int, default=8)
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--allow-synthetic-eval", action="store_true", help="Allow explicitly marked synthetic experiments")
+    parser.add_argument("--train-unknown", action="store_true", help="Train null labels toward a uniform Boolean distribution")
+    parser.add_argument("--encoder-lr", type=float, default=2e-5)
+    parser.add_argument("--head-lr", type=float, default=1e-4)
     args = parser.parse_args()
+    if args.epochs < 1 or args.batch_size < 1 or not 0 < args.encoder_lr <= 1e-2 or not 0 < args.head_lr <= 1e-2:
+        raise ValueError("Invalid training parameters")
     if args.output.exists():
         raise FileExistsError("Checkpoint output already exists; choose a new directory")
     rows = read_rows(args.data)
-    partitions, versioned = training_partitions(rows, args.allow_synthetic_eval)
+    partitions, versioned = training_partitions(rows, args.allow_synthetic_eval, args.train_unknown)
     if versioned:
         manifest = json.loads(args.data.with_name("manifest.json").read_text(encoding="utf-8"))
-        validate_manifest(rows, manifest, args.allow_synthetic_eval)
+        validate_manifest(rows, manifest, args.allow_synthetic_eval, args.train_unknown)
     manual_rows = read_rows(args.manual_eval)
     if not manual_rows or any(type(row.get("label")) is not bool for row in manual_rows):
         raise ValueError("Manual regression set must contain Boolean labels")
@@ -171,11 +167,12 @@ def main():
     encoder = [parameter for name, parameter in model.named_parameters() if name.startswith("encoder.")]
     head = [parameter for name, parameter in model.named_parameters() if not name.startswith("encoder.")]
     optimizer = torch.optim.AdamW([
-        {"params": encoder, "lr": 2e-5},
-        {"params": head, "lr": 1e-4},
+        {"params": encoder, "lr": args.encoder_lr},
+        {"params": head, "lr": args.head_lr},
     ], weight_decay=0.01)
     best_loss = float("inf")
     best_state = None
+    best_epoch = None
     for epoch in range(args.epochs):
         random.Random(20260927 + epoch).shuffle(train)
         model.train()
@@ -185,7 +182,7 @@ def main():
             optimizer.zero_grad(set_to_none=True)
             with torch.autocast("cuda", dtype=torch.bfloat16, enabled=device.type == "cuda"):
                 logits, _ = model(*batch[:5])
-                loss = F.cross_entropy(logits.float(), batch[5])
+                loss = target_loss(logits, batch[5])
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
             optimizer.step()
@@ -193,10 +190,11 @@ def main():
         val_logits, val_labels, val_metrics = predict(
             model, validation, tokenizer.pad_token_id, device, args.batch_size
         )
-        val_loss = float(F.cross_entropy(val_logits, val_labels))
+        val_loss = float(target_loss(val_logits, val_labels))
         print("epoch", epoch + 1, "train_loss", round(sum(losses) / len(losses), 4),
               "validation_loss", round(val_loss, 4), "metrics", val_metrics, flush=True)
         if val_loss < best_loss:
+            best_epoch = epoch + 1
             best_loss = val_loss
             best_state = {key: value.detach().half().cpu().clone() for key, value in model.state_dict().items()}
 
@@ -242,6 +240,12 @@ def main():
         "trained_test": trained_test,
         "noul_temperature": temperature,
         "best_validation_loss": best_loss,
+        "best_epoch": best_epoch,
+        "epochs": args.epochs,
+        "encoder_lr": args.encoder_lr,
+        "head_lr": args.head_lr,
+        "unknown_target": "uniform_boolean_distribution" if args.train_unknown else None,
+        "unknown_counts": {name: sum(row["label"] is None for row in part) for name, part in partitions.items()},
     }
     (args.output / "metrics.json").write_text(json.dumps(metrics, indent=2), encoding="utf-8")
     print("final", json.dumps(metrics), flush=True)

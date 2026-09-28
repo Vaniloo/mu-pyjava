@@ -94,3 +94,20 @@ PYTHONPATH=python python3 training/train_laya.py \
 ## 验证边界
 
 第 13 阶段包含输入一致性、隐私分离、取消、拒绝写入、标签绑定、组/重复隔离、清单冻结、实际阈值、部分路由、choice/score、准入误丢弃、CLI 及真实 Java/Python HTTP 测试。测试模型和人工标签都是夹具，不作为新模型质量证据。没有调用付费 API、lab GPU 或执行新的训练。
+
+## Explicit uncertainty training (milestone 15)
+
+`export_intent(..., include_unknown=True)` preserves reviewed null answers and records
+`unknown_target: uniform_boolean_distribution` in the frozen manifest. Training requires
+both this marker and `--train-unknown`; default Boolean-only preflight still rejects null
+labels. Null targets use `[0.5, 0.5]` soft cross entropy, known false/true use one-hot targets.
+Validation checkpoint selection and separate calibration use this same loss. This encourages
+uncertainty; it does not create a third semantic class or an independent evidence guarantee.
+Known-label accuracy/coverage and unknown non-abstention are reported with separate denominators.
+
+`build_intent_uncertainty.py` freezes bilingual goal/phrase families and retains only the
+349 original v1 training rows (including 37 teacher candidates) in train. Prior v1 validation
+and the inspected 20-case manual regression are excluded from training. The new experiment
+covers five actual intent-triggering tools; previous hypothetical extension examples are not
+newly implemented tools. Every synthetic evaluation still needs `--allow-synthetic-eval`;
+teacher candidates cannot enter validation/calibration/test. No default or active-mode change.

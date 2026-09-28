@@ -57,3 +57,12 @@ The approval gate, durable tree sessions, dedicated judgment tab, active-turn St
 ## Milestone 12 implementation boundary
 
 Semantic output-kind admission and source-grounded summaries are implemented; see [SEMANTIC_CONTEXT.md](SEMANTIC_CONTEXT.md). There are seven registered parent decision points. The trained Laya cannot answer admission questions. Exact source excerpts, including optional model selection, do not reproduce mu's free-form generative summaries. Opt-in raw sampling, annotation/replay tools and frozen four-partition intent-v2 exports are implemented; see [JUDGE_EVALUATION.md](JUDGE_EVALUATION.md). Next priorities are independently reviewed real decisions and checkpoint comparison/retraining, provider usage calibration and asynchronous shadow/HTTP cancellation.
+
+## Milestone 15 classifier findings
+
+Explicit uncertainty targets and v1 rehearsal are implemented and trained. New controlled
+holdout: known 300/300 and unknown abstention 60/60; old manual17/20 and old r2 test460/580
+expose remaining negation/scope and distribution failures. The live edit recovered, but
+read-only false allows remain. Keep all Laya models shadow-only. Next: mixed old/new family
+rehearsal, prohibition scope/short request variation, versioned task-context input and
+independently reviewed real traces. See [results-intent-uncertainty.md](../training/results-intent-uncertainty.md).

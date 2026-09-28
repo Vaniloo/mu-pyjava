@@ -42,3 +42,22 @@ ssh -N -L 18765:127.0.0.1:28765 lab
 ```
 
 Then run the Python CLI or Java desktop with `MU_JUDGE_MODE=shadow`, `MU_JUDGE_LAYA_URL=http://127.0.0.1:18765`, and optionally `--ledger work/judge-ledger.jsonl`. The Java desktop displays each judge event in its transcript. For a reproducible temporary-workspace exercise using DeepSeek Flash as the coding model, run `PYTHONPATH=python python training/probe_harness.py`. That script prompts for the API key and saves only the synthetic task transcript and verdicts under the ignored `work/` directory.
+
+## Natural requests and explicit uncertainty
+
+Milestone 15 adds null-target training, old v1 training rehearsal and an extended live harness.
+See [results-intent-uncertainty.md](results-intent-uncertainty.md) for improvements and regressions.
+The model remains shadow-only. Frozen data are under `datasets/intent-uncertainty-r1`.
+
+```sh
+PYTHONPATH=python python3 training/train_laya.py \
+  --data training/datasets/intent-uncertainty-r1/intent-v2.jsonl.gz \
+  --manual-eval training/manual_eval.jsonl --output work/checkpoints/uncertainty-new \
+  --init-checkpoint work/checkpoint-copy --epochs 3 --batch-size 8 \
+  --encoder-lr 0.00001 --head-lr 0.00005 --train-unknown --allow-synthetic-eval
+```
+
+`work/checkpoint-copy` must be a separate local copy of the retained v1 checkpoint. Exporting
+reviewed null labels from raw samples uses `training/judge_pipeline.py export --include-unknown`.
+`probe_harness.py --extended` also exercises a Chinese configuration edit and an authorized
+local unit-test command in temporary fixtures, while keeping the original denied-command task.

@@ -136,3 +136,25 @@ frozen manifest, inference predictions and detailed findings are published in
 [results-intent-v2.md](../training/results-intent-v2.md). Next: task-aware intent input,
 natural-language data/rehearsal, explicit missing-evidence targets and independently reviewed real harness evaluation.
 GitHub tracking: [milestone 14](https://github.com/Vaniloo/mu-pyjava/issues/14).
+
+## Milestone 15 — explicit uncertainty and natural intent training
+
+Added opt-in null-label soft targets with a frozen-manifest guard, pipeline CLI export support,
+matching training/serving criteria and separately denominated metrics. Generated 3,709 rows
+in 57 bilingual goal/phrase families: 2,629 train and 360 each validation/calibration/test;
+720 missing-context examples and all 349 original v1 training rows (teacher provenance retained).
+Five actual intent-triggering tools; prior hypothetical extensions are not new implementations.
+
+Lab trained from a v1 copy for three epochs, validation selected epoch 1. Actual serving gets
+300/300 known new synthetic cases and 60/60 unknown abstentions. Manual regression is 17/20
+at 0.5 (16 accepted correct, two false allows, one false decline, one abstention), below v1's
+18/20. Prior r2 synthetic test regresses to 460/580; no default change or active promotion.
+
+Live DeepSeek six-task harness recovered the previously rejected edit, completed Chinese
+configuration mutation via shadow fallback and ran a real one-test unittest suite. Eight
+actual intent snapshots: seven accepted, one abstention; command permissions still denied
+both proposals in the disabled-command task. Read-only false allows persist in direct probes.
+Original v1/r2 weight hashes unchanged; temporary serving/tunnel stopped. Software gate:
+**197 tests, 196 passed, native PowerShell skipped**. See
+[results-intent-uncertainty.md](../training/results-intent-uncertainty.md).
+GitHub tracking: [milestone 15](https://github.com/Vaniloo/mu-pyjava/issues/15).

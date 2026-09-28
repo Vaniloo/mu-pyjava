@@ -33,9 +33,12 @@ def main():
     parser.add_argument("--seed", default="intent-v2")
     parser.add_argument("--point", action="append", help="Limit replay/export to a parent point (repeatable)")
     parser.add_argument("--allow-synthetic-eval", action="store_true", help="Experimental synthetic labels; never independent gold")
+    parser.add_argument("--include-unknown", action="store_true", help="Export reviewed null labels with an explicit uniform-target manifest")
     args = parser.parse_args()
     if args.fresh and args.action != "replay":
         parser.error("--fresh is only valid with replay")
+    if args.include_unknown and args.action != "export":
+        parser.error("--include-unknown is only valid with export")
     samples = load_samples(args.samples)
     if args.action == "annotate":
         save_new(args.output, label_templates(samples), jsonl=True)
@@ -56,7 +59,8 @@ def main():
         save_new(args.output, report)
         print(json.dumps({key: report[key] for key in ("mode", "samples", "metrics")}, ensure_ascii=False))
     else:
-        rows, manifest = export_intent(samples, labels, args.seed, args.allow_synthetic_eval)
+        rows, manifest = export_intent(samples, labels, args.seed, args.allow_synthetic_eval,
+                                       include_unknown=args.include_unknown)
         args.output.mkdir(parents=True, exist_ok=False)
         save_new(args.output / "intent-v2.jsonl", rows, jsonl=True)
         save_new(args.output / "manifest.json", manifest)

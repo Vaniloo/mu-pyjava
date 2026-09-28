@@ -1,0 +1,30 @@
+{
+  "counts_before_dedup": {
+    "True": 1217,
+    "False": 1772,
+    "unknown": 720
+  },
+  "splits": {
+    "train": 2629,
+    "validation": 360,
+    "calibration": 360,
+    "test": 360
+  },
+  "families": 57,
+  "unknown_counts": {
+    "train": 540,
+    "validation": 60,
+    "calibration": 60,
+    "test": 60
+  },
+  "tools": {
+    "bash": 464,
+    "edit_file": 1104,
+    "write_file": 1123,
+    "run_command": 554,
+    "powershell": 464
+  },
+  "evaluation_basis": "controlled_synthetic_experiment",
+  "rehearsal_rows": 349,
+  "note": "Goal/phrase-family holdouts share structural patterns; not independent real harness gold."
+}
