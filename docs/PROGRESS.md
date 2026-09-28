@@ -28,6 +28,8 @@ The ordered gap audit and acceptance criteria are in [NEXT_PHASE.md](NEXT_PHASE.
 - [x] Route read/list through injectable operations; verify paging and multi-edit with an in-memory workspace that has no local target file.
 - [x] Extend operation injection to find/grep, read-only Git and streamed commands; verify a complete alternate-backend agent workflow with common approvals, output artifacts and cancellation.
 - [x] Add approved Bash/PowerShell tools and unified content/details/error results, with saved Java metadata and shell lifecycle tests. Native PowerShell awaits an installed platform.
+- [x] Add bounded image reading/conversion with explicit model capabilities, correct Chat Completions attachment ordering and completed-session restoration.
+- [x] Add trusted custom-tool modules with validated schemas, fresh mutation approvals, judge/cancel/result handling and Java process coverage.
 - [ ] Collect independently labeled decisions for all mutating tools, including `edit_file`, and resolve confident false positives before enabling the trained judge.
 - [ ] Add branch/fork sessions, provider-side HTTP request abort and background jobs after the single-path format is stable.
 - [ ] Typed choice/score decisions, judge routing, and output admission.

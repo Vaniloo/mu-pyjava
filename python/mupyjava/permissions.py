@@ -1,6 +1,7 @@
 """Per-action permission gate used by the interactive backend."""
 
 import base64
+import json
 import os
 import shlex
 import threading
@@ -10,7 +11,7 @@ from pathlib import Path
 from typing import Callable, Dict, Optional, Tuple
 
 from .tools import WorkspaceTools
-from .tool_policy import COMMAND_TOOLS, MUTATING_TOOLS
+from .tool_policy import COMMAND_TOOLS, FILE_MUTATIONS
 
 
 PROTECTED_PARTS = frozenset({".git", ".mu", ".pi", ".codex"})
@@ -44,6 +45,11 @@ def action_preview(tools: WorkspaceTools, name: str, arguments: dict,
         tools._positive_int(arguments.get("timeout", 30), "timeout", 120)
         label = "a command" if name == "run_command" else name
         return ("Run " + label + " in " + str(tools.root), command, None, None)
+    definition = tools.registry.resolve(name)
+    if definition is not None and definition.effect == "mutation":
+        tools.validate_call(name, arguments)
+        return ("Run custom tool " + name + " in " + str(tools.root),
+                definition.description + "\n\nArguments:\n" + json.dumps(arguments, ensure_ascii=False, indent=2), None, None)
     raise ValueError("Not a mutating tool: " + name)
 
 
@@ -75,9 +81,9 @@ class ApprovalManager:
         self._closed = False
 
     def request(self, request_id: str, tool_call_id: str, name: str, arguments: dict) -> bool:
-        if name not in MUTATING_TOOLS:
+        if not self.tools.is_mutating(name):
             return True
-        if (name in COMMAND_TOOLS and self.full_command) or (name not in COMMAND_TOOLS and self.full_write):
+        if (name in COMMAND_TOOLS and self.full_command) or (name in FILE_MUTATIONS and self.full_write):
             return True
         proposed = self.tools.prepare_change(name, arguments) if name in {"write_file", "edit_file"} else None
         summary, preview, grant, target = action_preview(self.tools, name, arguments, proposed)

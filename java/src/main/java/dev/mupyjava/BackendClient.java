@@ -40,7 +40,12 @@ public final class BackendClient implements AutoCloseable {
         }
         var builder = new ProcessBuilder(command);
         builder.directory(repository.toFile());
-        builder.environment().put("PYTHONPATH", repository.resolve("python").toAbsolutePath().toString());
+        String pythonPath = repository.resolve("python").toAbsolutePath().toString();
+        String extensionPath = builder.environment().get("PYTHONPATH");
+        if (extensionPath != null && !extensionPath.isBlank()) {
+            pythonPath += java.io.File.pathSeparator + extensionPath;
+        }
+        builder.environment().put("PYTHONPATH", pythonPath);
         process = builder.start();
         input = new BufferedWriter(new OutputStreamWriter(process.getOutputStream(), StandardCharsets.UTF_8));
         reader = new Thread(() -> readEvents(process, onEvent), "mu-backend-events");

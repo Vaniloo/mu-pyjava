@@ -6,14 +6,14 @@ The current behavior and architecture comparison is in [MU_COMPARISON.md](MU_COM
 
 | mu capability | mu-pyjava today | Remaining gap |
 | --- | --- | --- |
-| `read`: text paging with line/byte limits | `read_file`: 1-based `offset`, `limit`, 50 KiB response limit | Images and model-aware image resizing |
+| `read`: text paging with line/byte limits | `read_file`: 1-based text paging, 50 KiB response limit; typed image attachments, explicit model capabilities, orientation, resizing and BMP conversion | Animated images, automatic capability discovery, vision-provider live validation and desktop image viewer |
 | `find`: glob search with ignore rules | `find_files`: ripgrep-backed glob discovery, Git ignore rules, result limit | Broader ignore semantics and search on remote workspaces |
 | `grep`: regex/literal, case folding, context, limits | `grep_files`: those options via ripgrep, structured path/line results | More complete output metadata and search result rendering |
 | `ls` | `list_files`: one directory, 200 entries | Pagination and metadata |
 | `edit`: targeted replacement | `edit_file`: multiple unique, non-overlapping replacements against original content; BOM/CRLF preservation, unified diff approval, revision check and atomic replacement | Fuzzy matching fallback, standard patch/navigation details and remote workspace support |
 | `write` | `write_file`: bounded UTF-8 write; unified diff approval, revision check, serialized atomic replacement preserving existing permission bits | Richer metadata and remote workspace support |
 | `bash` / `powershell` | Dedicated Bash/PowerShell tools and direct `run_command`; common approval, streaming, timeout/cancel, process-tree kill, output artifacts and structured exit metadata | Actual remote transport; native PowerShell validation on an installed platform |
-| Extensible tool definitions | Fixed built-in tool schemas; injectable file/search/Git/command operations | Custom tools and actual remote transport |
+| Extensible tool definitions | Twelve built-ins plus explicit Python-module registration, validated schemas, shared approval/judge/cancel/result handling; injectable operations | Hot registration, custom rendering hooks, MCP discovery and actual remote transport |
 
 Additional read-only `git_status`, `git_diff` and `read_command_output` tools are provided so inspection does not require general command permission. The Java desktop asks for each write, edit and command and can stop an active turn; CLI flags remain explicit broad-access overrides for noninteractive use. The experimental Laya judge remains in shadow mode.
 
@@ -21,4 +21,4 @@ File changes emit structured `tool.change` records (path, operation, byte counts
 
 The new read/search behavior was checked in Python tests and in a temporary Git project with DeepSeek Flash: it located `src/Main.java:1` for a `TODO` followed by a number, excluded a Git-ignored Java file, and read lines 2050–2052 from a 2500-line text file by offset. This is a small workflow smoke test, not a complete compatibility suite.
 
-All tools expose versioned content/details/error results; the agent journals them and Java displays readable metadata. See [TOOL_RESULTS.md](TOOL_RESULTS.md). Image content blocks and custom tool registration remain incomplete.
+All tools expose versioned content/details/error results; the agent journals them and Java displays readable metadata. See [TOOL_RESULTS.md](TOOL_RESULTS.md). Image content blocks and explicit custom tool registration are implemented; see [IMAGES_AND_EXTENSIONS.md](IMAGES_AND_EXTENSIONS.md) for supported behavior and limits.

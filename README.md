@@ -10,7 +10,7 @@ A small Python + Java coding-agent foundation inspired by [mu](https://github.co
 - ripgrep (`rg`) for file discovery and content search
 - A Chat Completions-compatible model endpoint for real model use
 
-The Python and Java code uses their standard libraries; Git and ripgrep are optional external executables for their respective tools.
+Text tools and the Java code use their standard libraries; Git and ripgrep are optional external executables for their respective tools. Image decoding/conversion uses optional Pillow: `python3 -m pip install -r python/requirements-images.txt`.
 
 ## Run the offline smoke test
 
@@ -39,7 +39,7 @@ PYTHONPATH=python python3 -m mupyjava --workspace . --prompt "Summarize this pro
 
 The adapter uses the [Chat Completions function-call format](https://developers.openai.com/api/docs/guides/function-calling). Other endpoints may need a separate adapter. A model key is never stored in this repository.
 
-The agent now has twelve tools, following mu's read/find/grep/edit/write/shell workflow and adding direct Git inspection and full command-output retrieval:
+The agent has twelve built-in tools and an explicit custom-tool registry, following mu's read/find/grep/edit/write/shell workflow and adding direct Git inspection and full command-output retrieval:
 
 | Read-only, always available | Desktop approval; CLI requires `--allow-write` | Desktop approval; CLI requires `--allow-command` |
 | --- | --- | --- |
@@ -74,4 +74,8 @@ See [progress](docs/PROGRESS.md) for completed work and next milestones. The ups
 The [tool parity table](docs/TOOL_PARITY.md) tracks which mu behaviors have been reproduced and what remains.
 The [operation contracts](docs/OPERATIONS.md) describe local and alternate workspace implementations.
 
-See [structured results and shell behavior](docs/TOOL_RESULTS.md) for tool metadata, platform requirements and validation coverage.
+`read_file` also recognizes PNG/JPEG/GIF/WebP/BMP images by their bytes. Configure `MU_MODEL_SUPPORTS_IMAGES=true` for a vision endpoint; the default text-only mode returns a clear omission notice. Optional Pillow handles orientation, BMP conversion, transparency and bounded resizing. Image attachments survive completed-session restoration. The desktop displays image metadata; an image viewer is not implemented.
+
+Custom Python modules export `register_tools(registry)` and are loaded explicitly through `--tool-module` or `MU_TOOL_MODULES`. The agent advertises their schemas and records their results. Custom mutations default to fresh desktop approval; CLI requires `--allow-custom-tools`, independently of the built-in write/command flags. A read-only `mupyjava.extensions.file_digest` example is included.
+
+See [images and custom tool setup](docs/IMAGES_AND_EXTENSIONS.md) and [structured results and shell behavior](docs/TOOL_RESULTS.md) for contracts, platform requirements and validation coverage.

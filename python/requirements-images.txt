@@ -1,0 +1,2 @@
+# Optional: text tools and the offline adapter need no third-party packages.
+Pillow

@@ -47,7 +47,12 @@ def build_agent(args: argparse.Namespace) -> Agent:
     )
     # The interactive server gates each call before reaching these tool methods.
     tools = WorkspaceTools(Path(args.workspace), args.allow_write or args.server,
-                           args.allow_command or args.server)
+                           args.allow_command or args.server,
+                           allow_custom=args.server or getattr(args, "allow_custom_tools", False))
+    modules = list(getattr(args, "tool_module", None) or [])
+    modules.extend(name.strip() for name in os.environ.get("MU_TOOL_MODULES", "").split(",") if name.strip())
+    for name in dict.fromkeys(modules):
+        tools.registry.load_module(name)
     return Agent(model, tools, judge)
 
 
@@ -58,6 +63,8 @@ def main() -> int:
     parser.add_argument("--server", action="store_true")
     parser.add_argument("--allow-write", action="store_true")
     parser.add_argument("--allow-command", action="store_true")
+    parser.add_argument("--allow-custom-tools", action="store_true", help="Allow custom mutation tools in noninteractive CLI mode")
+    parser.add_argument("--tool-module", action="append", help="Load a trusted Python module exporting register_tools(registry)")
     parser.add_argument("--ledger", help="Optional JSONL path for decision records")
     parser.add_argument("--session-dir", help="Local directory for saved sessions")
     parser.add_argument("--new-session", action="store_true", help="Start a fresh server session")

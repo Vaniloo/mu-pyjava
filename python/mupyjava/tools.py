@@ -1,5 +1,6 @@
 """Workspace tools. Mutating tools require explicit launch flags."""
 
+import copy
 import json
 import difflib
 import hashlib
@@ -12,11 +13,14 @@ from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
 from .cancel import CancellationToken, TurnCancelled
+from .capabilities import ModelCapabilities
 from .file_ops import FileMutationQueue, FileOperations, LocalFileOperations
 from .command_ops import CommandOperations, CommandOutput, LocalCommandOperations
 from .search_ops import GitOperations, LocalGitOperations, LocalSearchOperations, SearchOperations
 from .shell_ops import LocalShellOperations, ShellOperations
-from .tool_policy import COMMAND_TOOLS
+from .image_ops import ImageOperations, PillowImageOperations, MAX_SOURCE_BYTES, detect_image_mime
+from .registry import ToolContext, ToolRegistry, validate_arguments
+from .tool_policy import COMMAND_TOOLS, MUTATING_TOOLS
 from .tool_result import ToolResult, TextContent
 
 
@@ -33,7 +37,7 @@ TOOL_SCHEMAS: List[Dict[str, Any]] = [
         "type": "function",
         "function": {
             "name": "read_file",
-            "description": "Read UTF-8 text, optionally from a 1-based line offset with a line limit. Large files can be read in pages.",
+            "description": "Read UTF-8 text or PNG/JPEG/GIF/WebP/BMP images. Text supports 1-based offset and line limit. Images are converted and attached only for models configured to accept them.",
             "parameters": {"type": "object", "properties": {
                 "path": {"type": "string"}, "offset": {"type": "integer"}, "limit": {"type": "integer"},
             }, "required": ["path"]},
@@ -152,7 +156,8 @@ class WorkspaceTools:
                  output_root: Optional[Path] = None, file_ops: Optional[FileOperations] = None,
                  search_ops: Optional[SearchOperations] = None, git_ops: Optional[GitOperations] = None,
                  command_ops: Optional[CommandOperations] = None,
-                 shell_ops: Optional[ShellOperations] = None):
+                 shell_ops: Optional[ShellOperations] = None,
+                 image_ops: Optional[ImageOperations] = None, allow_custom: bool = False):
         self.root = root.resolve(strict=True)
         if not self.root.is_dir():
             raise ValueError("Workspace must be a directory")
@@ -164,7 +169,24 @@ class WorkspaceTools:
         self.git_ops = git_ops or LocalGitOperations(self.root)
         self.command_ops = command_ops or LocalCommandOperations()
         self.shell_ops = shell_ops or LocalShellOperations()
+        self.image_ops = image_ops or PillowImageOperations()
+        self.allow_custom = allow_custom
+        self.registry = ToolRegistry(schema["function"]["name"] for schema in TOOL_SCHEMAS)
         self.mutations = FileMutationQueue()
+
+    @property
+    def schemas(self):
+        return copy.deepcopy(TOOL_SCHEMAS) + self.registry.schemas()
+
+    def is_mutating(self, name: str) -> bool:
+        definition = self.registry.resolve(name)
+        return name in MUTATING_TOOLS or (definition is not None and definition.effect == "mutation")
+
+    def validate_call(self, name: str, arguments: dict):
+        definition = self.registry.resolve(name)
+        if definition is not None:
+            json.dumps(arguments, allow_nan=False)
+            validate_arguments(arguments, definition.parameters)
 
     def prepare_change(self, name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Compute the exact proposed text and a revision for approval/revalidation."""
@@ -330,6 +352,56 @@ class WorkspaceTools:
                                    on_change=on_change, expected_change=expected_change).text
 
     def execute_result(self, name: str, arguments: Dict[str, Any], **options) -> ToolResult:
+        capabilities = options.pop("capabilities", ModelCapabilities())
+        cancel = options.get("cancel")
+        if cancel is not None:
+            cancel.raise_if_cancelled()
+        definition = self.registry.resolve(name)
+        if definition is not None:
+            self.validate_call(name, arguments)
+            if definition.effect == "mutation" and not self.allow_custom:
+                raise PermissionError("Custom mutation tools require approval or --allow-custom-tools")
+            context = ToolContext(self.root, self._path, cancel, options.get("on_update"),
+                                  options.get("on_artifact"), options.get("output_dir") or self.output_root,
+                                  capabilities)
+            try:
+                result = definition.execute(copy.deepcopy(arguments), context)
+                context.check_cancelled()
+                if not isinstance(result, ToolResult):
+                    raise ValueError("Custom tools must return a ToolResult")
+                return result
+            except TurnCancelled:
+                raise
+            except Exception as error:
+                context.check_cancelled()
+                return ToolResult.failed(error)
+        if name == "read_file":
+            # Old text-only operation adapters remain usable. Binary support is an
+            # explicit extension to their contract, with no local-file fallback.
+            read_bytes = getattr(self.file_ops, "read_bytes", None)
+            if read_bytes is not None:
+                target = self._path(arguments["path"])
+                header = read_bytes(target, 32, cancel)
+                if not isinstance(header, bytes) or len(header) > 32:
+                    raise ValueError("Binary operations must return bounded bytes")
+                mime = detect_image_mime(header)
+                if mime is not None:
+                    if "offset" in arguments or "limit" in arguments:
+                        raise ValueError("offset and limit apply only to text files")
+                    if not capabilities.supports_images:
+                        return ToolResult.from_text(
+                            f"Read image file [{mime}]\n[Image omitted: current model accepts text only.]",
+                            {"path": str(target.relative_to(self.root)), "source_mime_type": mime,
+                             "image_omitted": True, "omission_reason": "text_only_model"})
+                    data = read_bytes(target, MAX_SOURCE_BYTES + 1, cancel)
+                    if not isinstance(data, bytes) or len(data) > MAX_SOURCE_BYTES:
+                        raise ValueError("Image exceeds the bounded binary-read limit (20 MiB)")
+                    result = self.image_ops.process(data, mime, capabilities, cancel)
+                    if cancel is not None:
+                        cancel.raise_if_cancelled()
+                    if not isinstance(result, ToolResult):
+                        raise ValueError("Image operations must return a ToolResult")
+                    return ToolResult(result.content, {**result.details, "path": str(target.relative_to(self.root))}, result.is_error)
         details = {}
         text = self._execute_text(name, arguments, details=details, **options)
         return ToolResult((TextContent(text),), details, details.get("exit_code", 0) != 0)

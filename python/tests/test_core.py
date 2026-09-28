@@ -448,10 +448,12 @@ class CoreTests(unittest.TestCase):
 
     @unittest.skipUnless(shutil.which("javac") and shutil.which("java"), "JDK is unavailable")
     def test_java_smoke_approval_round_trip(self):
+        requests = []
         class Handler(BaseHTTPRequestHandler):
             def do_POST(self):
                 payload = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
-                if payload["messages"][-1]["role"] == "tool":
+                requests.append(payload)
+                if payload["messages"][-1]["role"] == "tool" or isinstance(payload["messages"][-1]["content"], list):
                     message = {"role": "assistant", "content": "Finished."}
                 else:
                     prompt = payload["messages"][-1]["content"]
@@ -468,6 +470,10 @@ class CoreTests(unittest.TestCase):
                         name, arguments = "write_file", {"path": "note.txt", "content": "replaced"}
                     elif prompt == "Run Bash":
                         name, arguments = "bash", {"command": "printf shell-ok > shell.txt; cat shell.txt"}
+                    elif prompt == "Run custom export":
+                        name, arguments = "custom_export", {"path": "export.txt"}
+                    elif prompt == "Read picture":
+                        name, arguments = "read_file", {"path": "picture.png"}
                     else:
                         name, arguments = "write_file", {"path": "note.txt", "content": "created"}
                     message = {"role": "assistant", "content": None, "tool_calls": [{
@@ -551,6 +557,44 @@ class CoreTests(unittest.TestCase):
                     self.assertEqual(result["details"]["mode"], "bash")
                     self.assertTrue(any(kind == "history.transcript" and "bash: exit code 0" in text
                                         for kind, text in store.history()))
+                (Path(directory) / "fixture_tools.py").write_text(
+                    "from mupyjava.registry import ToolDefinition\n"
+                    "from mupyjava.tool_result import ToolResult\n"
+                    "def export(args, context):\n"
+                    "    context.check_cancelled()\n"
+                    "    context.resolve_path(args['path']).write_text('exported')\n"
+                    "    return ToolResult.from_text('exported', {'count': 1})\n"
+                    "def register_tools(registry):\n"
+                    "    registry.register(ToolDefinition('custom_export', 'Export a file.', "
+                    "{'type': 'object', 'properties': {'path': {'type': 'string'}}, 'required': ['path']}, export))\n")
+                env.update({"MU_TOOL_MODULES": "fixture_tools", "PYTHONPATH": directory})
+                for answer in ("deny", "once"):
+                    custom = subprocess.run(["java", "-cp", str(classes), "dev.mupyjava.Main",
+                                             "--workspace", directory, "--smoke", "Run custom export",
+                                             "--smoke-approval", answer], cwd=repository, env=env,
+                                            capture_output=True, text=True, timeout=15)
+                    self.assertEqual(custom.returncode, 0, custom.stderr)
+                    self.assertIn("custom_export", [tool["function"]["name"] for tool in requests[-1]["tools"]])
+                    if answer == "deny":
+                        self.assertFalse((Path(directory) / "export.txt").exists())
+                    else:
+                        self.assertEqual((Path(directory) / "export.txt").read_text(), "exported")
+                        self.assertIn("tool.detail: custom_export: 1 results", custom.stdout)
+                try:
+                    from PIL import Image
+                except ImportError:
+                    Image = None
+                if Image is not None:
+                    Image.new("RGB", (12, 8), "blue").save(Path(directory) / "picture.png")
+                    env["MU_MODEL_SUPPORTS_IMAGES"] = "true"
+                    image = subprocess.run(["java", "-cp", str(classes), "dev.mupyjava.Main",
+                                            "--workspace", directory, "--smoke", "Read picture"],
+                                           cwd=repository, env=env, capture_output=True, text=True, timeout=15)
+                    self.assertEqual(image.returncode, 0, image.stderr)
+                    self.assertIn("12×8 image", image.stdout)
+                    self.assertEqual(requests[-1]["messages"][-1]["content"][1]["type"], "image_url")
+                    store = SessionStore.open(Path(directory), Path(directory) / "sessions", resume=True)
+                    self.assertTrue(any("image_blocks" in message for message in store.restore_messages()))
             finally:
                 server.shutdown()
                 server_thread.join(timeout=5)

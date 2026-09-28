@@ -9,11 +9,12 @@ from pathlib import Path
 from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple
 
 from .cancel import CancellationToken, TurnCancelled
+from .capabilities import ModelCapabilities
 from .judge import DecisionEngine, DecisionPoint
 from .model import ChatModel
-from .tools import TOOL_SCHEMAS, WorkspaceTools
-from .tool_policy import COMMAND_TOOLS, MUTATING_TOOLS
-from .tool_result import ToolResult
+from .tools import WorkspaceTools
+from .tool_policy import COMMAND_TOOLS
+from .tool_result import ToolResult, ImageContent
 
 
 TOOL_INTENT = DecisionPoint(
@@ -34,6 +35,7 @@ class Agent:
     def __init__(self, model: ChatModel, tools: WorkspaceTools, judge: DecisionEngine, max_steps: int = 8):
         self.model = model
         self.tools = tools
+        self.tools.registry.freeze()
         self.judge = judge
         self.max_steps = max_steps
         self.messages: List[Dict[str, Any]] = [{"role": "system", "content": SYSTEM_MESSAGE}]
@@ -74,6 +76,7 @@ class Agent:
                 if cancel is not None:
                     cancel.raise_if_cancelled()
                 name = str(call.get("function", {}).get("name", ""))
+                tracked_tool = name in COMMAND_TOOLS or self.tools.registry.resolve(name) is not None
                 call_id = str(call.get("id", ""))
                 if not call_id:
                     raise RuntimeError("Model returned a tool call without an id")
@@ -81,6 +84,7 @@ class Agent:
                     arguments = json.loads(call["function"]["arguments"])
                     if not isinstance(arguments, dict):
                         raise ValueError("Tool arguments must be an object")
+                    self.tools.validate_call(name, arguments)
                     judged_arguments = arguments
                     if name == "write_file":
                         judged_arguments = {"path": arguments.get("path"),
@@ -96,9 +100,10 @@ class Agent:
                                                                   for edit in edits if isinstance(edit, dict)),
                                             "new_text_bytes": sum(len(str(edit.get("new_text", "")).encode("utf-8"))
                                                                   for edit in edits if isinstance(edit, dict))}
-                    if name in MUTATING_TOOLS:
+                    if self.tools.is_mutating(name):
                         approved = self.judge.decide(
-                            TOOL_INTENT, {"user_request": prompt[:1000], "tool": name, "arguments": judged_arguments}
+                            TOOL_INTENT, {"user_request": prompt[:1000], "tool": name,
+                                          "arguments": copy.deepcopy(judged_arguments)}
                         )
                         if cancel is not None:
                             cancel.raise_if_cancelled()
@@ -114,13 +119,13 @@ class Agent:
                             yield "judge", f"{name}: {verdict}{detail}; {record['mode']} mode, {record['latency_ms']} ms"
                         if not approved:
                             raise PermissionError("Judge declined this tool action")
-                        if approval is not None and not approval(call_id, name, arguments):
+                        if approval is not None and not approval(call_id, name, copy.deepcopy(arguments)):
                             if cancel is not None:
                                 cancel.raise_if_cancelled()
                             raise PermissionError("User did not allow this tool action")
                     if cancel is not None:
                         cancel.raise_if_cancelled()
-                    if name in COMMAND_TOOLS and on_tool_event is not None:
+                    if tracked_tool and on_tool_event is not None:
                         on_tool_event(call_id, "tool.started", {"tool": name})
                     try:
                         structured_result = self.tools.execute_result(
@@ -132,18 +137,20 @@ class Agent:
                             on_change=(lambda change: on_tool_event(call_id, "tool.change", change))
                             if on_tool_event else None,
                             expected_change=expected_change(call_id) if expected_change else None,
+                            capabilities=getattr(self.model, "capabilities", ModelCapabilities()),
                         )
                     except subprocess.TimeoutExpired:
-                        if name in COMMAND_TOOLS and on_tool_event is not None:
+                        if tracked_tool and on_tool_event is not None:
                             on_tool_event(call_id, "tool.timed_out", {"tool": name})
                         raise
                     except Exception as error:
-                        if name in COMMAND_TOOLS and on_tool_event is not None:
+                        if tracked_tool and on_tool_event is not None:
                             on_tool_event(call_id, "tool.cancelled" if isinstance(error, TurnCancelled)
                                           else "tool.failed", {"tool": name, "error": type(error).__name__})
                         raise
-                    if name in COMMAND_TOOLS and on_tool_event is not None:
-                        on_tool_event(call_id, "tool.completed", {"tool": name})
+                    if tracked_tool and on_tool_event is not None:
+                        custom_failed = name not in COMMAND_TOOLS and structured_result.is_error
+                        on_tool_event(call_id, "tool.failed" if custom_failed else "tool.completed", {"tool": name})
                     if cancel is not None:
                         cancel.raise_if_cancelled()
                 except (KeyError, TypeError, ValueError, PermissionError, OSError, subprocess.TimeoutExpired) as error:
@@ -152,7 +159,11 @@ class Agent:
                 if on_tool_event is not None:
                     on_tool_event(call_id, "tool.result", {"tool": name, **structured_result.to_payload()})
                 tool_content = result if len(result) <= 60_000 else result[:59_900] + "\n[Tool result clipped at 60,000 characters]"
-                append({"role": "tool", "tool_call_id": call_id, "content": tool_content})
+                tool_message = {"role": "tool", "tool_call_id": call_id, "content": tool_content}
+                images = [block.to_payload() for block in structured_result.content if isinstance(block, ImageContent)]
+                if images:
+                    tool_message["image_blocks"] = images
+                append(tool_message)
                 display = result[:500]
                 if name in COMMAND_TOOLS and "Full output id:" in result:
                     display = result[:120] + "\n" + result[result.rfind("[Output truncated at 12 KB]"):]
@@ -163,14 +174,15 @@ class Agent:
 
     def _complete(self, cancel: Optional[CancellationToken]) -> Dict[str, Any]:
         if cancel is None:
-            return self.model.complete(self.messages, TOOL_SCHEMAS)
+            return self.model.complete(self.messages, self.tools.schemas)
         cancel.raise_if_cancelled()
         result: "queue.Queue[Tuple[bool, Any]]" = queue.Queue(maxsize=1)
         messages = copy.deepcopy(self.messages)
+        schemas = self.tools.schemas
 
         def call_model() -> None:
             try:
-                result.put((True, self.model.complete(messages, TOOL_SCHEMAS)))
+                result.put((True, self.model.complete(messages, schemas)))
             except Exception as error:
                 result.put((False, error))
 

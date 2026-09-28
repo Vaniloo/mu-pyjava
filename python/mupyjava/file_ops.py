@@ -12,6 +12,7 @@ from .cancel import CancellationToken
 
 
 class FileOperations(Protocol):
+    def read_bytes(self, path: Path, limit: int, cancel: Optional[CancellationToken] = None) -> bytes: ...
     def read_text(self, path: Path) -> str: ...
     def open_text(self, path: Path, cancel: Optional[CancellationToken] = None) -> ContextManager[Iterable[str]]: ...
     def is_dir(self, path: Path) -> bool: ...
@@ -22,6 +23,15 @@ class FileOperations(Protocol):
 
 
 class LocalFileOperations:
+    def read_bytes(self, path: Path, limit: int, cancel: Optional[CancellationToken] = None) -> bytes:
+        if cancel is not None:
+            cancel.raise_if_cancelled()
+        with path.open("rb") as source:
+            data = source.read(limit)
+        if cancel is not None:
+            cancel.raise_if_cancelled()
+        return data
+
     def read_text(self, path: Path) -> str:
         with path.open("r", encoding="utf-8", newline="") as source:
             return source.read()
