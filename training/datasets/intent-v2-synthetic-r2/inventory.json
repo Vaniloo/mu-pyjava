@@ -1,0 +1,23 @@
+{
+  "evaluation_basis": "synthetic_experiment",
+  "sample_count": 4240,
+  "tools": {
+    "edit_file": 1280,
+    "write_file": 960,
+    "run_command": 512,
+    "bash": 384,
+    "powershell": 384,
+    "rename_path": 240,
+    "format_file": 240,
+    "apply_patch": 240
+  },
+  "splits": {
+    "train": 2500,
+    "validation": 580,
+    "calibration": 580,
+    "test": 580
+  },
+  "families": 56,
+  "dataset_digest": "b0027d1afed92c03b5bcafb40b43221f395a851980f72ac4d0ff7bd0e32cb469",
+  "note": "Template-family holdout; shared structural patterns are not independent real-world evidence."
+}

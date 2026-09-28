@@ -1,6 +1,7 @@
 """Validated labels, pure policy replay and group-isolated intent datasets."""
 
 import copy
+import gzip
 import json
 from collections import Counter
 from dataclasses import asdict
@@ -25,7 +26,9 @@ def read_jsonl(path):
         raise ValueError("Nonfinite JSON value")
 
     rows = []
-    with Path(path).open(encoding="utf-8") as file:
+    path = Path(path)
+    opener = gzip.open if path.suffix == ".gz" else open
+    with opener(path, "rt", encoding="utf-8") as file:
         while True:
             line = file.readline(262_145)
             if not line:
@@ -173,14 +176,15 @@ def replay_sample(sample, engine=None):
             "attempts": record["attempts"]}
 
 
-def evaluate(samples, labels, engine=None):
+def evaluate(samples, labels, engine=None, allow_synthetic_eval=False):
     """Only reviewed, manually labeled questions enter independent metric denominators."""
     metrics, replays = {}, []
     for sample in samples:
         replay = replay_sample(sample, engine)
         replays.append(replay)
         annotation = labels.get(sample["sample_id"])
-        if not annotation or not annotation["reviewed"] or annotation["origin"] != "manual":
+        if (not annotation or not annotation["reviewed"] or annotation["origin"] != "manual"
+                and not (allow_synthetic_eval and annotation["origin"] == "synthetic")):
             continue
         spec, questions, _ = resolve_sample(sample)
         for question in questions:
@@ -188,6 +192,8 @@ def evaluate(samples, labels, engine=None):
             if truth is None:
                 continue
             key = spec.id + "/" + question.kind + "/" + str(sample["decision"]["inputs"].get("tool", "-"))
+            if annotation["origin"] != "manual":
+                key += "/" + annotation["origin"]
             metric = metrics.setdefault(key, {"labeled": 0, "accepted": 0, "correct": 0,
                 "abstained": 0, "false_allow": 0, "missed_violation": 0, "false_positive": 0,
                 "false_negative": 0, "negative_labels": 0, "positive_labels": 0,
@@ -233,13 +239,13 @@ def evaluate(samples, labels, engine=None):
         metric["harmful_drop_rate"] = metric["harmful_drop"] / metric["important_chunks"] if metric["important_chunks"] else None
     latencies = sorted(row["latency_ms"] for row in replays)
     return {"schema_version": 1, "mode": "fresh_shadow" if engine else "recorded",
-            "samples": len(samples), "metrics": metrics,
+            "samples": len(samples), "metrics": metrics, "synthetic_eval_enabled": allow_synthetic_eval,
             "latency_p50_ms": latencies[len(latencies) // 2] if latencies else None,
             "latency_p95_ms": latencies[min(len(latencies) - 1, int(len(latencies) * .95))] if latencies else None,
             "replays": replays}
 
 
-def export_intent(samples, labels, seed="intent-v2"):
+def export_intent(samples, labels, seed="intent-v2", allow_synthetic_eval=False, split_by_group=None):
     """Whole groups plus duplicate-connected groups are kept in one partition."""
     parents = {sample["group_id"]: sample["group_id"] for sample in samples}
 
@@ -263,6 +269,17 @@ def export_intent(samples, labels, seed="intent-v2"):
     for group in sorted(parents):
         bucket = int(digest({"seed": seed, "group": root(group)})[:8], 16) % 10
         partitions[group] = "train" if bucket < 7 else "validation" if bucket == 7 else "calibration" if bucket == 8 else "test"
+    if split_by_group is not None:
+        if (set(split_by_group) != set(parents)
+                or any(split not in {"train", "validation", "calibration", "test"} for split in split_by_group.values())):
+            raise ValueError("Explicit group split map must cover every group")
+        components = {}
+        for group, split in split_by_group.items():
+            component = root(group)
+            if component in components and components[component] != split:
+                raise ValueError("Explicit split map separates duplicate-connected groups")
+            components[component] = split
+        partitions = dict(sorted(split_by_group.items()))
     rows, seen, excluded = [], {}, Counter()
     for sample in sorted(samples, key=lambda row: row["sample_id"]):
         spec, _, _ = resolve_sample(sample)
@@ -274,7 +291,8 @@ def export_intent(samples, labels, seed="intent-v2"):
             excluded["unreviewed_or_unknown"] += 1
             continue
         split = partitions[sample["group_id"]]
-        if split != "train" and annotation["origin"] != "manual":
+        if (split != "train" and annotation["origin"] != "manual"
+                and not (allow_synthetic_eval and annotation["origin"] == "synthetic")):
             excluded["nonmanual_holdout"] += 1
             continue
         label = annotation["answers"][spec.id]
@@ -288,18 +306,21 @@ def export_intent(samples, labels, seed="intent-v2"):
         rows.append({"schema_version": 2, "point": spec.id, "version": spec.version,
                      "sample_id": sample["sample_id"], "input_digest": sample["input_digest"],
                      "group_id": sample["group_id"], "split": split, "origin": annotation["origin"],
+                     "tags": copy.deepcopy(sample.get("source", {})),
                      "reviewer": annotation["reviewer"], "state": sample["decision"]["state"],
                      "question": spec.question, "criteria": LayaBooleanJudge.CRITERIA, "label": label})
     counts = Counter(row["split"] for row in rows)
     manifest = {"schema_version": 1, "seed": seed, "groups": partitions,
+                "split_strategy": "explicit_group_map" if split_by_group is not None else "group_hash",
                 "group_components": {group: root(group) for group in sorted(parents)},
                 "counts": {split: counts[split] for split in ("train", "validation", "calibration", "test")},
                 "excluded": dict(excluded), "dataset_digest": digest(rows),
+                "evaluation_basis": "synthetic_experiment" if allow_synthetic_eval else "manual_only",
                 "ready_for_training": all(counts[split] > 0 for split in ("train", "validation", "calibration", "test"))}
     return rows, manifest
 
 
-def training_partitions(rows):
+def training_partitions(rows, allow_synthetic_eval=False):
     """Preflight before loading GPU weights or downloading a checkpoint."""
     versioned = any(row.get("schema_version") == 2 for row in rows)
     partitions = {name: [] for name in ("train", "validation", "calibration", "test")}
@@ -321,7 +342,8 @@ def training_partitions(rows):
             if fingerprint in fingerprints:
                 raise ValueError("Intent-v2 data contains duplicate inputs")
             fingerprints[fingerprint] = row["split"]
-            if row["split"] != "train" and row.get("origin") != "manual":
+            if (row["split"] != "train" and row.get("origin") != "manual"
+                    and not (allow_synthetic_eval and row.get("origin") == "synthetic")):
                 raise ValueError("Evaluation partitions require manual labels")
         partitions[row["split"]].append(row)
     required = partitions if versioned else ("train", "validation")
@@ -330,7 +352,9 @@ def training_partitions(rows):
     return partitions, versioned
 
 
-def validate_manifest(rows, manifest):
+def validate_manifest(rows, manifest, allow_synthetic_eval=False):
+    if manifest.get("evaluation_basis") == "synthetic_experiment" and not allow_synthetic_eval:
+        raise ValueError("Synthetic experiment requires explicit --allow-synthetic-eval")
     if (manifest.get("schema_version") != 1 or manifest.get("dataset_digest") != digest(rows)
             or manifest.get("ready_for_training") is not True):
         raise ValueError("Intent-v2 data requires its unchanged, ready split manifest")

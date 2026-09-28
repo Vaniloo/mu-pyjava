@@ -118,15 +118,19 @@ def main():
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--model", default="convaiinnovations/laya-multilingual")
     parser.add_argument("--revision", default="e4e9ddf21a7b1903b7acffd8814ad4307bf63a67")
+    parser.add_argument("--init-checkpoint", type=Path, help="Continue post-training from a local checkpoint copy")
     parser.add_argument("--epochs", type=int, default=3)
     parser.add_argument("--batch-size", type=int, default=8)
     parser.add_argument("--device", default="cuda")
+    parser.add_argument("--allow-synthetic-eval", action="store_true", help="Allow explicitly marked synthetic experiments")
     args = parser.parse_args()
+    if args.output.exists():
+        raise FileExistsError("Checkpoint output already exists; choose a new directory")
     rows = read_rows(args.data)
-    partitions, versioned = training_partitions(rows)
+    partitions, versioned = training_partitions(rows, args.allow_synthetic_eval)
     if versioned:
         manifest = json.loads(args.data.with_name("manifest.json").read_text(encoding="utf-8"))
-        validate_manifest(rows, manifest)
+        validate_manifest(rows, manifest, args.allow_synthetic_eval)
     manual_rows = read_rows(args.manual_eval)
     if not manual_rows or any(type(row.get("label")) is not bool for row in manual_rows):
         raise ValueError("Manual regression set must contain Boolean labels")
@@ -141,7 +145,7 @@ def main():
     if device.type == "cuda" and not torch.cuda.is_available():
         raise RuntimeError("CUDA is unavailable")
 
-    source = snapshot_download(args.model, revision=args.revision)
+    source = str(args.init_checkpoint) if args.init_checkpoint else snapshot_download(args.model, revision=args.revision)
     _fix_tokenizer_config(source)
     config = json.loads((Path(source) / "rl_agent_config.json").read_text())
     # Export the same sequence bound used in training so serving uses it too.
@@ -220,6 +224,8 @@ def main():
     metrics = {
         "base_model": args.model,
         "base_revision": args.revision,
+        "initialization": "local_checkpoint" if args.init_checkpoint else "pinned_hub_base",
+        "initial_checkpoint_sha256": hashlib.sha256((Path(source) / "model.safetensors").read_bytes()).hexdigest(),
         "training_data_sha256": hashlib.sha256(args.data.read_bytes()).hexdigest(),
         "manual_eval_sha256": hashlib.sha256(args.manual_eval.read_bytes()).hexdigest(),
         "train_count": len(train),
@@ -228,6 +234,7 @@ def main():
         "calibration_count": len(calibration),
         "test_count": len(test),
         "calibration_split": "calibration" if versioned else "validation_legacy",
+        "evaluation_basis": manifest.get("evaluation_basis", "manual_only") if versioned else "legacy",
         "baseline_validation": baseline_validation,
         "baseline_manual": baseline_manual,
         "trained_validation": trained_validation,

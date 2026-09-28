@@ -46,7 +46,9 @@ PYTHONPATH=python python3 training/judge_pipeline.py annotate \
 
 输出只建立空标签，`reviewed=false`。人工查看对应样本后填写每个问题的答案、`reviewer` 和 `rationale`，再设置 `reviewed=true`。布尔答案必须为 JSON true/false；choice 必须是声明的选项；score 必须在范围内；证据不足用 null。`task.frame` 的字符串 `none` 是真实类别，与 null 不同。
 
-`origin` 取 manual、teacher 或 synthetic。DeepSeek 可生成候选答案，记录为 teacher；人工审核候选后仍保留 teacher 来源，不自动变成独立人工测试标签。未审核数据不能导出训练行，非 manual 数据只能进入训练分区；离线独立指标只统计已审核 manual 标签。
+`origin` 取 manual、teacher 或 synthetic。DeepSeek 可生成候选答案，记录为 teacher；人工审核候选后仍保留 teacher 来源，不自动变成独立人工测试标签。未审核数据不能导出训练行，默认非 manual 数据只能进入训练分区；离线独立指标只统计已审核 manual 标签。
+
+第 14 阶段增加显式 `--allow-synthetic-eval` 实验开关：允许 synthetic 标签参与合成评测/训练清单，指标与 manual 分开，清单标记 synthetic_experiment；teacher 仍不能进入评测分区。这个开关不改变默认规则或 Laya 的 shadow 限制。实际实验与已知弱点见 [results-intent-v2.md](../training/results-intent-v2.md)。
 
 目前 intent 的 write/edit 输入主要是路径、字节数和编辑数量；不会新增文件正文。遇到正文内容、旧目标或“继续”所指任务无法从输入判断时，应标 null 并列为输入契约缺口，不能强迫模型猜测。推荐覆盖 edit/write、run_command/bash/powershell、自定义修改工具，中英文、Python/Java 等语言项目，以及只读要求、错误路径、无关命令、续做和硬约束。
 

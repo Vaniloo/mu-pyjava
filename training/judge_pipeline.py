@@ -32,6 +32,7 @@ def main():
     parser.add_argument("--fresh", action="store_true", help="Call configured judge routes; never run tools")
     parser.add_argument("--seed", default="intent-v2")
     parser.add_argument("--point", action="append", help="Limit replay/export to a parent point (repeatable)")
+    parser.add_argument("--allow-synthetic-eval", action="store_true", help="Experimental synthetic labels; never independent gold")
     args = parser.parse_args()
     if args.fresh and args.action != "replay":
         parser.error("--fresh is only valid with replay")
@@ -51,11 +52,11 @@ def main():
         env = dict(os.environ)
         env.pop("MU_JUDGE_SAMPLES", None)  # Replay inference must never resample itself.
         engine = engine_from_environment(environ=env) if args.fresh else None
-        report = evaluate(samples, labels, engine)
+        report = evaluate(samples, labels, engine, args.allow_synthetic_eval)
         save_new(args.output, report)
         print(json.dumps({key: report[key] for key in ("mode", "samples", "metrics")}, ensure_ascii=False))
     else:
-        rows, manifest = export_intent(samples, labels, args.seed)
+        rows, manifest = export_intent(samples, labels, args.seed, args.allow_synthetic_eval)
         args.output.mkdir(parents=True, exist_ok=False)
         save_new(args.output / "intent-v2.jsonl", rows, jsonl=True)
         save_new(args.output / "manifest.json", manifest)

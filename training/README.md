@@ -20,6 +20,12 @@ The script pins the base checkpoint revision, reports baseline and fine-tuned re
 
 Opt-in exact-input sampling, annotation templates, tool-free recorded/fresh-shadow replay and group-isolated exports are implemented. Follow [JUDGE_EVALUATION.md](../docs/JUDGE_EVALUATION.md). Predictions and permission approvals never become gold labels automatically. No new training or independently measured accuracy is included in milestone 13.
 
+Milestone 14 completed broader synthetic post-training and actual v1/v2 serving comparison,
+plus a live DeepSeek harness run. See [results-intent-v2.md](results-intent-v2.md). Frozen
+compressed data and prediction reports are included; experimental synthetic evaluation
+requires `--allow-synthetic-eval`. The new checkpoint remains shadow-only and shows
+overconfidence on missing-context inputs.
+
 ## Connect the lab checkpoint to the app
 
 Run the service on the lab host with the Python environment used for training. It listens on lab loopback only:

@@ -110,3 +110,29 @@ No paid model call, independent new labels, GPU run or retraining occurred in th
 Next: gather and review diverse real decisions, freeze an independent holdout, compare the
 existing checkpoint, then train intent v2. See [JUDGE_EVALUATION.md](JUDGE_EVALUATION.md).
 GitHub tracking: [milestone 13](https://github.com/Vaniloo/mu-pyjava/issues/13).
+
+## Milestone 14 — broader synthetic intent post-training
+
+Generated and froze 4,240 bilingual examples in 56 scenario families, with all eight actual
+or hypothetical tool names in every partition: 2,500 train, 580 validation, 580 calibration,
+580 test. Synthetic provenance is preserved; an explicit experiment flag permits these
+labels in evaluation without calling them human gold. Duplicate/group checks remain active.
+
+Lab continued three epochs from a copy of v1; the pinned hub base download stalled.
+An initial timeout metadata mismatch was corrected and the experiment rerun; r1 artifacts
+remain historical, r2 is current. Actual serving comparison improved synthetic 0.5 accuracy
+from 421/580 to 579/580, while manual regression worsened from 18/20 to 16/20, with one
+false allow, three false declines and one abstention. Missing-context probes worsened:
+24/24 explicit v2 answers versus 20/24 for v1. The default model is not replaced.
+
+A live DeepSeek coding-model run verified edit/document/readonly cases and original command
+denial, but r2 incorrectly declined the actual edit in shadow. Six direct legacy probes were
+all correct and missed this real failure. Both trial runs and their outcomes are retained. No training
+sample was recast as independent real-world gold. Original checkpoint and default app settings
+are preserved. Temporary service/tunnel were stopped after verification.
+
+Full software regression: **192 tests, 191 passed, native PowerShell skipped**. Training data,
+frozen manifest, inference predictions and detailed findings are published in
+[results-intent-v2.md](../training/results-intent-v2.md). Next: task-aware intent input,
+natural-language data/rehearsal, explicit missing-evidence targets and independently reviewed real harness evaluation.
+GitHub tracking: [milestone 14](https://github.com/Vaniloo/mu-pyjava/issues/14).
