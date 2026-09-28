@@ -466,6 +466,8 @@ class CoreTests(unittest.TestCase):
                         ]}
                     elif prompt == "Replace note.txt":
                         name, arguments = "write_file", {"path": "note.txt", "content": "replaced"}
+                    elif prompt == "Run Bash":
+                        name, arguments = "bash", {"command": "printf shell-ok > shell.txt; cat shell.txt"}
                     else:
                         name, arguments = "write_file", {"path": "note.txt", "content": "created"}
                     message = {"role": "assistant", "content": None, "tool_calls": [{
@@ -530,6 +532,25 @@ class CoreTests(unittest.TestCase):
                 self.assertEqual(failed.returncode, 0, failed.stderr)
                 self.assertIn("old_text must occur exactly once", failed.stdout)
                 self.assertEqual((Path(directory) / "note.txt").read_text(), "updated")
+                if shutil.which("bash"):
+                    for answer in ("deny", "once"):
+                        shell = subprocess.run(["java", "-cp", str(classes), "dev.mupyjava.Main",
+                                                "--workspace", directory, "--smoke", "Run Bash",
+                                                "--smoke-approval", answer],
+                                               cwd=repository, env=env, capture_output=True, text=True, timeout=15)
+                        self.assertEqual(shell.returncode, 0, shell.stderr)
+                        if answer == "deny":
+                            self.assertFalse((Path(directory) / "shell.txt").exists())
+                        else:
+                            self.assertEqual((Path(directory) / "shell.txt").read_text(), "shell-ok")
+                            self.assertIn("tool.detail: bash: exit code 0", shell.stdout)
+                    store = SessionStore.open(Path(directory), Path(directory) / "sessions", resume=True)
+                    result = next(item["payload"] for item in reversed(store.events())
+                                  if item["type"] == "tool.result" and item["payload"]["tool"] == "bash")
+                    self.assertEqual(result["version"], 1)
+                    self.assertEqual(result["details"]["mode"], "bash")
+                    self.assertTrue(any(kind == "history.transcript" and "bash: exit code 0" in text
+                                        for kind, text in store.history()))
             finally:
                 server.shutdown()
                 server_thread.join(timeout=5)

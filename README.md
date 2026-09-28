@@ -39,13 +39,13 @@ PYTHONPATH=python python3 -m mupyjava --workspace . --prompt "Summarize this pro
 
 The adapter uses the [Chat Completions function-call format](https://developers.openai.com/api/docs/guides/function-calling). Other endpoints may need a separate adapter. A model key is never stored in this repository.
 
-The agent now has ten tools, following mu's basic read/find/grep/edit/write/command workflow and adding direct Git inspection and full command-output retrieval:
+The agent now has twelve tools, following mu's read/find/grep/edit/write/shell workflow and adding direct Git inspection and full command-output retrieval:
 
 | Read-only, always available | Desktop approval; CLI requires `--allow-write` | Desktop approval; CLI requires `--allow-command` |
 | --- | --- | --- |
-| `list_files`, `read_file`, `find_files`, `grep_files`, `git_status`, `git_diff`, `read_command_output` | `write_file`, `edit_file` | `run_command` |
+| `list_files`, `read_file`, `find_files`, `grep_files`, `git_status`, `git_diff`, `read_command_output` | `write_file`, `edit_file` | `run_command`, `bash`, `powershell` |
 
-`read_file` accepts `offset` and `limit` to page through large UTF-8 files, returning at most 50 KiB per call. `find_files` uses globs, and `grep_files` supports regex, literal matching, case-insensitive search and surrounding lines. Both use ripgrep and respect `.gitignore` in Git workspaces. Their JSON results include a `truncated` flag. `edit_file` replaces text only when the old text appears exactly once. File paths stay inside the selected workspace. Commands use an argument list without a shell, run inside the workspace, and have a configurable timeout of up to 120 seconds. Output streams live to the desktop. The final result keeps the last 12 KiB; longer output receives an ID that `read_command_output` can page through by byte offset, including after restart.
+`read_file` accepts `offset` and `limit` to page through large UTF-8 files, returning at most 50 KiB per call. `find_files` uses globs, and `grep_files` supports regex, literal matching, case-insensitive search and surrounding lines. Both use ripgrep and respect `.gitignore` in Git workspaces. Their JSON results include a `truncated` flag. `edit_file` supports multiple unique, disjoint replacements against original text, preserving BOM/CRLF and committing atomically after diff approval. File tool paths stay inside the selected workspace. `run_command` executes an argument vector; `bash` and `powershell` accept complete shell scripts with pipelines and redirection. All start in the workspace and have a configurable timeout of up to 120 seconds. Output streams live to the desktop. The final result keeps the last 12 KB; longer output receives an ID that `read_command_output` can page through by byte offset, including after restart.
 
 The Java desktop now asks before each write, edit or command. A file action can be allowed once, allowed for the same file during this conversation, or denied; commands and protected files are approved one at a time. Denial returns a tool result to the model. Closing the backend denies pending requests. In noninteractive CLI mode, `--allow-write` and `--allow-command` still explicitly grant broad access for that process; passing those flags to the desktop also bypasses its approval dialog. The `--smoke` test path denies actions unless `--smoke-approval once` is supplied for an automated test.
 
@@ -55,9 +55,9 @@ The desktop now restores the latest conversation for the selected workspace on r
 
 ## Decisions
 
-`tool.intent` is the first decision point. Version 2 asks whether a proposed `write_file`, `edit_file`, or `run_command` action serves the latest user request. Read-only tools do not use this decision point. The default mode is `off`; `shadow` asks and records without changing behavior; `active` applies the answer. The desktop permission gate still applies after the judge decision. A separate judge model can be configured with `MU_JUDGE_MODEL`, `MU_JUDGE_MODE=shadow|active`, and an optional `--ledger path/to/ledger.jsonl` argument.
+`tool.intent` is the first decision point. Version 2 asks whether a proposed file mutation, command or shell action serves the latest user request. Read-only tools do not use this decision point. The default mode is `off`; `shadow` asks and records without changing behavior; `active` applies the answer. The desktop permission gate still applies after the judge decision. A separate judge model can be configured with `MU_JUDGE_MODEL`, `MU_JUDGE_MODE=shadow|active`, and an optional `--ledger path/to/ledger.jsonl` argument.
 
-A fine-tuned Laya checkpoint can be loaded locally with `MU_JUDGE_LAYA_PATH=/path/to/checkpoint`, or reached through an SSH tunnel with `MU_JUDGE_LAYA_URL=http://127.0.0.1:18765`. The local option needs `laya==0.3.20` and its runtime dependencies in the Python environment. The experimental Laya backend supports `MU_JUDGE_MODE=shadow` only. Its training covered version 1's `write_file` and `run_command`; `edit_file` verdicts are exploratory until new data and evaluation cover them. The small evaluation found confident errors, so it cannot yet control tools. See [training results](training/results-lab.md) and [lab connection steps](training/README.md).
+A fine-tuned Laya checkpoint can be loaded locally with `MU_JUDGE_LAYA_PATH=/path/to/checkpoint`, or reached through an SSH tunnel with `MU_JUDGE_LAYA_URL=http://127.0.0.1:18765`. The local option needs `laya==0.3.20` and its runtime dependencies in the Python environment. The experimental Laya backend supports `MU_JUDGE_MODE=shadow` only. Its training covered version 1's `write_file` and `run_command`; `edit_file`, `bash` and `powershell` verdicts are exploratory until new data and evaluation cover them. The small evaluation found confident errors, so it cannot yet control tools. See [training results](training/results-lab.md) and [lab connection steps](training/README.md).
 
 The intent question sends the latest request and tool metadata to the configured judge. For a write or edit, it sends the path and text sizes, not the file content. The ledger stores the verdict, probability, timing, and tool name, not the submitted state. Shadow verdicts appear as `judge` events in the CLI and desktop transcript.
 
@@ -73,3 +73,5 @@ See [progress](docs/PROGRESS.md) for completed work and next milestones. The ups
 
 The [tool parity table](docs/TOOL_PARITY.md) tracks which mu behaviors have been reproduced and what remains.
 The [operation contracts](docs/OPERATIONS.md) describe local and alternate workspace implementations.
+
+See [structured results and shell behavior](docs/TOOL_RESULTS.md) for tool metadata, platform requirements and validation coverage.

@@ -11,6 +11,7 @@ tools = WorkspaceTools(
     search_ops=backend,
     git_ops=backend,
     command_ops=backend,
+    shell_ops=backend,
 )
 ```
 
@@ -22,8 +23,9 @@ An implementation may supply one or more operation groups. Omitted groups use lo
 | `SearchOperations` | `find`, `grep` | Discover workspace-relative paths; produce structured match/context records, honoring glob/ignore options and cancellation |
 | `GitOperations` | `inspect` | Execute the supplied read-only Git argument list and return text; throw on failure |
 | `CommandOperations` | `execute` | Run the supplied argument vector in the workspace, emit byte chunks, observe timeout/cancellation, stop descendants, and return an integer exit code |
+| `ShellOperations` | `execute` | Run the selected Bash/PowerShell script and follow the same byte-stream, timeout, cancellation and exit-code contract |
 
-Definitions live in `python/mupyjava/file_ops.py`, `search_ops.py` and `command_ops.py`. Local implementations use the filesystem, ripgrep, Git and processes respectively.
+Definitions live in `python/mupyjava/file_ops.py`, `search_ops.py`, `command_ops.py` and `shell_ops.py`. Local implementations use the filesystem, ripgrep, Git and processes respectively.
 
 ## Shared contracts
 
@@ -40,4 +42,4 @@ This milestone provides interfaces and an in-memory alternate backend test; it d
 
 An actual remote backend must map the agent's workspace namespace onto a configured remote root, resolve remote symlinks under that root, and enforce containment on the remote host. The local path resolver alone cannot validate remote symlinks. Authentication, host verification, connection lifetime, reconnection, remote process-tree termination and atomic remote file replacement belong to that transport. A lost connection must report an uncertain operation as a failure and must not retry a mutation automatically.
 
-Commands remain argument vectors with no shell interpretation. Bash/PowerShell syntax and a public custom-tool registry are separate parity milestones.
+`run_command` remains an argument vector. `bash` and `powershell` use an injectable `ShellOperations.execute(shell, script, cwd, timeout, cancel, on_data)` transport and the same output policy. See [structured results and shell behavior](TOOL_RESULTS.md). A public custom-tool registry and actual SSH transport remain future work.

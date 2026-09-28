@@ -15,6 +15,9 @@ from .cancel import CancellationToken, TurnCancelled
 from .file_ops import FileMutationQueue, FileOperations, LocalFileOperations
 from .command_ops import CommandOperations, CommandOutput, LocalCommandOperations
 from .search_ops import GitOperations, LocalGitOperations, LocalSearchOperations, SearchOperations
+from .shell_ops import LocalShellOperations, ShellOperations
+from .tool_policy import COMMAND_TOOLS
+from .tool_result import ToolResult, TextContent
 
 
 TOOL_SCHEMAS: List[Dict[str, Any]] = [
@@ -133,12 +136,23 @@ TOOL_SCHEMAS: List[Dict[str, Any]] = [
     },
 ]
 
+TOOL_SCHEMAS.extend({
+    "type": "function", "function": {
+        "name": shell,
+        "description": f"Execute a {shell} script in the workspace, including pipes and redirection. Requires command permission. Output streams and can be retrieved after truncation.",
+        "parameters": {"type": "object", "properties": {
+            "command": {"type": "string"}, "timeout": {"type": "integer"},
+        }, "required": ["command"]},
+    },
+} for shell in ("bash", "powershell"))
+
 
 class WorkspaceTools:
     def __init__(self, root: Path, allow_write: bool = False, allow_command: bool = False,
                  output_root: Optional[Path] = None, file_ops: Optional[FileOperations] = None,
                  search_ops: Optional[SearchOperations] = None, git_ops: Optional[GitOperations] = None,
-                 command_ops: Optional[CommandOperations] = None):
+                 command_ops: Optional[CommandOperations] = None,
+                 shell_ops: Optional[ShellOperations] = None):
         self.root = root.resolve(strict=True)
         if not self.root.is_dir():
             raise ValueError("Workspace must be a directory")
@@ -149,6 +163,7 @@ class WorkspaceTools:
         self.search_ops = search_ops or LocalSearchOperations(self.root)
         self.git_ops = git_ops or LocalGitOperations(self.root)
         self.command_ops = command_ops or LocalCommandOperations()
+        self.shell_ops = shell_ops or LocalShellOperations()
         self.mutations = FileMutationQueue()
 
     def prepare_change(self, name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
@@ -261,16 +276,18 @@ class WorkspaceTools:
             raise ValueError("Search operations returned an invalid listing")
         return [str(self._path(path).relative_to(self.root)) for path in paths], incomplete
 
-    def _git(self, args, cancel):
+    def _git(self, args, cancel, details):
         result = self.git_ops.inspect(args, cancel)
         if cancel is not None:
             cancel.raise_if_cancelled()
         if not isinstance(result, str):
             raise ValueError("Git operations must return text")
-        return result[:12_000]
+        text = result[:12_000]
+        details.update(truncated=len(result) > len(text), output_bytes=len(text.encode("utf-8")))
+        return text
 
     def _read_page(self, path: Path, offset: int, limit: int,
-                   cancel: Optional[CancellationToken] = None) -> str:
+                   cancel: Optional[CancellationToken], details: dict) -> str:
         lines = []
         byte_count = 0
         last_line = 0
@@ -288,6 +305,8 @@ class WorkspaceTools:
                     break
                 lines.append(line)
                 byte_count += line_bytes
+        details.update(offset=offset, output_lines=len(lines), output_bytes=byte_count,
+                       truncated=more, next_offset=offset + len(lines) if more else None)
         if last_line == 0 and offset == 1:
             return ""
         if last_line < offset:
@@ -306,18 +325,39 @@ class WorkspaceTools:
                 output_dir: Optional[Path] = None,
                 on_change: Optional[Callable[[Dict[str, Any]], None]] = None,
                 expected_change: Optional[Dict[str, Any]] = None) -> str:
+        return self.execute_result(name, arguments, cancel=cancel, on_update=on_update,
+                                   on_artifact=on_artifact, output_dir=output_dir,
+                                   on_change=on_change, expected_change=expected_change).text
+
+    def execute_result(self, name: str, arguments: Dict[str, Any], **options) -> ToolResult:
+        details = {}
+        text = self._execute_text(name, arguments, details=details, **options)
+        return ToolResult((TextContent(text),), details, details.get("exit_code", 0) != 0)
+
+    def _execute_text(self, name: str, arguments: Dict[str, Any],
+                      cancel: Optional[CancellationToken] = None,
+                      on_update: Optional[Callable[[str], None]] = None,
+                      on_artifact: Optional[Callable[[str], None]] = None,
+                      output_dir: Optional[Path] = None,
+                      on_change: Optional[Callable[[Dict[str, Any]], None]] = None,
+                      expected_change: Optional[Dict[str, Any]] = None,
+                      details: Optional[dict] = None) -> str:
+        if details is None:
+            details = {}
         if cancel is not None:
             cancel.raise_if_cancelled()
         if name == "list_files":
             target = self._path(arguments["path"])
             if not self.file_ops.is_dir(target):
                 raise ValueError("Not a directory")
-            return json.dumps(sorted(self.file_ops.list_dir(target, cancel))[:200])
+            entries = sorted(self.file_ops.list_dir(target, cancel))
+            details.update(count=min(200, len(entries)), truncated=len(entries) > 200)
+            return json.dumps(entries[:200])
         if name == "read_file":
             target = self._path(arguments["path"])
             offset = self._positive_int(arguments.get("offset", 1), "offset", 10_000_000)
             limit = self._positive_int(arguments.get("limit", 2000), "limit", 2000)
-            return self._read_page(target, offset, limit, cancel)
+            return self._read_page(target, offset, limit, cancel, details)
         if name == "read_command_output":
             raw_id = arguments["id"]
             if not isinstance(raw_id, str):
@@ -338,6 +378,8 @@ class WorkspaceTools:
                 file.seek(offset)
                 data = file.read(limit + 1)
             more = len(data) > limit
+            details.update(artifact_id=output_id, offset=offset, output_bytes=min(limit, len(data)),
+                           truncated=more, next_offset=offset + limit if more else None)
             text = data[:limit].decode("utf-8", errors="replace")
             if more:
                 text += f"\n[More output available; use offset={offset + limit}]"
@@ -357,7 +399,8 @@ class WorkspaceTools:
                 if size > 10_000:
                     break
                 shown.append(path)
-            return json.dumps({"paths": shown, "truncated": incomplete or len(shown) < len(paths)}, ensure_ascii=False)
+            details.update(count=len(shown), truncated=incomplete or len(shown) < len(paths))
+            return json.dumps({"paths": shown, "truncated": details["truncated"]}, ensure_ascii=False)
         if name == "grep_files":
             pattern = arguments["pattern"]
             file_glob = arguments.get("glob", "**/*")
@@ -416,9 +459,10 @@ class WorkspaceTools:
                 if output_full or match_count >= limit:
                     truncated = truncated or start + 100 < len(paths)
                     break
+            details.update(count=match_count, record_count=len(matches), truncated=truncated)
             return json.dumps({"matches": matches, "truncated": truncated}, ensure_ascii=False)
         if name == "git_status":
-            return self._git(["status", "--short", "--untracked-files=normal", "--", "."], cancel)
+            return self._git(["status", "--short", "--untracked-files=normal", "--", "."], cancel, details)
         if name == "git_diff":
             raw_path = arguments.get("path", ".")
             selected = self._path(raw_path)
@@ -426,7 +470,7 @@ class WorkspaceTools:
             if not isinstance(staged, bool):
                 raise ValueError("staged must be a boolean")
             path = str(selected.relative_to(self.root)) or "."
-            return self._git(["diff", "--no-ext-diff", *(["--staged"] if staged else []), "--", path], cancel)
+            return self._git(["diff", "--no-ext-diff", *(["--staged"] if staged else []), "--", path], cancel, details)
         if name in {"write_file", "edit_file"}:
             if not self.allow_write:
                 raise PermissionError("Writing is disabled; restart with --allow-write")
@@ -443,6 +487,7 @@ class WorkspaceTools:
                 if cancel is not None:
                     cancel.raise_if_cancelled()
                 self.file_ops.replace_text(target, change["content"])
+                details["change"] = {key: value for key, value in change.items() if key != "content"}
                 if on_change is not None:
                     try:
                         on_change({key: value for key, value in change.items() if key != "content"})
@@ -450,25 +495,28 @@ class WorkspaceTools:
                         # Reporting cannot turn a committed write into an apparent failure.
                         pass
             return ("Wrote " if name == "write_file" else "Edited ") + change["path"]
-        if name == "run_command":
-            return self._run_command(arguments, cancel, on_update, on_artifact, output_dir)
+        if name in COMMAND_TOOLS:
+            return self._run_command(name, arguments, cancel, on_update, on_artifact, output_dir, details)
         raise ValueError("Unknown tool: " + name)
 
-    def _run_command(self, arguments: Dict[str, Any], cancel: Optional[CancellationToken],
+    def _run_command(self, name: str, arguments: Dict[str, Any], cancel: Optional[CancellationToken],
                      on_update: Optional[Callable[[str], None]],
-                     on_artifact: Optional[Callable[[str], None]], output_dir: Optional[Path]) -> str:
+                     on_artifact: Optional[Callable[[str], None]], output_dir: Optional[Path], details: dict) -> str:
         if not self.allow_command:
             raise PermissionError("Commands are disabled; restart with --allow-command")
         command = arguments["command"]
         if not isinstance(command, str) or not command.strip():
             raise ValueError("Command is required")
         timeout = self._positive_int(arguments.get("timeout", 30), "timeout", 120)
-        argv = shlex.split(command, posix=os.name != "nt")
-        if not argv:
-            raise ValueError("Command is required")
         capture = CommandOutput(output_dir or self.output_root, on_update, on_artifact)
         try:
-            code = self.command_ops.execute(argv, self.root, timeout, cancel, capture.feed)
+            if name == "run_command":
+                argv = shlex.split(command, posix=os.name != "nt")
+                if not argv:
+                    raise ValueError("Command is required")
+                code = self.command_ops.execute(argv, self.root, timeout, cancel, capture.feed)
+            else:
+                code = self.shell_ops.execute(name, command, self.root, timeout, cancel, capture.feed)
             if cancel is not None:
                 cancel.raise_if_cancelled()
         except (TurnCancelled, subprocess.TimeoutExpired) as error:
@@ -478,4 +526,7 @@ class WorkspaceTools:
             raise
         finally:
             capture.close()
-        return capture.result(code)
+        text = capture.result(code)
+        details.update(exit_code=code, output_bytes=capture.total, truncated=capture.artifact_id is not None,
+                       artifact_id=capture.artifact_id, mode="exec" if name == "run_command" else name)
+        return text

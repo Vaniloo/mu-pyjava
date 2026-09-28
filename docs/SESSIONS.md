@@ -6,7 +6,7 @@ The Python engine owns conversation state. In server mode it keeps one active se
 
 Sessions live outside the project workspace in the platform's application state directory. Set `MU_SESSION_DIR` or pass `--session-dir` to use another location. A SHA-256 digest of the resolved workspace path separates projects; each conversation is a UUID-named JSONL file. The directory is owner-only where supported, and a new journal file is created with owner-only permissions.
 
-Every line is a version 1 event with `event_id`, `session_id`, `turn_id`, `tool_call_id`, timestamp, type and payload. The journal records model-visible messages, display events, approval requests/resolutions and judge records. It therefore contains the text of prompts, model tool arguments and tool results; keep the selected session directory private.
+Every line is a version 1 event with `event_id`, `session_id`, `turn_id`, `tool_call_id`, timestamp, type and payload. The journal records model-visible messages, display events, approval requests/resolutions, versioned tool results with structured details, and judge records. It therefore contains the text of prompts, model tool arguments and tool results; keep the selected session directory private.
 
 A turn enters the model context after `turn.completed` has been written. If the process stops mid-turn, startup appends `turn.interrupted` and restores only completed turns to the model. The desktop still shows the interrupted turn and a notice. Executed tools are never replayed from the journal. Session-scoped permission grants are cleared on backend restart and when a new session starts. Long command output lives in an owner-only `.outputs` directory next to the journal and remains readable by output ID after restart.
 

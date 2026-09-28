@@ -10,9 +10,9 @@ from pathlib import Path
 from typing import Callable, Dict, Optional, Tuple
 
 from .tools import WorkspaceTools
+from .tool_policy import COMMAND_TOOLS, MUTATING_TOOLS
 
 
-MUTATING_TOOLS = frozenset({"write_file", "edit_file", "run_command"})
 PROTECTED_PARTS = frozenset({".git", ".mu", ".pi", ".codex"})
 
 
@@ -35,12 +35,15 @@ def action_preview(tools: WorkspaceTools, name: str, arguments: dict,
         verb = "Edit" if name == "edit_file" else ("Replace" if change["existed"] else "Create")
         preview = change["diff"] or "(No content change)"
         return (f"{verb} {relative} ({change['after_bytes']} bytes)", preview, grant, target)
-    if name == "run_command":
+    if name in COMMAND_TOOLS:
         command = arguments["command"]
-        if not isinstance(command, str) or not command.strip() or not shlex.split(command, posix=os.name != "nt"):
+        if not isinstance(command, str) or not command.strip():
+            raise ValueError("Command is required")
+        if name == "run_command" and not shlex.split(command, posix=os.name != "nt"):
             raise ValueError("Command is required")
         tools._positive_int(arguments.get("timeout", 30), "timeout", 120)
-        return ("Run a command in " + str(tools.root), command, None, None)
+        label = "a command" if name == "run_command" else name
+        return ("Run " + label + " in " + str(tools.root), command, None, None)
     raise ValueError("Not a mutating tool: " + name)
 
 
@@ -74,7 +77,7 @@ class ApprovalManager:
     def request(self, request_id: str, tool_call_id: str, name: str, arguments: dict) -> bool:
         if name not in MUTATING_TOOLS:
             return True
-        if (name == "run_command" and self.full_command) or (name != "run_command" and self.full_write):
+        if (name in COMMAND_TOOLS and self.full_command) or (name not in COMMAND_TOOLS and self.full_write):
             return True
         proposed = self.tools.prepare_change(name, arguments) if name in {"write_file", "edit_file"} else None
         summary, preview, grant, target = action_preview(self.tools, name, arguments, proposed)

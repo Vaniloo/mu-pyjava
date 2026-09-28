@@ -12,6 +12,8 @@ from .cancel import CancellationToken, TurnCancelled
 from .judge import DecisionEngine, DecisionPoint
 from .model import ChatModel
 from .tools import TOOL_SCHEMAS, WorkspaceTools
+from .tool_policy import COMMAND_TOOLS, MUTATING_TOOLS
+from .tool_result import ToolResult
 
 
 TOOL_INTENT = DecisionPoint(
@@ -94,7 +96,7 @@ class Agent:
                                                                   for edit in edits if isinstance(edit, dict)),
                                             "new_text_bytes": sum(len(str(edit.get("new_text", "")).encode("utf-8"))
                                                                   for edit in edits if isinstance(edit, dict))}
-                    if name in {"write_file", "edit_file", "run_command"}:
+                    if name in MUTATING_TOOLS:
                         approved = self.judge.decide(
                             TOOL_INTENT, {"user_request": prompt[:1000], "tool": name, "arguments": judged_arguments}
                         )
@@ -118,10 +120,10 @@ class Agent:
                             raise PermissionError("User did not allow this tool action")
                     if cancel is not None:
                         cancel.raise_if_cancelled()
-                    if name == "run_command" and on_tool_event is not None:
+                    if name in COMMAND_TOOLS and on_tool_event is not None:
                         on_tool_event(call_id, "tool.started", {"tool": name})
                     try:
-                        result = self.tools.execute(
+                        structured_result = self.tools.execute_result(
                             name, arguments, cancel=cancel,
                             on_update=(lambda chunk: on_tool_update(call_id, chunk)) if on_tool_update else None,
                             on_artifact=(lambda artifact_id: on_tool_artifact(call_id, artifact_id))
@@ -132,24 +134,27 @@ class Agent:
                             expected_change=expected_change(call_id) if expected_change else None,
                         )
                     except subprocess.TimeoutExpired:
-                        if name == "run_command" and on_tool_event is not None:
+                        if name in COMMAND_TOOLS and on_tool_event is not None:
                             on_tool_event(call_id, "tool.timed_out", {"tool": name})
                         raise
                     except Exception as error:
-                        if name == "run_command" and on_tool_event is not None:
+                        if name in COMMAND_TOOLS and on_tool_event is not None:
                             on_tool_event(call_id, "tool.cancelled" if isinstance(error, TurnCancelled)
                                           else "tool.failed", {"tool": name, "error": type(error).__name__})
                         raise
-                    if name == "run_command" and on_tool_event is not None:
+                    if name in COMMAND_TOOLS and on_tool_event is not None:
                         on_tool_event(call_id, "tool.completed", {"tool": name})
                     if cancel is not None:
                         cancel.raise_if_cancelled()
                 except (KeyError, TypeError, ValueError, PermissionError, OSError, subprocess.TimeoutExpired) as error:
-                    result = "Tool error: " + str(error)
+                    structured_result = ToolResult.failed(error)
+                result = structured_result.text
+                if on_tool_event is not None:
+                    on_tool_event(call_id, "tool.result", {"tool": name, **structured_result.to_payload()})
                 tool_content = result if len(result) <= 60_000 else result[:59_900] + "\n[Tool result clipped at 60,000 characters]"
                 append({"role": "tool", "tool_call_id": call_id, "content": tool_content})
                 display = result[:500]
-                if name == "run_command" and "Full output id:" in result:
+                if name in COMMAND_TOOLS and "Full output id:" in result:
                     display = result[:120] + "\n" + result[result.rfind("[Output truncated at 12 KB]"):]
                 yield "tool", name + ": " + display
         answer = "Stopped after the maximum number of tool steps."

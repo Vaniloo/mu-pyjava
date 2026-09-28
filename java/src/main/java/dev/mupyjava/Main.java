@@ -78,7 +78,8 @@ public final class Main {
             if (event.kind().equals("assistant") || event.kind().equals("error") ||
                     event.kind().equals("judge") || event.kind().equals("tool") ||
                     event.kind().equals("history.judge") || event.kind().equals("cancelled") ||
-                    event.kind().equals("tool.update") || event.kind().equals("tool.change"))
+                    event.kind().equals("tool.update") || event.kind().equals("tool.change") ||
+                    event.kind().equals("tool.detail"))
                 System.out.println(event.kind() + ": " + event.text());
             if (event.kind().equals("done") || event.kind().equals("stopped")) done.countDown();
         })) {

@@ -14,6 +14,7 @@ from .model import ChatCompletionsModel, model_from_environment
 from .permissions import ApprovalManager
 from .sessions import SessionStore, format_judgment
 from .tools import WorkspaceTools
+from .tool_result import format_result_details
 from .wire import decode_text, event_line, parse_request
 
 
@@ -118,6 +119,11 @@ def main() -> int:
                 if kind == "tool.change":
                     emit(request_id, kind, f"{payload['path']}: {payload['before_bytes']} → "
                          f"{payload['after_bytes']} bytes\n{payload['diff']}")
+                elif kind == "tool.result":
+                    summary = format_result_details(payload["tool"], payload)
+                    if summary:
+                        store.append("display", {"kind": "tool.detail", "text": summary}, turn_id, call_id)
+                        emit(request_id, "tool.detail", summary)
 
             for kind, message in agent.run(
                 prompt, approval=lambda call_id, name, arguments:
