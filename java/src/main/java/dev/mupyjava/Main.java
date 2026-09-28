@@ -86,7 +86,8 @@ public final class Main {
                     event.kind().equals("tool.update") || event.kind().equals("tool.change") ||
                     event.kind().equals("tool.detail") || event.kind().equals("context.detail") ||
                     event.kind().equals("history.context") || event.kind().equals("frame.detail") ||
-                    event.kind().equals("history.frame"))
+                    event.kind().equals("history.frame") || event.kind().equals("summary.detail") ||
+                    event.kind().equals("history.summary"))
                 System.out.println(event.kind() + ": " + event.text());
             if (event.kind().equals("done") || event.kind().equals("stopped")) done.countDown();
         })) {
@@ -174,7 +175,8 @@ public final class Main {
                     if (event.kind().equals("context.detail") || event.kind().equals("history.context")) {
                         appendBounded(context, event.text() + "\n\n"); return;
                     }
-                    if (event.kind().equals("frame.detail") || event.kind().equals("history.frame")) {
+                    if (event.kind().equals("frame.detail") || event.kind().equals("history.frame")
+                            || event.kind().equals("summary.detail") || event.kind().equals("history.summary")) {
                         appendBounded(task, event.text()); return;
                     }
                     if (event.kind().equals("approval.request")) {

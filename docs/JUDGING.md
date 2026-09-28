@@ -27,6 +27,12 @@ The two new probes are **mu-pyjava specifications**, not copies of mu's
 its risk specification combines two boolean questions into allow/confirm. Actual multi-question constraint/risk policy hooks and bounded branch-local task
 frames are now implemented separately; see [TASK_POLICIES.md](TASK_POLICIES.md).
 
+`tool.admission` v3 is a seventh registered parent point: a default-off dynamic
+choice set classifying long-output middle chunks. It is a context hook, including
+eligible read-only tool output, rather than an action permission hook. It uses
+the same typed routes and confidence checks, plus a shared per-output deadline.
+See [SEMANTIC_CONTEXT.md](SEMANTIC_CONTEXT.md). Laya remains intent-only/shadow-only.
+
 ## Configuration
 
 The existing `MU_JUDGE_MODE` plus one of `MU_JUDGE_MODEL`, `MU_JUDGE_LAYA_PATH` or

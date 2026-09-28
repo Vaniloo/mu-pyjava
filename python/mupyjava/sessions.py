@@ -14,6 +14,7 @@ from .agent import SYSTEM_MESSAGE
 from .judge import format_judgment
 from .context import context_status, format_context
 from .task_frame import restore_frame, format_frame
+from .summary import validate_summary, format_summary
 
 
 def default_session_root() -> Path:
@@ -362,12 +363,24 @@ class SessionStore:
     def restore_frame(self):
         return restore_frame(self.branch_events())
 
+    def summary_records(self):
+        messages = self.restore_messages()
+        records = []
+        for entry in self.branch_events():
+            if entry["type"] == "context.summary":
+                try:
+                    records.append(validate_summary(entry["payload"], messages))
+                except (ValueError, TypeError, KeyError):
+                    continue
+        return records
+
     def history(self) -> List[Tuple[str, str]]:
         history = []
         last_context = None
         entries = self.branch_events()
         frames = {}
         restore_frame(entries, lambda event_id, frame: frames.update({event_id: frame}))
+        messages = self.restore_messages()
         for item in entries:
             kind = item["type"]
             payload = item["payload"]
@@ -382,6 +395,12 @@ class SessionStore:
             elif kind == "task.frame":
                 if item["event_id"] in frames:
                     history.append(("history.frame", format_frame(frames[item["event_id"]].payload())))
+            elif kind == "context.summary":
+                try:
+                    record = validate_summary(payload, messages)
+                    history.append(("history.summary", format_summary(record)))
+                except (ValueError, TypeError, KeyError):
+                    continue
             elif kind == "tool.artifact":
                 history.append(("history.transcript", "[output] Full output id: " + str(payload.get("id")) + "\n\n"))
             elif kind == "turn.interrupted":

@@ -34,10 +34,11 @@ The ordered gap audit and acceptance criteria are in [NEXT_PHASE.md](NEXT_PHASE.
 - [ ] Collect independently labeled decisions for all mutating tools, including `edit_file`, and resolve confident false positives before enabling the trained judge.
 - [x] Add parent-linked session trees, completed-turn selection, independent forks with copied output artifacts, selected-path restart and a Java session browser.
 - [x] Add deterministic request/tool/image budgets, immutable canonical history, full-text admission archives, general retrieval and Java Context history/status.
-- [ ] Add provider usage calibration, summarized/task-preserving compaction, semantic chunk admission, provider-side HTTP request abort and background jobs.
+- [x] Add default-off semantic output-kind admission and bounded source-grounded summaries of omitted turns, with optional model excerpt selection and selected-path restoration.
+- [ ] Add provider usage calibration, free-form generative compaction, provider-side HTTP request abort and background jobs.
 - [x] Typed boolean/choice/score registry, per-point modes and ordered backend routing, strict answers, bounded timeout/cancel and individual saved records.
 - [x] Dynamic question sets, partial-answer cascading, constraint/risk policy aggregation, branch task frames and fresh risk confirmation with Java restoration.
-- [ ] Generated frame writing/distribution pooling, independently calibrated decisions and semantic output admission.
+- [ ] Generated frame writing/distribution pooling and independently calibrated decisions.
 - [ ] LSP diagnostics and project-specific build/test guidance.
 - [ ] Robust packaging of Python and Java runtimes for each platform.
 - [ ] Add GitHub Actions after a GitHub credential with workflow permission is available.
@@ -62,3 +63,26 @@ The kernel validates boolean/choice/score specifications and answers, freezes re
 ## Milestone 11 — dynamic policies and branch task frames
 
 The kernel supports static/dynamic question sets and partial-answer cascades with pure outcome policies. Actual `tool.constraint` asks one question per newest user constraint; active confident violations veto with the user's sentence and outages fall through to existing permissions. `tool.risk` combines destructive/requested booleans for flagged commands and can require fresh confirmation; allow never grants permission. Confirmation is bound to the exact action and consumed once by the normal gate. Branch-local frames retain verbatim user constraints, source turns, goal/current step and open questions, including restart/fork/interrupted-user recovery. The derived request note retains all stored constraints under context omission; Java adds Task history and displays multi-question records. New judge points default off; Laya remains intent-only/shadow-only. Full validation: 140 tests, 139 passed and native PowerShell skipped. Local HTTP fixtures exercise actual Python/Java restart and forced risk confirmation. Generated frame writing, choice-distribution pooling, mu permission modes, asynchronous shadow checks, independent accuracy/calibration and semantic admission remain gaps. See [TASK_POLICIES.md](TASK_POLICIES.md).
+
+## Milestone 12 — semantic output admission and history summaries
+
+`tool.admission` v3 classifies bounded middle chunks through typed routes, retaining
+errors/results/unknowns/endpoints and allowing confident progress/repeated-warning/
+passing omissions only in active mode. A shared per-output deadline spans batches
+and routes; timeout/cancel/invalid answers preserve fallbacks. Canonical text is
+unchanged and every applied omission archives exact original bytes. Source reads,
+error/image results and old unknown-status replies bypass semantic classification;
+hard budgets still apply. The trained Laya remains intent-only/shadow-only.
+
+When whole older turns leave the request, bounded exact evidence excerpts retain
+task decisions/progress/observations with source roles/indexes and prefix fingerprints.
+Default extraction has no extra model call; optional model selection rejects invented
+facts and falls back on errors/timeouts. Selected-path restart/fork restoration checks
+evidence without executing a model/tool. Java shows admission savings and Task summaries.
+Actual Python/Java processes against local HTTP fixtures recover omitted text, generate
+grounded summaries and restore independent forks without the original output source.
+Full validation: **164 tests, 163 passed and native PowerShell skipped**; 24 new
+admission/summary tests include the actual Java/Python HTTP-fixture flow.
+See [SEMANTIC_CONTEXT.md](SEMANTIC_CONTEXT.md) for configuration and limits. Free-form
+compaction/frame writing, asynchronous shadow, exact provider usage, mu test-log repetition
+handling, independent accuracy/calibration and HTTP abort remain gaps.

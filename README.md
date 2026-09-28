@@ -55,7 +55,9 @@ The desktop restores the selected conversation path for the workspace on restart
 
 ## Context budgets
 
-Before every model call, the engine reserves answer space, includes tool definitions/images in its estimate, and fits the request by omitting older complete turns and shortening tool text with explicit full-text retrieval IDs. Canonical session history is preserved. **Context** shows saved estimates and omissions in Java. Defaults are `MU_CONTEXT_TOKENS=65536`, `MU_RESPONSE_TOKENS=8192`, `MU_TOOL_RESULT_TOKENS=8192` and `MU_IMAGE_TOKENS=4096`. These are estimates and manually configured limits, not a discovered provider tokenizer/window. Mandatory input that cannot fit blocks that request. Automatic summaries and Jev semantic admission remain future work. See [context behavior, configuration and limits](docs/CONTEXT.md).
+Before every model call, the engine reserves answer space, includes tool definitions/images in its estimate, and fits the request by omitting older complete turns and shortening tool text with explicit full-text retrieval IDs. Canonical session history is preserved. **Context** shows saved estimates and omissions in Java. Defaults are `MU_CONTEXT_TOKENS=65536`, `MU_RESPONSE_TOKENS=8192`, `MU_TOOL_RESULT_TOKENS=8192` and `MU_IMAGE_TOKENS=4096`. These are estimates and manually configured limits, not a discovered provider tokenizer/window. Mandatory input that cannot fit blocks that request. See [context behavior, configuration and limits](docs/CONTEXT.md).
+
+Optional `tool.admission` v3 classifies middle chunks of long outputs and can omit confident progress/repeated-warning/passing logs while preserving error/result/unknown chunks and endpoints, with exact byte-range archive pointers. It defaults off and cannot use the trained Laya. When older turns are omitted, the agent now keeps a bounded source-grounded history summary (`MU_SUMMARY_MODE=extractive` by default); optional model mode selects exact excerpts and rejects invented text. **Task** restores these summaries on restart/selected paths/forks. See [semantic context configuration, fallbacks and mu differences](docs/SEMANTIC_CONTEXT.md).
 
 ## Decisions
 

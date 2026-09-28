@@ -85,7 +85,41 @@ TOOL_RISK = DecisionSpec("tool.risk", 1, (
     DecisionPoint("requested", 1, "Did user_message ask for what command does?", False),
 ), _risk_policy, _risk_fallback, build_state=_risk_state, default_mode="off")
 
-BUILTIN_POINTS = (*ACTION_POINTS, TASK_FRAME, TOOL_CONSTRAINT, TOOL_RISK)
+ADMISSION_KINDS = ("error", "result", "progress", "warning", "passing", "unknown")
+ADMISSION_NOISE = ("progress", "warning", "passing")
+
+
+def _admission_questions(inputs):
+    chunks = inputs["chunks"]
+    if (not isinstance(chunks, list) or not 1 <= len(chunks) <= 32
+            or any(not isinstance(chunk, str) or not 1 <= len(chunk) <= 1200 for chunk in chunks)):
+        raise ValueError("Admission requires 1..32 bounded text chunks")
+    return tuple(DecisionPoint(f"chunk_{index}", 1,
+        f"Classify chunks[{index}] as error (any failure or stack trace), result (data, search results or "
+        "file contents), progress (downloads/build status), warning (repeated warnings/deprecations), "
+        "passing (passed tests/checks), or unknown. A mixed chunk containing an error or result must "
+        "keep that class. This is output-kind classification, not an assessment of task relevance.",
+        "unknown", kind="choice", choices=ADMISSION_KINDS) for index in range(len(chunks)))
+
+
+def _admission_state(inputs):
+    return {"call": inputs["call"][:400], "chunks": inputs["chunks"]}
+
+
+def _admission_policy(answers, inputs):
+    return [{"kind": answers.get(f"chunk_{index}", {}).get("answer", "unknown"),
+             "drop": answers.get(f"chunk_{index}", {}).get("answer") in ADMISSION_NOISE}
+            for index in range(len(inputs["chunks"]))]
+
+
+def _admission_fallback(inputs):
+    return [{"kind": "unknown", "drop": False} for _ in inputs.get("chunks", [])]
+
+
+TOOL_ADMISSION = DecisionSpec("tool.admission", 3, (), _admission_policy, _admission_fallback,
+    questions_for=_admission_questions, build_state=_admission_state, default_mode="off", min_confidence=0.9)
+
+BUILTIN_POINTS = (*ACTION_POINTS, TASK_FRAME, TOOL_CONSTRAINT, TOOL_RISK, TOOL_ADMISSION)
 
 
 def builtin_registry() -> DecisionRegistry:

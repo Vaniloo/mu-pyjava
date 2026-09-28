@@ -15,6 +15,8 @@ from .judge import DecisionEngine, format_judgment
 from .decision_points import (ACTION_POINTS, BUILTIN_POINTS, TASK_FRAME, TOOL_CONSTRAINT,
                               TOOL_INTENT, TOOL_REVIEW, TOOL_RISK)
 from .task_frame import TaskFrame
+from .admission import OutputAdmission
+from .summary import TaskSummaries
 from .command_risk import risk_flag
 from .model import ChatCompletionsModel, ChatModel
 from .tools import WorkspaceTools
@@ -31,7 +33,8 @@ SYSTEM_MESSAGE = (
 
 class Agent:
     def __init__(self, model: ChatModel, tools: WorkspaceTools, judge: DecisionEngine, max_steps: int = 8,
-                 context_settings: Optional[ContextSettings] = None):
+                 context_settings: Optional[ContextSettings] = None, *, admission_settings=None,
+                 summary_settings=None, summary_model=None):
         self.model = model
         self.tools = tools
         self.tools.registry.freeze()
@@ -42,6 +45,8 @@ class Agent:
         self.judge.registry.freeze()
         self.max_steps = max_steps
         self.context = ContextBudget(context_settings)
+        self.admission = OutputAdmission(judge, admission_settings)
+        self.summaries = TaskSummaries(summary_settings, summary_model)
         self.frame = TaskFrame()
         self.messages: List[Dict[str, Any]] = [{"role": "system", "content": SYSTEM_MESSAGE}]
 
@@ -57,7 +62,8 @@ class Agent:
             on_context: Optional[Callable[[Dict[str, Any]], None]] = None,
             on_judgment: Optional[Callable[[Dict[str, Any]], None]] = None,
             on_frame: Optional[Callable[[Dict[str, Any]], None]] = None,
-            risk_approval: Optional[Callable[[str, str, Dict[str, Any], str], bool]] = None) -> Iterator[Tuple[str, str]]:
+            risk_approval: Optional[Callable[[str, str, Dict[str, Any], str], bool]] = None,
+            on_summary: Optional[Callable[[Dict[str, Any]], None]] = None) -> Iterator[Tuple[str, str]]:
         if not prompt.strip():
             raise ValueError("Prompt is empty")
 
@@ -67,6 +73,7 @@ class Agent:
             self.messages.append(message)
 
         self.context.begin_turn()
+        self.summaries.begin_turn()
         append({"role": "user", "content": prompt})
         change = "none"
         if self.frame.version and self.judge.policy_for(TASK_FRAME).mode != "off":
@@ -90,7 +97,9 @@ class Agent:
                     request_messages = [self.messages[0], {"role": "system", "content": note}, *self.messages[1:]]
                 projection = self.context.prepare(request_messages, self.tools.schemas,
                     output_dir or self.tools.output_root,
-                    getattr(self.model, "capabilities", ModelCapabilities()), cancel)
+                    getattr(self.model, "capabilities", ModelCapabilities()), cancel,
+                    admission=self.admission, summaries=self.summaries,
+                    on_judgment=on_judgment, on_summary=on_summary)
             except ContextOverflow as error:
                 if note:
                     for item in error.record["shortened_tools"]:
@@ -107,7 +116,7 @@ class Agent:
                     on_tool_artifact(call_id, artifact_id)
             if on_context is not None:
                 on_context(projection.record)
-            if projection.record["omitted_turns"] or projection.record["shortened_tools"]:
+            if projection.record["omitted_turns"] or projection.record["shortened_tools"] or projection.record.get("admission"):
                 yield "context", format_context(projection.record)
             response = self._complete(cancel, projection.messages)
             calls = response.get("tool_calls") or []
@@ -252,7 +261,8 @@ class Agent:
                     result += "\nFuzzy normalization used on lines: " + json.dumps(change.get("normalized_line_ranges", []))
                 if on_tool_event is not None:
                     on_tool_event(call_id, "tool.result", {"tool": name, **structured_result.to_payload()})
-                tool_message = {"role": "tool", "tool_call_id": call_id, "content": result}
+                tool_message = {"role": "tool", "tool_call_id": call_id, "content": result,
+                                "tool_is_error": structured_result.is_error}
                 images = [block.to_payload() for block in structured_result.content if isinstance(block, ImageContent)]
                 if images:
                     tool_message["image_blocks"] = images

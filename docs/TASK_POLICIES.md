@@ -181,7 +181,7 @@ unresolved IDs, each route's asked IDs/reasons/timing, judged/applied outcomes a
 fallback/source. Constraint records include frame revision and index offset.
 The optional ledger still excludes raw state, question text and constraint
 sentences; regular session journals retain user text as before. State-bearing
-calibration replay and semantic chunk admission remain future work.
+calibration replay remain future work. Semantic output-kind admission and grounded history excerpts are now implemented separately; see [SEMANTIC_CONTEXT.md](SEMANTIC_CONTEXT.md).
 
 ## Source anchors and validation
 

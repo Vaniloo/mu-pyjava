@@ -11,10 +11,12 @@ from .agent import Agent
 from .cancel import CancellationToken, TurnCancelled
 from .context import ContextSettings, context_status, format_context
 from .judge_config import engine_from_environment
-from .model import model_from_environment
+from .model import ChatCompletionsModel, model_from_environment
 from .permissions import ApprovalManager
 from .sessions import SessionStore, format_judgment
 from .task_frame import format_frame
+from .admission import AdmissionSettings
+from .summary import SummarySettings, format_summary
 from .tools import WorkspaceTools
 from .tool_result import format_result_details
 from .wire import decode_text, encode_text, event_line, parse_request
@@ -22,6 +24,8 @@ from .wire import decode_text, encode_text, event_line, parse_request
 
 def build_agent(args: argparse.Namespace) -> Agent:
     context_settings = ContextSettings.from_environment()
+    summary_settings = SummarySettings.from_environment()
+    admission_settings = AdmissionSettings.from_environment()
     model = model_from_environment(max_output_tokens=context_settings.reserve_tokens)
     judge = engine_from_environment(Path(args.ledger) if args.ledger else None)
     # The interactive server gates each call before reaching these tool methods.
@@ -32,7 +36,16 @@ def build_agent(args: argparse.Namespace) -> Agent:
     modules.extend(name.strip() for name in os.environ.get("MU_TOOL_MODULES", "").split(",") if name.strip())
     for name in dict.fromkeys(modules):
         tools.registry.load_module(name)
-    return Agent(model, tools, judge, context_settings=context_settings)
+    summary_model = None
+    if summary_settings.mode == "model":
+        if not os.environ.get("MU_SUMMARY_MODEL"):
+            raise ValueError("MU_SUMMARY_MODE=model requires MU_SUMMARY_MODEL")
+        summary_model = ChatCompletionsModel(
+            os.environ.get("MU_SUMMARY_API_BASE", os.environ.get("MU_API_BASE", "https://api.openai.com/v1")),
+            os.environ.get("MU_SUMMARY_API_KEY", os.environ.get("MU_API_KEY", "")),
+            os.environ["MU_SUMMARY_MODEL"], timeout=summary_settings.wait_seconds, max_output_tokens=2048)
+    return Agent(model, tools, judge, context_settings=context_settings, admission_settings=admission_settings,
+                 summary_settings=summary_settings, summary_model=summary_model)
 
 
 def main() -> int:
@@ -63,6 +76,7 @@ def main() -> int:
     store = SessionStore.open(agent.tools.root, session_root, resume=not args.new_session)
     agent.messages = store.restore_messages()
     agent.frame = store.restore_frame()
+    agent.summaries.restore(agent.messages, store.summary_records())
     agent.tools.output_root = store.output_dir
     output_lock = threading.Lock()
     current_turn = None
@@ -127,6 +141,10 @@ def main() -> int:
                 store.append("task.frame", record, turn_id)
                 emit(request_id, "frame.detail", format_frame(record))
 
+            def save_summary(record: dict) -> None:
+                store.append("context.summary", record, turn_id)
+                emit(request_id, "summary.detail", format_summary(record))
+
             for kind, message in agent.run(
                 prompt, approval=lambda call_id, name, arguments:
                     manager.request(request_id, call_id, name, arguments),
@@ -140,6 +158,7 @@ def main() -> int:
                 on_context=save_context,
                 on_judgment=save_judgment,
                 on_frame=save_frame,
+                on_summary=save_summary,
                 risk_approval=lambda call_id, name, arguments, flag: manager.request(
                     request_id, call_id, name, arguments, force_confirmation=True, risk_flag=flag),
             ):
@@ -150,11 +169,13 @@ def main() -> int:
             store.append("turn.interrupted", {"reason": "cancelled"}, turn_id)
             agent.messages = store.restore_messages()
             agent.frame = store.restore_frame()
+            agent.summaries.restore(agent.messages, store.summary_records())
             emit(request_id, "cancelled", "Turn cancelled")
         except Exception as error:
             store.append("turn.interrupted", {"reason": type(error).__name__}, turn_id)
             agent.messages = store.restore_messages()
             agent.frame = store.restore_frame()
+            agent.summaries.restore(agent.messages, store.summary_records())
             emit(request_id, "error", str(error))
         finally:
             current_turn = None
@@ -210,6 +231,7 @@ def main() -> int:
                             store = candidate
                             agent.messages = messages
                             agent.frame = task_state
+                            agent.summaries.restore(messages, candidate.summary_records())
                             agent.tools.output_root = store.output_dir
                             manager.reset_grants()
                             emit(request_id, "session.reset", "")

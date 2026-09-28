@@ -468,10 +468,10 @@ class DecisionEngine:
                 continue
 
     def decide(self, point: Any, state: Dict[str, Any], cancel: Optional[CancellationToken] = None,
-               on_record: Any = None) -> Any:
+               on_record: Any = None, deadline: Optional[float] = None) -> Any:
         point = self.registry.resolve(point) if isinstance(point, str) else self.registry.register(point)
         if point.kind == "multi":
-            return self._decide_spec(point, state, cancel, on_record)
+            return self._decide_spec(point, state, cancel, on_record, deadline)
         policy = self.policy_for(point)
         if cancel is not None:
             cancel.raise_if_cancelled()
@@ -489,7 +489,10 @@ class DecisionEngine:
                 try:
                     if route not in self.backends:
                         raise LookupError("Missing judge backend")
-                    judgment = self._evaluate(route, point, state, policy.timeout_seconds, cancel)
+                    timeout = policy.timeout_seconds if deadline is None else min(policy.timeout_seconds, deadline - time.monotonic())
+                    if timeout <= 0:
+                        raise TimeoutError("Decision deadline exceeded")
+                    judgment = self._evaluate(route, point, state, timeout, cancel)
                     reason = _judgment_reason(point, judgment, policy.min_confidence)
                     attempt.update(answer=judgment.answer, confidence=judgment.confidence,
                                    probability=judgment.probability)
@@ -505,7 +508,7 @@ class DecisionEngine:
                     attempt["reason"] = type(error).__name__
                 attempt["latency_ms"] = round((time.perf_counter() - attempt_started) * 1000, 1)
                 attempts.append(attempt)
-                if selected_backend is not None:
+                if selected_backend is not None or deadline is not None and time.monotonic() >= deadline:
                     break
             failure = attempts[-1]["reason"] if answer is None and attempts else None
         if cancel is not None:
@@ -551,7 +554,7 @@ class DecisionEngine:
         if on_record is not None:
             on_record(copy.deepcopy(record))
 
-    def _decide_spec(self, spec, input_state, cancel, on_record):
+    def _decide_spec(self, spec, input_state, cancel, on_record, deadline=None):
         policy = self.policy_for(spec)
         started = time.perf_counter()
         if cancel is not None:
@@ -574,7 +577,10 @@ class DecisionEngine:
                     attempt = {"backend": route, "asked": [question.id for question in pending], "questions": {}}
                     attempt_started = time.perf_counter()
                     try:
-                        response = self._evaluate(route, spec, state, policy.timeout_seconds, cancel, pending)
+                        timeout = policy.timeout_seconds if deadline is None else min(policy.timeout_seconds, deadline - time.monotonic())
+                        if timeout <= 0:
+                            raise TimeoutError("Decision deadline exceeded")
+                        response = self._evaluate(route, spec, state, timeout, cancel, pending)
                         for question in pending:
                             detail = {}
                             try:
@@ -597,6 +603,8 @@ class DecisionEngine:
                         attempt["reason"] = type(error).__name__
                     attempt["latency_ms"] = round((time.perf_counter() - attempt_started) * 1000, 1)
                     attempts.append(attempt)
+                    if deadline is not None and time.monotonic() >= deadline:
+                        break
             judged = spec.aggregate(copy.deepcopy(answers), copy.deepcopy(inputs)) if answers else None
             if judged is not None:
                 json.dumps(judged, allow_nan=False)

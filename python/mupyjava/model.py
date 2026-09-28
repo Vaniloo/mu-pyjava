@@ -23,6 +23,7 @@ def prepare_messages(messages: List[Dict[str, Any]], capabilities: ModelCapabili
 
     for message in messages:
         wire_message = copy.deepcopy(message)
+        wire_message.pop("tool_is_error", None)
         blocks = wire_message.pop("image_blocks", [])
         if wire_message.get("role") != "tool":
             if blocks:

@@ -2,6 +2,13 @@
 
 The Python engine owns conversation state. In server mode it keeps one active conversation path per workspace. Restart restores the explicitly selected session and path; if the selector is missing or invalid, it resumes the newest valid journal. The Java desktop loads its conversation and judgments at startup.
 
+`context.summary` schema-1 records hold bounded, verbatim history excerpts with
+role/message provenance and a source-prefix fingerprint. Restoration validates
+them against the selected completed model-message path before reuse; sibling
+paths, changed sources and invented quotes cannot supply a summary. Forks copy
+records on their selected path along with output artifacts. Java displays live
+`summary.detail` and restored `history.summary` in Task. See [SEMANTIC_CONTEXT.md](SEMANTIC_CONTEXT.md).
+
 ## Desktop actions
 
 - **New session** starts an empty conversation.

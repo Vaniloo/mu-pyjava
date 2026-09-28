@@ -12,6 +12,7 @@ from typing import Any, Dict, List
 
 from .capabilities import ModelCapabilities
 from .model import prepare_messages
+from .summary import summary_note
 
 
 @dataclass(frozen=True)
@@ -94,10 +95,15 @@ def validate_chain(messages):
 def format_context(record):
     if record.get("blocked"):
         return "Context budget exceeded; this model request was not sent."
+    extra = ""
+    if record.get("admission"):
+        extra += f" {sum(item['applied_drop_chunks'] for item in record['admission'])} noise chunks omitted semantically."
+    if record.get("summary", {}).get("included_facts"):
+        extra += f" {record['summary']['included_facts']} history excerpts retained."
     return (f"Context: about {record['estimated_tokens']} / {record['input_limit']} input tokens; "
             f"{record['reserve_tokens']} reserved for the answer. "
             f"{record['omitted_turns']} earlier turns omitted; "
-            f"{len(record['shortened_tools'])} tool outputs shortened with full text available by ID.")
+            f"{len(record['shortened_tools'])} tool outputs shortened with full text available by ID." + extra)
 
 
 def context_status(record):
@@ -146,7 +152,8 @@ class ContextBudget:
         return (data[:head].decode("utf-8", "ignore") + marker +
                 (data[-tail:].decode("utf-8", "ignore") if tail else ""))
 
-    def prepare(self, messages, schemas, directory: Path, capabilities=ModelCapabilities(), cancel=None):
+    def prepare(self, messages, schemas, directory: Path, capabilities=ModelCapabilities(), cancel=None,
+                *, admission=None, summaries=None, on_judgment=None, on_summary=None):
         if cancel is not None:
             cancel.raise_if_cancelled()
         validate_chain(messages)
@@ -163,24 +170,37 @@ class ContextBudget:
         # Remove whole older turns before shaping current tool replies. The
         # system prompt and latest user request/assistant arguments stay intact.
         omitted = 0
+        summary_enabled = summaries is not None and summaries.settings.mode != "off"
+        summary_reserve = min(1024, limit // 4) if summary_enabled else 0
+        fit_limit = limit
         projected = copy.deepcopy(messages)
         def choose(start):
             selected = copy.deepcopy(prefix + messages[start:])
             if omitted:
+                description = ("Source-grounded history excerpts may be supplied below. " if summary_enabled else
+                               "No summary was generated; ")
                 selected[0]["content"] += (f"\nContext note: {omitted} earlier completed turns were omitted "
-                    "from this request by the context budget. No summary was generated; inspect the workspace "
+                    "from this request by the context budget. " + description + "Inspect the workspace "
                     "when historical facts are needed. This does not authorize additional actions.")
             return selected
         for start in starts[1:]:
-            if self.estimate(projected, schemas, capabilities) <= limit:
+            if self.estimate(projected, schemas, capabilities) <= fit_limit:
                 break
             omitted += 1
+            fit_limit = limit - summary_reserve
             projected = choose(start)
         original_start = starts[omitted]
         candidates = {}
+        admission_records = []
+        calls = {}
         root = directory.resolve()
         # Plan IDs and text first. An impossible request must not create archives.
         for index, message in enumerate(projected):
+            if message.get("role") == "assistant":
+                for call in message.get("tool_calls") or []:
+                    function = call.get("function", {})
+                    calls[call["id"]] = {"id": call["id"], "name": function.get("name", ""),
+                                          "description": function.get("arguments", "")}
             if message.get("role") != "tool" or not isinstance(message.get("content"), str):
                 continue
             text = message["content"]
@@ -188,22 +208,45 @@ class ContextBudget:
             key = (str(root), hashlib.sha256(data).hexdigest())
             cached = self._cache.get(key)
             artifact_id = cached if cached and (root / (cached + ".log")).is_file() else str(uuid.uuid4())
-            candidates[index] = {"text": text, "bytes": len(data), "key": key, "id": artifact_id,
+            admitted = text
+            plan = admission.plan(text, calls.get(message["tool_call_id"], {}),
+                is_error=message.get("tool_is_error", True), has_images=bool(message.get("image_blocks")),
+                cancel=cancel, on_judgment=on_judgment) if admission is not None else None
+            if plan is not None:
+                admitted = plan.render(artifact_id)
+                admission_records.append(plan.record)
+            candidates[index] = {"text": text, "admitted": admitted, "bytes": len(data), "key": key, "id": artifact_id,
                                  "call_id": message["tool_call_id"], "reason": "tool_limit"}
-            message["content"] = self._clip(text, self.settings.tool_tokens * 4, artifact_id)
+            message["content"] = self._clip(admitted, self.settings.tool_tokens * 4, artifact_id)
+            if admitted != text:
+                candidates[index]["reason"] = "semantic" if message["content"] == admitted else "semantic+tool_limit"
+        summary_record, included_facts = None, 0
+        base_system = projected[0]["content"]
+        if omitted and summary_enabled:
+            summary_record = summaries.build(messages[starts[0]:original_start], cancel)
+            if summary_record is not None:
+                note, included_facts = summary_note(summary_record, min(summary_reserve * 4,
+                    summaries.settings.max_chars * 4), summaries.settings.max_chars)
+                if note:
+                    projected[0]["content"] += "\n" + note
         estimated = self.estimate(projected, schemas, capabilities)
         while estimated > limit:
             reducible = [(len(projected[index]["content"].encode("utf-8")), index)
                          for index, candidate in candidates.items()
                          if len(projected[index]["content"].encode("utf-8")) > len(self._marker(candidate["id"]).encode("utf-8"))]
             if not reducible:
+                if included_facts:
+                    projected[0]["content"] = base_system
+                    included_facts = 0
+                    estimated = self.estimate(projected, schemas, capabilities)
+                    continue
                 break
             size, index = max(reducible)
             candidate = candidates[index]
             minimum = len(self._marker(candidate["id"]).encode("utf-8"))
             maximum = max(minimum, size - max(4, (estimated - limit) * 4))
-            projected[index]["content"] = self._clip(candidate["text"], maximum, candidate["id"])
-            candidate["reason"] = "request_limit"
+            projected[index]["content"] = self._clip(candidate["admitted"], maximum, candidate["id"])
+            candidate["reason"] = "semantic+request_limit" if candidate["admitted"] != candidate["text"] else "request_limit"
             estimated = self.estimate(projected, schemas, capabilities)
         shortened = []
         for index, candidate in candidates.items():
@@ -215,6 +258,12 @@ class ContextBudget:
                   "max_tokens": self.settings.max_tokens, "reserve_tokens": self.settings.reserve_tokens,
                   "input_limit": limit, "estimated_before": before, "estimated_tokens": estimated,
                   "omitted_turns": omitted, "shortened_tools": shortened, "blocked": estimated > limit}
+        if admission_records:
+            record["admission"] = admission_records
+        if summary_record is not None:
+            record["summary"] = {key: summary_record[key] for key in
+                                 ("source_count", "source_digest", "source", "fallback_reason")}
+            record["summary"]["included_facts"] = included_facts
         if record["blocked"]:
             raise ContextOverflow(record)
         artifacts = []
@@ -248,4 +297,8 @@ class ContextBudget:
                 artifacts.append((candidate["call_id"], artifact_id))
                 pending_ids.add(artifact_id)
         self._emitted.update(pending_ids)
+        if cancel is not None:
+            cancel.raise_if_cancelled()
+        if summary_record is not None and included_facts:
+            summaries.publish(summary_record, included_facts, on_summary)
         return ContextProjection(projected, record, artifacts)
