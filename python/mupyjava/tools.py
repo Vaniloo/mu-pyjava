@@ -1,24 +1,20 @@
 """Workspace tools. Mutating tools require explicit launch flags."""
 
 import json
-import codecs
 import difflib
 import hashlib
 import os
-import fnmatch
-import signal
 import shlex
-import shutil
 import subprocess
 import tempfile
-import threading
-import time
 import uuid
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
 from .cancel import CancellationToken, TurnCancelled
 from .file_ops import FileMutationQueue, FileOperations, LocalFileOperations
+from .command_ops import CommandOperations, CommandOutput, LocalCommandOperations
+from .search_ops import GitOperations, LocalGitOperations, LocalSearchOperations, SearchOperations
 
 
 TOOL_SCHEMAS: List[Dict[str, Any]] = [
@@ -140,7 +136,9 @@ TOOL_SCHEMAS: List[Dict[str, Any]] = [
 
 class WorkspaceTools:
     def __init__(self, root: Path, allow_write: bool = False, allow_command: bool = False,
-                 output_root: Optional[Path] = None, file_ops: Optional[FileOperations] = None):
+                 output_root: Optional[Path] = None, file_ops: Optional[FileOperations] = None,
+                 search_ops: Optional[SearchOperations] = None, git_ops: Optional[GitOperations] = None,
+                 command_ops: Optional[CommandOperations] = None):
         self.root = root.resolve(strict=True)
         if not self.root.is_dir():
             raise ValueError("Workspace must be a directory")
@@ -148,6 +146,9 @@ class WorkspaceTools:
         self.allow_command = allow_command
         self.output_root = output_root or Path(tempfile.gettempdir()) / "mupyjava-output"
         self.file_ops = file_ops or LocalFileOperations()
+        self.search_ops = search_ops or LocalSearchOperations(self.root)
+        self.git_ops = git_ops or LocalGitOperations(self.root)
+        self.command_ops = command_ops or LocalCommandOperations()
         self.mutations = FileMutationQueue()
 
     def prepare_change(self, name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
@@ -247,78 +248,26 @@ class WorkspaceTools:
         return target
 
     @staticmethod
-    def _matches_glob(path: str, pattern: str) -> bool:
-        return fnmatch.fnmatch(path, pattern) or (pattern.startswith("**/") and fnmatch.fnmatch(path, pattern[3:]))
-
-    def _git(self, args):
-        result = subprocess.run(["git", "--no-pager", "-c", "core.quotePath=false", *args],
-                                cwd=self.root, capture_output=True, text=True, timeout=30, check=False)
-        if result.returncode:
-            raise ValueError("Git failed: " + result.stderr.strip()[:500])
-        return result.stdout[:12_000]
-
-    @staticmethod
     def _positive_int(value, name: str, maximum: int) -> int:
         if isinstance(value, bool) or not isinstance(value, int) or not 1 <= value <= maximum:
             raise ValueError(f"{name} must be an integer from 1 to {maximum}")
         return value
 
-    def _rg_lines(self, args, max_lines: int, max_bytes: int = 120_000):
-        executable = shutil.which("rg")
-        if executable is None:
-            raise ValueError("ripgrep (rg) is required for find_files and grep_files")
-        process = subprocess.Popen([executable, *args], cwd=self.root, stdout=subprocess.PIPE,
-                                   stderr=subprocess.DEVNULL, text=True, encoding="utf-8", errors="replace")
-        timed_out = threading.Event()
+    def _search_paths(self, base: Path, pattern: str, cancel: Optional[CancellationToken]):
+        paths, incomplete = self.search_ops.find(base, pattern, cancel)
+        if cancel is not None:
+            cancel.raise_if_cancelled()
+        if not isinstance(paths, list) or not isinstance(incomplete, bool):
+            raise ValueError("Search operations returned an invalid listing")
+        return [str(self._path(path).relative_to(self.root)) for path in paths], incomplete
 
-        def kill_on_timeout():
-            if process.poll() is None:
-                timed_out.set()
-                try:
-                    process.kill()
-                except ProcessLookupError:
-                    pass
-
-        timer = threading.Timer(20, kill_on_timeout)
-        timer.start()
-        lines = []
-        size = 0
-        truncated = False
-        try:
-            for line in process.stdout:
-                encoded_size = len(line.encode("utf-8"))
-                if len(lines) >= max_lines or size + encoded_size > max_bytes:
-                    truncated = True
-                    process.kill()
-                    break
-                lines.append(line)
-                size += encoded_size
-            process.wait()
-        finally:
-            timer.cancel()
-            if process.poll() is None:
-                process.kill()
-                process.wait()
-            process.stdout.close()
-        if timed_out.is_set():
-            raise subprocess.TimeoutExpired(args, 20)
-        if not truncated and process.returncode not in {0, 1}:
-            raise ValueError("ripgrep failed; check the search pattern and path")
-        return lines, truncated
-
-    def _search_files(self, base: Path, pattern: str):
-        relative = str(base.relative_to(self.root)) or "."
-        lines, incomplete = self._rg_lines(["--files", "--hidden", "-g", "!.git", "--", relative],
-                                           10_000, 1_000_000)
-        files = []
-        for line in lines:
-            path = (self.root / line.strip()).resolve()
-            if path != self.root and self.root not in path.parents:
-                continue
-            local = str(path.relative_to(base)) if base.is_dir() else path.name
-            if self._matches_glob(local, pattern):
-                files.append(str(path.relative_to(self.root)))
-        return files, incomplete
+    def _git(self, args, cancel):
+        result = self.git_ops.inspect(args, cancel)
+        if cancel is not None:
+            cancel.raise_if_cancelled()
+        if not isinstance(result, str):
+            raise ValueError("Git operations must return text")
+        return result[:12_000]
 
     def _read_page(self, path: Path, offset: int, limit: int,
                    cancel: Optional[CancellationToken] = None) -> str:
@@ -398,9 +347,9 @@ class WorkspaceTools:
             if not isinstance(pattern, str) or not pattern or len(pattern) > 200:
                 raise ValueError("Glob must be a nonempty string of at most 200 characters")
             base = self._path(arguments["path"])
-            if not base.exists():
+            if not self.file_ops.exists(base):
                 raise ValueError("Search path does not exist")
-            paths, incomplete = self._search_files(base, pattern)
+            paths, incomplete = self._search_paths(base, pattern, cancel)
             shown = []
             size = 0
             for path in paths[:200]:
@@ -425,44 +374,36 @@ class WorkspaceTools:
                 raise ValueError("context must be an integer from 0 to 5")
             limit = self._positive_int(arguments.get("limit", 100), "limit", 100)
             base = self._path(arguments["path"])
-            if not base.exists():
+            if not self.file_ops.exists(base):
                 raise ValueError("Search path does not exist")
-            paths, incomplete = self._search_files(base, file_glob)
-            args = ["--json", "--sort", "path", "--max-filesize", "1M", "--max-columns", "500", "--max-columns-preview"]
-            if literal:
-                args.append("--fixed-strings")
-            if ignore_case:
-                args.append("--ignore-case")
-            if context:
-                args.extend(["--context", str(context)])
+            paths, incomplete = self._search_paths(base, file_glob, cancel)
             matches = []
             match_count = 0
             truncated = incomplete
             output_bytes = 0
             output_full = False
             for start in range(0, len(paths), 100):
-                lines, batch_truncated = self._rg_lines(
-                    [*args, "--", pattern, *paths[start:start + 100]],
-                    min(500, (limit - match_count) * (2 * context + 3) + 10),
-                    10_000,
+                records, batch_truncated = self.search_ops.grep(
+                    paths[start:start + 100], pattern, literal, ignore_case, context,
+                    min(500, (limit - match_count) * (2 * context + 3) + 10), cancel,
                 )
+                if cancel is not None:
+                    cancel.raise_if_cancelled()
+                if not isinstance(records, list) or not isinstance(batch_truncated, bool):
+                    raise ValueError("Search operations returned invalid matches")
                 truncated = truncated or batch_truncated
-                for line in lines:
-                    item = json.loads(line)
-                    if item.get("type") not in {"match", "context"}:
-                        continue
-                    data = item["data"]
-                    path = data["path"].get("text")
-                    content = data["lines"].get("text")
-                    if path is None or content is None:
-                        continue
-                    kind = item["type"]
+                for item in records:
+                    if (not isinstance(item, dict) or item.get("kind") not in {"match", "context"}
+                            or not isinstance(item.get("text"), str) or isinstance(item.get("line"), bool)
+                            or not isinstance(item.get("line"), int) or item["line"] < 1):
+                        raise ValueError("Search operations returned a malformed match")
+                    kind = item["kind"]
                     if kind == "match":
                         if match_count >= limit:
                             truncated = True
                             break
-                    record = {"path": str(Path(path)), "line": data["line_number"],
-                              "text": content.rstrip("\r\n")[:500], "kind": kind}
+                    record = {"path": str(self._path(item["path"]).relative_to(self.root)), "line": item["line"],
+                              "text": item["text"].rstrip("\r\n")[:500], "kind": kind}
                     size = len(json.dumps(record, ensure_ascii=False).encode("utf-8")) + 2
                     if output_bytes + size > 9_000:
                         truncated = True
@@ -477,7 +418,7 @@ class WorkspaceTools:
                     break
             return json.dumps({"matches": matches, "truncated": truncated}, ensure_ascii=False)
         if name == "git_status":
-            return self._git(["status", "--short", "--untracked-files=normal", "--", "."])
+            return self._git(["status", "--short", "--untracked-files=normal", "--", "."], cancel)
         if name == "git_diff":
             raw_path = arguments.get("path", ".")
             selected = self._path(raw_path)
@@ -485,7 +426,7 @@ class WorkspaceTools:
             if not isinstance(staged, bool):
                 raise ValueError("staged must be a boolean")
             path = str(selected.relative_to(self.root)) or "."
-            return self._git(["diff", "--no-ext-diff", *(["--staged"] if staged else []), "--", path])
+            return self._git(["diff", "--no-ext-diff", *(["--staged"] if staged else []), "--", path], cancel)
         if name in {"write_file", "edit_file"}:
             if not self.allow_write:
                 raise PermissionError("Writing is disabled; restart with --allow-write")
@@ -525,130 +466,16 @@ class WorkspaceTools:
         argv = shlex.split(command, posix=os.name != "nt")
         if not argv:
             raise ValueError("Command is required")
-        if cancel is not None:
-            cancel.raise_if_cancelled()
-        process = subprocess.Popen(argv, cwd=self.root, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
-                                   stderr=subprocess.STDOUT, start_new_session=os.name != "nt")
-        tail = bytearray()
-        total = 0
-        artifact_id = None
-        artifact_file = None
-        reader_error = []
-
-        def update(value: str) -> None:
-            if on_update is not None and value:
-                try:
-                    on_update(value)
-                except Exception:
-                    # A display failure must not stop draining the child pipe.
-                    pass
-
-        def drain() -> None:
-            nonlocal total, artifact_id, artifact_file
-            decoder = codecs.getincrementaldecoder("utf-8")("replace")
-            pending = ""
-            last_emit = 0.0
-            try:
-                while True:
-                    chunk = os.read(process.stdout.fileno(), 4096)
-                    if not chunk:
-                        break
-                    if artifact_file is None and total + len(chunk) > 12_000:
-                        directory = output_dir or self.output_root
-                        directory.mkdir(parents=True, exist_ok=True, mode=0o700)
-                        if os.name != "nt":
-                            directory.chmod(0o700)
-                        artifact_id = str(uuid.uuid4())
-                        descriptor = os.open(directory / (artifact_id + ".log"),
-                                             os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-                        artifact_file = os.fdopen(descriptor, "wb")
-                        artifact_file.write(tail)
-                        if on_artifact is not None:
-                            try:
-                                on_artifact(artifact_id)
-                            except Exception:
-                                pass
-                    if artifact_file is not None:
-                        artifact_file.write(chunk)
-                    total += len(chunk)
-                    tail.extend(chunk)
-                    if len(tail) > 12_000:
-                        del tail[:-12_000]
-                    pending += decoder.decode(chunk)
-                    if len(pending) > 8_000:
-                        pending = pending[-8_000:]
-                    now = time.monotonic()
-                    if pending and (last_emit == 0.0 or now - last_emit >= 0.1):
-                        update(pending)
-                        pending = ""
-                        last_emit = now
-                pending += decoder.decode(b"", final=True)
-                update(pending)
-            except Exception as error:
-                reader_error.append(error)
-            finally:
-                if artifact_file is not None:
-                    try:
-                        artifact_file.flush()
-                        os.fsync(artifact_file.fileno())
-                    except Exception as error:
-                        reader_error.append(error)
-                    finally:
-                        artifact_file.close()
-
-        reader = threading.Thread(target=drain, daemon=True, name="mu-command-output")
-        reader.start()
-        deadline = time.monotonic() + timeout
-        stopped = None
+        capture = CommandOutput(output_dir or self.output_root, on_update, on_artifact)
         try:
-            while True:
-                if cancel is not None and cancel.is_cancelled():
-                    stopped = "cancel"
-                    break
-                if reader_error:
-                    stopped = "output-error"
-                    break
-                if time.monotonic() >= deadline:
-                    stopped = "timeout"
-                    break
-                if process.poll() is not None and not reader.is_alive():
-                    break
-                time.sleep(0.05)
-            if stopped is not None:
-                self._kill_process_tree(process)
-                process.wait()
+            code = self.command_ops.execute(argv, self.root, timeout, cancel, capture.feed)
+            if cancel is not None:
+                cancel.raise_if_cancelled()
+        except (TurnCancelled, subprocess.TimeoutExpired) as error:
+            if capture.artifact_id:
+                reason = "cancelled" if isinstance(error, TurnCancelled) else "timed out"
+                capture.update("\n[Command " + reason + "; full output id: " + capture.artifact_id + "]\n")
+            raise
         finally:
-            reader.join(timeout=2)
-            process.stdout.close()
-        if reader.is_alive():
-            raise OSError("Command output stream did not close")
-        if reader_error:
-            raise OSError("Could not capture command output: " + str(reader_error[0]))
-        if stopped == "cancel" or cancel is not None and cancel.is_cancelled():
-            if artifact_id:
-                update("\n[Command cancelled; full output id: " + artifact_id + "]\n")
-            raise TurnCancelled("Turn cancelled")
-        if stopped == "timeout":
-            if artifact_id:
-                update("\n[Command timed out; full output id: " + artifact_id + "]\n")
-            raise subprocess.TimeoutExpired(argv, timeout)
-        output = bytes(tail).decode("utf-8", errors="replace")
-        if artifact_id:
-            output += "\n[Output truncated at 12 KB]\nFull output id: " + artifact_id
-        return "Exit code: " + str(process.returncode) + "\n" + output
-
-    @staticmethod
-    def _kill_process_tree(process: subprocess.Popen) -> None:
-        if os.name != "nt":
-            try:
-                os.killpg(process.pid, signal.SIGKILL)
-            except ProcessLookupError:
-                pass
-        else:
-            try:
-                subprocess.run(["taskkill", "/PID", str(process.pid), "/T", "/F"],
-                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
-            except OSError:
-                pass
-            if process.poll() is None:
-                process.kill()
+            capture.close()
+        return capture.result(code)

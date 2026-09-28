@@ -26,6 +26,7 @@ The ordered gap audit and acceptance criteria are in [NEXT_PHASE.md](NEXT_PHASE.
 - [x] Show unified diffs before write/edit approval, recheck the approved revision, serialize same-path mutations, replace atomically, and record structured change events.
 - [x] Compare mu's current tool and architecture contracts; extend edit to multiple disjoint replacements while preserving BOM and CRLF.
 - [x] Route read/list through injectable operations; verify paging and multi-edit with an in-memory workspace that has no local target file.
+- [x] Extend operation injection to find/grep, read-only Git and streamed commands; verify a complete alternate-backend agent workflow with common approvals, output artifacts and cancellation.
 - [ ] Collect independently labeled decisions for all mutating tools, including `edit_file`, and resolve confident false positives before enabling the trained judge.
 - [ ] Add branch/fork sessions, provider-side HTTP request abort and background jobs after the single-path format is stable.
 - [ ] Typed choice/score decisions, judge routing, and output admission.

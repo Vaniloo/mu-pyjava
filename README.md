@@ -72,3 +72,4 @@ MU_MODEL_BACKEND=echo java -cp java/out dev.mupyjava.Main --smoke "hello"
 See [progress](docs/PROGRESS.md) for completed work and next milestones. The upstream mu repository uses an MIT license for its agent packages and Apache 2.0 for its desktop app; this repository contains newly written code and does not copy those files. A license for this repository has not been selected yet.
 
 The [tool parity table](docs/TOOL_PARITY.md) tracks which mu behaviors have been reproduced and what remains.
+The [operation contracts](docs/OPERATIONS.md) describe local and alternate workspace implementations.
