@@ -15,7 +15,7 @@ from .permissions import ApprovalManager
 from .sessions import SessionStore, format_judgment
 from .tools import WorkspaceTools
 from .tool_result import format_result_details
-from .wire import decode_text, event_line, parse_request
+from .wire import decode_text, encode_text, event_line, parse_request
 
 
 def build_agent(args: argparse.Namespace) -> Agent:
@@ -178,22 +178,53 @@ def main() -> int:
                     manager.cancel_request(fields[1])
                     emit(fields[1], "turn.cancel_requested", "Stopping the active turn")
                 continue
-            if len(fields) == 2 and fields[0] == "HISTORY" and fields[1]:
-                emit(fields[1], "session.info", store.session_id)
-                for kind, message in store.history():
-                    emit(fields[1], kind, message)
-                emit(fields[1], "history.done", "")
-                continue
-            if len(fields) == 2 and fields[0] == "NEW" and fields[1]:
-                if current_turn is not None:
-                    emit(fields[1], "error", "A turn is already running")
-                else:
-                    store = SessionStore.open(agent.tools.root, session_root, resume=False)
-                    agent.messages = store.restore_messages()
-                    agent.tools.output_root = store.output_dir
-                    manager.reset_grants()
-                    emit(fields[1], "session.info", store.session_id)
-                emit(fields[1], "done", "")
+            if fields[0] in {"HISTORY", "NEW", "SESSIONS", "POINTS", "SELECT", "FORK"}:
+                request_id = fields[1] if len(fields) > 1 and fields[1] else "?"
+                try:
+                    kind = fields[0]
+                    expected = {"HISTORY": 2, "NEW": 2, "SESSIONS": 2, "POINTS": 3, "SELECT": 4, "FORK": 4}[kind]
+                    if len(fields) != expected or request_id == "?":
+                        raise ValueError("Invalid session request")
+                    if kind in {"NEW", "SELECT", "FORK"} and current_turn is not None:
+                        raise ValueError("A turn is already running")
+                    if kind == "SESSIONS":
+                        for item in SessionStore.catalog(agent.tools.root, session_root):
+                            origin = (item.get("forked_from") or {}).get("session_id", "")
+                            emit(request_id, "session.item", "\t".join([
+                                "v1", item["session_id"], encode_text(item["title"]),
+                                encode_text(item["updated_at"]), origin]))
+                        emit(request_id, "session.list_done", "")
+                    elif kind == "POINTS":
+                        source = SessionStore.load(agent.tools.root, store.path.parent, fields[2])
+                        for point in source.points():
+                            emit(request_id, "session.point", "\t".join([
+                                "v1", point["point_id"], encode_text(point["title"]), encode_text(point["at"])]))
+                        emit(request_id, "session.points_done", "")
+                    else:
+                        if kind != "HISTORY":
+                            if kind == "NEW":
+                                candidate = SessionStore.create(agent.tools.root, session_root, activate=False)
+                            else:
+                                source = SessionStore.load(agent.tools.root, store.path.parent, fields[2])
+                                candidate = (source.fork(fields[3], activate=False) if kind == "FORK"
+                                             else source.select(fields[3], persist=False))
+                            messages = candidate.restore_messages()
+                            candidate.activate()
+                            store = candidate
+                            agent.messages = messages
+                            agent.tools.output_root = store.output_dir
+                            manager.reset_grants()
+                            emit(request_id, "session.reset", "")
+                        emit(request_id, "session.info", store.session_id)
+                        for event_kind, message in store.history():
+                            emit(request_id, event_kind, message)
+                        emit(request_id, "history.done", "")
+                except Exception as error:
+                    emit(request_id, "error", str(error))
+                    if fields[0] == "HISTORY":
+                        emit(request_id, "done", "")
+                if fields[0] != "HISTORY":
+                    emit(request_id, "done", "")
                 continue
             request_id = "?"
             try:

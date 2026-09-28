@@ -17,6 +17,9 @@ public final class BackendClient implements AutoCloseable {
     public record ApprovalRequest(String approvalId, String toolCallId, boolean sessionOption,
                                   String summary, String preview) {}
 
+    public record SessionItem(String sessionId, String title, String updatedAt, String parentSessionId) {}
+    public record SessionPoint(String pointId, String title, String at) {}
+
     private final Process process;
     private final BufferedWriter input;
     private final Thread reader;
@@ -83,6 +86,36 @@ public final class BackendClient implements AutoCloseable {
         return sendControl("NEW");
     }
 
+    public synchronized String requestSessions() throws IOException { return sendControl("SESSIONS"); }
+    public synchronized String requestPoints(String sessionId) throws IOException {
+        return sendControl("POINTS", sessionId);
+    }
+    public synchronized String selectSession(String sessionId, String pointId) throws IOException {
+        return sendControl("SELECT", sessionId, pointId);
+    }
+    public synchronized String forkSession(String sessionId, String pointId) throws IOException {
+        return sendControl("FORK", sessionId, pointId);
+    }
+
+    private static String canonicalId(String value) {
+        if (!UUID.fromString(value).toString().equals(value))
+            throw new IllegalArgumentException("Invalid session id");
+        return value;
+    }
+    public static SessionItem parseSessionItem(String text) {
+        String[] fields = text.split("\t", -1);
+        if (fields.length != 5 || !fields[0].equals("v1"))
+            throw new IllegalArgumentException("Invalid session summary");
+        return new SessionItem(canonicalId(fields[1]), decode(fields[2]), decode(fields[3]),
+                fields[4].isEmpty() ? "" : canonicalId(fields[4]));
+    }
+    public static SessionPoint parseSessionPoint(String text) {
+        String[] fields = text.split("\t", -1);
+        if (fields.length != 4 || !fields[0].equals("v1"))
+            throw new IllegalArgumentException("Invalid conversation point");
+        return new SessionPoint(canonicalId(fields[1]), decode(fields[2]), decode(fields[3]));
+    }
+
     public synchronized void cancel(String requestId) throws IOException {
         if (!process.isAlive()) throw new IOException("Python backend has stopped");
         if (!UUID.fromString(requestId).toString().equals(requestId))
@@ -91,10 +124,11 @@ public final class BackendClient implements AutoCloseable {
         input.flush();
     }
 
-    private String sendControl(String kind) throws IOException {
+    private String sendControl(String kind, String... ids) throws IOException {
         if (!process.isAlive()) throw new IOException("Python backend has stopped");
         String id = UUID.randomUUID().toString();
-        input.write(kind + "\t" + id + "\n");
+        for (String value : ids) canonicalId(value);
+        input.write(kind + "\t" + id + (ids.length == 0 ? "" : "\t" + String.join("\t", ids)) + "\n");
         input.flush();
         return id;
     }

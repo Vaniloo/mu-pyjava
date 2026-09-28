@@ -21,7 +21,7 @@ The ordered gap audit and acceptance criteria are in [NEXT_PHASE.md](NEXT_PHASE.
 - [x] Connect a lab-hosted Laya checkpoint through a loopback HTTP service and SSH tunnel; show shadow verdicts and probabilities in transcripts and ledger.
 - [x] Exercise the real Python agent and Java process protocol with DeepSeek Flash plus the lab judge in shadow mode.
 - [x] Gate individual desktop write, edit and command calls through a versioned approval request/response protocol; deny pending actions on disconnect.
-- [x] Persist completed turns in a versioned local session journal, restore the newest session on restart, and show saved judge records in a dedicated Java tab.
+- [x] Persist completed turns in a versioned local session journal, restore the selected session on restart, and show saved judge records in a dedicated Java tab.
 - [x] Add a desktop Stop action, process-tree cancellation, live bounded command output and a full-output retrieval tool.
 - [x] Show unified diffs before write/edit approval, recheck the approved revision, serialize same-path mutations, replace atomically, and record structured change events.
 - [x] Compare mu's current tool and architecture contracts; extend edit to multiple disjoint replacements while preserving BOM and CRLF.
@@ -32,7 +32,8 @@ The ordered gap audit and acceptance criteria are in [NEXT_PHASE.md](NEXT_PHASE.
 - [x] Add trusted custom-tool modules with validated schemas, fresh mutation approvals, judge/cancel/result handling and Java process coverage.
 - [x] Add replayable standard patches, numbered display diffs and navigation metadata; implement explicit fuzzy normalization with fresh approvals, ambiguity checks, untouched-line preservation and Java history coverage.
 - [ ] Collect independently labeled decisions for all mutating tools, including `edit_file`, and resolve confident false positives before enabling the trained judge.
-- [ ] Add branch/fork sessions, provider-side HTTP request abort and background jobs after the single-path format is stable.
+- [x] Add parent-linked session trees, completed-turn selection, independent forks with copied output artifacts, selected-path restart and a Java session browser.
+- [ ] Add deterministic context budgets, provider-side HTTP request abort and background jobs.
 - [ ] Typed choice/score decisions, judge routing, and output admission.
 - [ ] LSP diagnostics and project-specific build/test guidance.
 - [ ] Robust packaging of Python and Java runtimes for each platform.
@@ -42,3 +43,7 @@ The ordered gap audit and acceptance criteria are in [NEXT_PHASE.md](NEXT_PHASE.
 ## Current boundaries
 
 The echo adapter only checks wiring. An API-backed run needs a configured Chat Completions endpoint and model. The Java window is a development shell, not a packaged desktop release. The trained judge weights are kept on the lab host and are not bundled with this repository. No provider sign-in flow or automatic language-server installation exists yet.
+
+## Milestone 8 — branch sessions and independent copies
+
+Python journals now retain sibling paths and restore the selected ancestry. The Java browser can select a completed turn or copy its prefix; tools are never replayed, files keep their current state and permission grants reset. Old linear journals remain readable without rewriting. Forks include image blocks, judgments and independent output archives; incomplete copies stay outside the catalog. See [SESSIONS.md](SESSIONS.md) for the protocol, recovery behavior, display limits and remaining gaps.

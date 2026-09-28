@@ -111,13 +111,18 @@ public final class Main {
         var send = new JButton("Send");
         var stop = new JButton("Stop");
         var newSession = new JButton("New session");
+        var sessions = new JButton("Saved conversations");
         send.setEnabled(false);
         stop.setEnabled(false);
         newSession.setEnabled(false);
+        sessions.setEnabled(false);
         var actions = new JPanel(new BorderLayout(4, 4));
         actions.add(send, BorderLayout.NORTH);
         actions.add(stop, BorderLayout.CENTER);
-        actions.add(newSession, BorderLayout.SOUTH);
+        var sessionActions = new JPanel(new java.awt.GridLayout(2, 1, 4, 4));
+        sessionActions.add(newSession);
+        sessionActions.add(sessions);
+        actions.add(sessionActions, BorderLayout.SOUTH);
         var bottom = new JPanel(new BorderLayout(8, 8));
         bottom.add(new JScrollPane(input), BorderLayout.CENTER);
         bottom.add(actions, BorderLayout.EAST);
@@ -130,8 +135,21 @@ public final class Main {
         try {
             AtomicReference<BackendClient> clientRef = new AtomicReference<>();
             AtomicReference<String> activeRequest = new AtomicReference<>();
+            AtomicReference<SessionBrowser> browser = new AtomicReference<>();
+            AtomicBoolean backendAlive = new AtomicBoolean(true);
+            Runnable idle = () -> {
+                if (backendAlive.get() && activeRequest.get() == null && browser.get() == null) {
+                    send.setEnabled(true); newSession.setEnabled(true); sessions.setEnabled(true);
+                }
+            };
             var client = new BackendClient(repository, workspace, allowWrite, allowCommand, ledger, event ->
                 SwingUtilities.invokeLater(() -> {
+                    if (browser.get() != null) browser.get().accept(event);
+                    if (event.kind().startsWith("session.") && !event.kind().equals("session.info")
+                            && !event.kind().equals("session.reset")) return;
+                    if (event.kind().equals("session.reset")) {
+                        transcript.setText(""); judgments.setText(""); return;
+                    }
                     if (event.kind().equals("approval.request")) {
                         try {
                             var request = BackendClient.parseApproval(event.text());
@@ -144,7 +162,7 @@ public final class Main {
                         return;
                     }
                     if (event.kind().equals("session.info")) {
-                        frame.setTitle("mu-pyjava · session " + event.text().substring(0, 8));
+                        frame.setTitle("mu-pyjava · Conversation");
                         return;
                     }
                     if (event.kind().equals("history.transcript")) {
@@ -159,23 +177,19 @@ public final class Main {
                         appendBounded(transcript, event.text());
                         return;
                     }
-                    if (event.kind().equals("history.done")) {
-                        send.setEnabled(true);
-                        newSession.setEnabled(true);
-                        return;
-                    }
+                    if (event.kind().equals("history.done")) { idle.run(); return; }
                     if (event.kind().equals("approval.resolved")) return;
                     if (event.kind().equals("done")) {
-                        if (event.id().equals(activeRequest.get())) activeRequest.set(null);
-                        stop.setEnabled(false);
-                        send.setEnabled(true);
-                        newSession.setEnabled(true);
+                        if (event.id().equals(activeRequest.get())) {
+                            activeRequest.set(null); stop.setEnabled(false); idle.run();
+                        }
                         return;
                     }
                     if (event.kind().equals("stopped")) {
-                        send.setEnabled(false);
-                        stop.setEnabled(false);
-                        newSession.setEnabled(false);
+                        backendAlive.set(false);
+                        if (browser.get() != null) browser.get().close();
+                        send.setEnabled(false); stop.setEnabled(false);
+                        newSession.setEnabled(false); sessions.setEnabled(false);
                     }
                     appendBounded(transcript, "[" + event.kind() + "] " + event.text() + "\n\n");
                 })
@@ -189,6 +203,7 @@ public final class Main {
                 send.setEnabled(false);
                 stop.setEnabled(true);
                 newSession.setEnabled(false);
+                sessions.setEnabled(false);
                 appendBounded(transcript, "[you] " + text + "\n\n");
                 try {
                     activeRequest.set(client.send(text));
@@ -197,6 +212,7 @@ public final class Main {
                     send.setEnabled(true);
                     stop.setEnabled(false);
                     newSession.setEnabled(true);
+                    sessions.setEnabled(true);
                 }
             });
             stop.addActionListener(action -> {
@@ -212,18 +228,33 @@ public final class Main {
             newSession.addActionListener(action -> {
                 send.setEnabled(false);
                 newSession.setEnabled(false);
+                sessions.setEnabled(false);
                 try {
-                    client.newSession();
-                    transcript.setText("");
-                    judgments.setText("");
+                    activeRequest.set(client.newSession());
                 } catch (Exception error) {
                     appendBounded(transcript, "[error] " + error.getMessage() + "\n\n");
-                    send.setEnabled(true);
-                    newSession.setEnabled(true);
+                    idle.run();
                 }
             });
+            sessions.addActionListener(action -> {
+                send.setEnabled(false); newSession.setEnabled(false); sessions.setEnabled(false);
+                java.util.function.BiConsumer<String, String> select = (session, point) -> {
+                    try { activeRequest.set(client.selectSession(session, point)); }
+                    catch (Exception error) { appendBounded(transcript, "[error] " + error.getMessage() + "\n\n"); }
+                };
+                java.util.function.BiConsumer<String, String> fork = (session, point) -> {
+                    try { activeRequest.set(client.forkSession(session, point)); }
+                    catch (Exception error) { appendBounded(transcript, "[error] " + error.getMessage() + "\n\n"); }
+                };
+                var dialog = new SessionBrowser(frame, client, select, fork, () -> { browser.set(null); idle.run(); });
+                browser.set(dialog);
+                dialog.show();
+            });
             frame.addWindowListener(new WindowAdapter() {
-                @Override public void windowClosed(WindowEvent event) { client.close(); }
+                @Override public void windowClosed(WindowEvent event) {
+                    if (browser.get() != null) browser.get().close();
+                    client.close();
+                }
             });
             frame.setVisible(true);
         } catch (Exception error) {
