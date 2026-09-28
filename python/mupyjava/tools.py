@@ -101,12 +101,15 @@ TOOL_SCHEMAS: List[Dict[str, Any]] = [
         "type": "function",
         "function": {
             "name": "edit_file",
-            "description": "Replace exactly one occurrence of old_text in a UTF-8 file. Requires write permission.",
+            "description": "Edit a UTF-8 file with one or more unique, non-overlapping replacements from the original content. Prefer edits for multiple changes; old_text/new_text remains supported. Requires write permission.",
             "parameters": {
                 "type": "object", "properties": {
                     "path": {"type": "string"}, "old_text": {"type": "string"},
                     "new_text": {"type": "string"},
-                }, "required": ["path", "old_text", "new_text"],
+                    "edits": {"type": "array", "items": {"type": "object", "properties": {
+                        "old_text": {"type": "string"}, "new_text": {"type": "string"},
+                    }, "required": ["old_text", "new_text"]}},
+                }, "required": ["path"],
             },
         },
     },
@@ -159,16 +162,49 @@ class WorkspaceTools:
             if not isinstance(updated, str) or len(updated.encode("utf-8")) > 1_000_000:
                 raise ValueError("Content must be text of at most 1 MB")
             original = self.file_ops.read_text(target) if existed else ""
+            edit_count = None
         else:
-            old_text, new_text = arguments["old_text"], arguments["new_text"]
-            if not isinstance(old_text, str) or not old_text or not isinstance(new_text, str):
-                raise ValueError("old_text must be nonempty and new_text must be text")
+            edits = arguments.get("edits")
+            if edits is None:
+                edits = [{"old_text": arguments["old_text"], "new_text": arguments["new_text"]}]
+            elif not isinstance(edits, list) or not edits:
+                raise ValueError("edits must be a nonempty list")
+            else:
+                edits = list(edits)
+                if "old_text" in arguments or "new_text" in arguments:
+                    edits.append({"old_text": arguments["old_text"], "new_text": arguments["new_text"]})
             if self.file_ops.size(target) > 1_000_000:
                 raise ValueError("File exceeds the 1 MB edit limit")
             original = self.file_ops.read_text(target)
-            if original.count(old_text) != 1:
-                raise ValueError("old_text must occur exactly once")
-            updated = original.replace(old_text, new_text, 1)
+            bom = "\ufeff" if original.startswith("\ufeff") else ""
+            body = original[len(bom):]
+            first_lf = body.find("\n")
+            ending = "\r\n" if first_lf > 0 and body[first_lf - 1] == "\r" else "\n"
+            normalized = body.replace("\r\n", "\n").replace("\r", "\n")
+            matches = []
+            for index, edit in enumerate(edits):
+                if not isinstance(edit, dict):
+                    raise ValueError(f"edits[{index}] must be an object")
+                old_text, new_text = edit.get("old_text"), edit.get("new_text")
+                if not isinstance(old_text, str) or not old_text or not isinstance(new_text, str):
+                    raise ValueError("old_text must be nonempty and new_text must be text")
+                old_text = old_text.replace("\r\n", "\n").replace("\r", "\n")
+                new_text = new_text.replace("\r\n", "\n").replace("\r", "\n")
+                if normalized.count(old_text) != 1:
+                    label = "old_text" if len(edits) == 1 else f"edits[{index}].old_text"
+                    raise ValueError(f"{label} must occur exactly once")
+                matches.append((normalized.index(old_text), len(old_text), new_text, index))
+            matches.sort()
+            for left, right in zip(matches, matches[1:]):
+                if left[0] + left[1] > right[0]:
+                    raise ValueError(f"edits[{left[3]}] and edits[{right[3]}] overlap")
+            revised = normalized
+            for start, length, replacement, _ in reversed(matches):
+                revised = revised[:start] + replacement + revised[start + length:]
+            if revised == normalized:
+                raise ValueError("Edits did not change the file")
+            updated = bom + (revised.replace("\n", ending) if ending == "\r\n" else revised)
+            edit_count = len(edits)
             if len(updated.encode("utf-8")) > 1_000_000:
                 raise ValueError("Edited file exceeds the 1 MB limit")
         diff = "\n".join(difflib.unified_diff(
@@ -199,7 +235,8 @@ class WorkspaceTools:
                 "before_sha256": hashlib.sha256(original.encode("utf-8")).hexdigest() if existed else None,
                 "after_sha256": hashlib.sha256(updated.encode("utf-8")).hexdigest(),
                 "before_bytes": len(original.encode("utf-8")) if existed else 0,
-                "after_bytes": len(updated.encode("utf-8")), "diff": diff, "content": updated}
+                "after_bytes": len(updated.encode("utf-8")), "diff": diff, "content": updated,
+                "edit_count": edit_count}
 
     def _path(self, raw: str) -> Path:
         if not isinstance(raw, str) or not raw.strip():
@@ -283,13 +320,16 @@ class WorkspaceTools:
                 files.append(str(path.relative_to(self.root)))
         return files, incomplete
 
-    def _read_page(self, path: Path, offset: int, limit: int, errors: str = "strict") -> str:
+    def _read_page(self, path: Path, offset: int, limit: int,
+                   cancel: Optional[CancellationToken] = None) -> str:
         lines = []
         byte_count = 0
         last_line = 0
         more = False
-        with path.open(encoding="utf-8", errors=errors) as file:
-            for number, line in enumerate(file, 1):
+        with self.file_ops.open_text(path, cancel) as source:
+            for number, line in enumerate(source, 1):
+                if cancel is not None:
+                    cancel.raise_if_cancelled()
                 last_line = number
                 if number < offset:
                     continue
@@ -321,14 +361,14 @@ class WorkspaceTools:
             cancel.raise_if_cancelled()
         if name == "list_files":
             target = self._path(arguments["path"])
-            if not target.is_dir():
+            if not self.file_ops.is_dir(target):
                 raise ValueError("Not a directory")
-            return json.dumps(sorted(p.name + ("/" if p.is_dir() else "") for p in target.iterdir())[:200])
+            return json.dumps(sorted(self.file_ops.list_dir(target, cancel))[:200])
         if name == "read_file":
             target = self._path(arguments["path"])
             offset = self._positive_int(arguments.get("offset", 1), "offset", 10_000_000)
             limit = self._positive_int(arguments.get("limit", 2000), "limit", 2000)
-            return self._read_page(target, offset, limit)
+            return self._read_page(target, offset, limit, cancel)
         if name == "read_command_output":
             raw_id = arguments["id"]
             if not isinstance(raw_id, str):

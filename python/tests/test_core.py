@@ -1,4 +1,5 @@
 import json
+import io
 import os
 import queue
 import shlex
@@ -123,6 +124,92 @@ class CoreTests(unittest.TestCase):
             second.join(timeout=2)
             self.assertEqual(errors, [])
             self.assertEqual((root / "a.txt").read_text(), "C")
+
+    def test_multi_edit_matches_original_and_preserves_bom_crlf(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            path = root / "source.py"
+            path.write_bytes(b"\xef\xbb\xbffirst = 1\r\nsecond = 2\r\n")
+            tools = WorkspaceTools(root, allow_write=True)
+            arguments = {"path": "source.py", "edits": [
+                {"old_text": "first = 1", "new_text": "first = 10"},
+                {"old_text": "second = 2", "new_text": "second = 20"},
+            ]}
+            proposed = tools.prepare_change("edit_file", arguments)
+            self.assertEqual(proposed["edit_count"], 2)
+            self.assertIn("first = 10", proposed["diff"])
+            self.assertIn("+second = 20", proposed["diff"])
+            changes = []
+            self.assertEqual(tools.execute("edit_file", arguments, on_change=changes.append), "Edited source.py")
+            self.assertEqual(path.read_bytes(), b"\xef\xbb\xbffirst = 10\r\nsecond = 20\r\n")
+            self.assertEqual(changes[0]["edit_count"], 2)
+
+    def test_multi_edit_rejects_overlap_without_changing_file(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            path = root / "source.txt"
+            path.write_text("abcdef")
+            tools = WorkspaceTools(root, allow_write=True)
+            with self.assertRaisesRegex(ValueError, "overlap"):
+                tools.execute("edit_file", {"path": "source.txt", "edits": [
+                    {"old_text": "abc", "new_text": "A"},
+                    {"old_text": "bcd", "new_text": "B"},
+                ]})
+            self.assertEqual(path.read_text(), "abcdef")
+
+    def test_multi_edit_matches_all_blocks_against_original(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            path = root / "source.txt"
+            path.write_text("alpha beta")
+            tools = WorkspaceTools(root, allow_write=True)
+            tools.execute("edit_file", {"path": "source.txt", "edits": [
+                {"old_text": "alpha", "new_text": "beta"},
+                {"old_text": "beta", "new_text": "gamma"},
+            ]})
+            self.assertEqual(path.read_text(), "beta gamma")
+
+    def test_virtual_operations_support_list_read_and_edit_without_local_file(self):
+        class VirtualOperations:
+            def __init__(self, root):
+                self.root = root.resolve()
+                self.content = "alpha\nbeta\n"
+
+            def exists(self, path):
+                return path == self.root / "virtual.txt"
+
+            def is_dir(self, path):
+                return path == self.root
+
+            def list_dir(self, path, cancel=None):
+                return ["virtual.txt"]
+
+            def read_text(self, path):
+                return self.content
+
+            def open_text(self, path, cancel=None):
+                return io.StringIO(self.content)
+
+            def size(self, path):
+                return len(self.content.encode("utf-8"))
+
+            def replace_text(self, path, content):
+                self.content = content
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            operations = VirtualOperations(root)
+            tools = WorkspaceTools(root, allow_write=True, file_ops=operations)
+            self.assertEqual(json.loads(tools.execute("list_files", {"path": "."})), ["virtual.txt"])
+            self.assertFalse((root / "virtual.txt").exists())
+            self.assertEqual(tools.execute("read_file", {"path": "virtual.txt", "offset": 2}), "beta\n")
+            self.assertIn("use offset=2", tools.execute("read_file", {"path": "virtual.txt", "limit": 1}))
+            tools.execute("edit_file", {"path": "virtual.txt", "edits": [
+                {"old_text": "alpha", "new_text": "ALPHA"},
+                {"old_text": "beta", "new_text": "BETA"},
+            ]})
+            self.assertEqual(operations.content, "ALPHA\nBETA\n")
+            self.assertFalse((root / "virtual.txt").exists())
 
     @unittest.skipUnless(shutil.which("javac") and shutil.which("java"), "JDK is unavailable")
     def test_java_smoke_cancels_streaming_command_and_marks_turn_interrupted(self):
@@ -372,6 +459,11 @@ class CoreTests(unittest.TestCase):
                         name, arguments = "edit_file", {"path": "note.txt", "old_text": "created", "new_text": "edited"}
                     elif prompt == "Fail edit note.txt":
                         name, arguments = "edit_file", {"path": "note.txt", "old_text": "missing", "new_text": "bad"}
+                    elif prompt == "Batch edit note.txt":
+                        name, arguments = "edit_file", {"path": "note.txt", "edits": [
+                            {"old_text": "re", "new_text": "up"},
+                            {"old_text": "placed", "new_text": "dated"},
+                        ]}
                     elif prompt == "Replace note.txt":
                         name, arguments = "write_file", {"path": "note.txt", "content": "replaced"}
                     else:
@@ -422,7 +514,8 @@ class CoreTests(unittest.TestCase):
                 self.assertIn("history.judge: tool.intent v2", allowed.stdout)
                 self.assertIn("tool: write_file: Wrote note.txt", allowed.stdout)
                 self.assertEqual((Path(directory) / "note.txt").read_text(), "created")
-                for prompt, expected in (("Edit note.txt", "edited"), ("Replace note.txt", "replaced")):
+                for prompt, expected in (("Edit note.txt", "edited"), ("Replace note.txt", "replaced"),
+                                         ("Batch edit note.txt", "updated")):
                     result = subprocess.run(["java", "-cp", str(classes), "dev.mupyjava.Main",
                                              "--workspace", directory, "--smoke", prompt,
                                              "--smoke-approval", "once"],
@@ -436,7 +529,7 @@ class CoreTests(unittest.TestCase):
                                         cwd=repository, env=env, capture_output=True, text=True, timeout=15)
                 self.assertEqual(failed.returncode, 0, failed.stderr)
                 self.assertIn("old_text must occur exactly once", failed.stdout)
-                self.assertEqual((Path(directory) / "note.txt").read_text(), "replaced")
+                self.assertEqual((Path(directory) / "note.txt").read_text(), "updated")
             finally:
                 server.shutdown()
                 server_thread.join(timeout=5)

@@ -84,9 +84,16 @@ class Agent:
                         judged_arguments = {"path": arguments.get("path"),
                                             "content_bytes": len(str(arguments.get("content", "")).encode("utf-8"))}
                     elif name == "edit_file":
-                        judged_arguments = {"path": arguments.get("path"),
-                                            "old_text_bytes": len(str(arguments.get("old_text", "")).encode("utf-8")),
-                                            "new_text_bytes": len(str(arguments.get("new_text", "")).encode("utf-8"))}
+                        edits = arguments.get("edits")
+                        edits = edits if isinstance(edits, list) else []
+                        if "old_text" in arguments or "new_text" in arguments:
+                            edits = [*edits, {"old_text": arguments.get("old_text"),
+                                              "new_text": arguments.get("new_text")}]
+                        judged_arguments = {"path": arguments.get("path"), "edit_count": len(edits),
+                                            "old_text_bytes": sum(len(str(edit.get("old_text", "")).encode("utf-8"))
+                                                                  for edit in edits if isinstance(edit, dict)),
+                                            "new_text_bytes": sum(len(str(edit.get("new_text", "")).encode("utf-8"))
+                                                                  for edit in edits if isinstance(edit, dict))}
                     if name in {"write_file", "edit_file", "run_command"}:
                         approved = self.judge.decide(
                             TOOL_INTENT, {"user_request": prompt[:1000], "tool": name, "arguments": judged_arguments}

@@ -6,11 +6,16 @@ import tempfile
 import threading
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Iterator, Protocol
+from typing import ContextManager, Iterable, Iterator, List, Optional, Protocol
+
+from .cancel import CancellationToken
 
 
 class FileOperations(Protocol):
     def read_text(self, path: Path) -> str: ...
+    def open_text(self, path: Path, cancel: Optional[CancellationToken] = None) -> ContextManager[Iterable[str]]: ...
+    def is_dir(self, path: Path) -> bool: ...
+    def list_dir(self, path: Path, cancel: Optional[CancellationToken] = None) -> List[str]: ...
     def exists(self, path: Path) -> bool: ...
     def size(self, path: Path) -> int: ...
     def replace_text(self, path: Path, content: str) -> None: ...
@@ -18,7 +23,24 @@ class FileOperations(Protocol):
 
 class LocalFileOperations:
     def read_text(self, path: Path) -> str:
-        return path.read_text(encoding="utf-8")
+        with path.open("r", encoding="utf-8", newline="") as source:
+            return source.read()
+
+    def open_text(self, path: Path, cancel: Optional[CancellationToken] = None) -> ContextManager[Iterable[str]]:
+        if cancel is not None:
+            cancel.raise_if_cancelled()
+        return path.open(encoding="utf-8")
+
+    def is_dir(self, path: Path) -> bool:
+        return path.is_dir()
+
+    def list_dir(self, path: Path, cancel: Optional[CancellationToken] = None) -> List[str]:
+        entries = []
+        for child in path.iterdir():
+            if cancel is not None:
+                cancel.raise_if_cancelled()
+            entries.append(child.name + ("/" if child.is_dir() else ""))
+        return entries
 
     def exists(self, path: Path) -> bool:
         return path.exists()

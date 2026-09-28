@@ -44,7 +44,7 @@ Add typed question and answer schemas, per-point mode/routing and deterministic 
 
 ## Immediate next slice
 
-The approval gate, durable single-path sessions, dedicated judgment tab, active-turn Stop action and streamed command output are implemented. Long output is retained behind an ID and can be paged back after restart. File write/edit now use approved diffs and atomic serialized replacement through an injectable operations interface. Next: extend the operations seam to read/search/commands, then image reads and additional patch forms. Branch/fork and provider-side HTTP abort remain future work.
+The approval gate, durable single-path sessions, dedicated judgment tab, active-turn Stop action and streamed command output are implemented. Long output is retained behind an ID and can be paged back after restart. File edit supports multiple disjoint replacements with BOM/CRLF preservation; write/edit use approved diffs and atomic serialized replacement. Read/list/write/edit have injectable operations and a virtual-workspace test. Next: extend the operations seam to search/Git/commands, then image reads and patch/navigation metadata. Branch/fork and provider-side HTTP abort remain future work. See [MU_COMPARISON.md](MU_COMPARISON.md) for the source-level comparison.
 
 ## Source anchors
 
