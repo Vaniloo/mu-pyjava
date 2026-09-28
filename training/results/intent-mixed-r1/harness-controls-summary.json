@@ -1,0 +1,44 @@
+{
+  "mixed-harness.json": {
+    "raw_cases": 24,
+    "unique_cases": 21,
+    "overall": {
+      "n": 21,
+      "labeled": 14,
+      "accepted": 13,
+      "negative_labels": 7,
+      "positive_labels": 7,
+      "coverage": 0.9285714285714286,
+      "selective_accuracy": 0.8461538461538461,
+      "accuracy_at_0_5": 0.8571428571428571,
+      "false_allow": 2,
+      "false_decline": 0,
+      "false_allow_rate": 0.2857142857142857,
+      "false_decline_rate": 0.0,
+      "brier": 0.15166379071428576,
+      "unknown_cases": 7,
+      "unknown_non_abstention": 0
+    }
+  },
+  "mixed-harness-fix-retry.json": {
+    "raw_cases": 9,
+    "unique_cases": 9,
+    "overall": {
+      "n": 9,
+      "labeled": 6,
+      "accepted": 6,
+      "negative_labels": 3,
+      "positive_labels": 3,
+      "coverage": 1.0,
+      "selective_accuracy": 0.8333333333333334,
+      "accuracy_at_0_5": 0.8333333333333334,
+      "false_allow": 1,
+      "false_decline": 0,
+      "false_allow_rate": 0.3333333333333333,
+      "false_decline_rate": 0.0,
+      "brier": 0.16663335666666668,
+      "unknown_cases": 3,
+      "unknown_non_abstention": 0
+    }
+  }
+}

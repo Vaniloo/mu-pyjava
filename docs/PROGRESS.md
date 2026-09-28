@@ -158,3 +158,27 @@ Original v1/r2 weight hashes unchanged; temporary serving/tunnel stopped. Softwa
 **197 tests, 196 passed, native PowerShell skipped**. See
 [results-intent-uncertainty.md](../training/results-intent-uncertainty.md).
 GitHub tracking: [milestone 15](https://github.com/Vaniloo/mu-pyjava/issues/15).
+
+## Milestone 16 — mixed rehearsal and deconfounding controls
+
+Canonicalized reused old/new goal families, imported only previous train partitions and retained
+all349 original v1 states. Other controlled rehearsal states receive coherent injective path
+renaming. Fresh argument signatures span true/false/null, with scoped prohibitions and short
+clear requests. Frozen9,465 rows:7,209 train;752 each validation/calibration/test. Each holdout
+has8 unknown families/16 distinct requests, addressing the prior one-family coverage weakness.
+
+Added522 unseen-path controls, paired validation and family/request-count reporting. Lab trained
+from a v1 copy; epoch3 selected, separate temperature calibration. New known592/592 and unknown
+158/160 abstentions; old synthetic574/580(up from460), all60 old file positives now allowed.
+Manual remains17/20, with1 false allow/1 false decline/2 abstentions. Path controls have0 known
+errors but5 unknown answer flips. Laya remains shadow-only; no default replacement.
+
+Six-task DeepSeek harness produced8 actual judgments(6 allow/1 decline/1 abstain). Tests ran,
+but the first repair task hit the probe's step cap before a final summary; a focused max10-step
+retry completed its summary. Controlled negatives against actual arguments still falsely allow
+small file edits. Deduplicated metrics and both traces retained. Eight reviewer input packets
+have no model predictions and no filled gold labels; independent human review remains pending.
+
+Software gate:**204 tests,203 passed, native PowerShell skipped**. Original weights unchanged;
+temporary service/tunnel stopped. See[results-intent-mixed.md](../training/results-intent-mixed.md).
+GitHub:[milestone16](https://github.com/Vaniloo/mu-pyjava/issues/16).

@@ -111,3 +111,23 @@ and the inspected 20-case manual regression are excluded from training. The new 
 covers five actual intent-triggering tools; previous hypothetical extension examples are not
 newly implemented tools. Every synthetic evaluation still needs `--allow-synthetic-eval`;
 teacher candidates cannot enter validation/calibration/test. No default or active-mode change.
+
+## Mixed rehearsal and path controls (milestone16)
+
+`training/build_intent_mixed.py` imports only past train rows, unifies synthetic/natural IDs
+for corresponding goals and holds imported families in train. Original v1 states stay verbatim;
+other controlled rows use an injective path substitution in both request and arguments. Fresh
+argument signatures span true/false/null. Labels remain synthetic/teacher, never independent
+human gold. Each new holdout has8 unknown families and16 distinct unknown requests.
+
+`training/intent_interventions.py` freezes coherent unseen-path controls with parent IDs and
+new digests. These use an intervention split rejected by training. `paired_metrics` requires
+the same checkpoint and unchanged labels, and reports answer flips/probability shifts. Actual
+serving reports now include family counts, distinct unknown-request counts and per-family
+metrics, so repeated argument variants are not presented as independent semantic coverage.
+
+`probe_harness.py --extended --counterfactuals --samples ...` judges constructed allow/read-only/
+unknown requests against real captured arguments. It never executes these counterfactuals;
+metrics deduplicate identical states. `--task` and `--max-steps` allow a focused bounded replay.
+Unreviewed annotation-only packets omit observed predictions and do not count toward gold.
+See[results-intent-mixed.md](../training/results-intent-mixed.md) for gains and remaining errors.

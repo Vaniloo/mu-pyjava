@@ -1,0 +1,70 @@
+{
+  "counts": {
+    "train": 7209,
+    "validation": 752,
+    "calibration": 752,
+    "test": 752
+  },
+  "excluded": {
+    "duplicate": 176
+  },
+  "tools": {
+    "write_file": 3113,
+    "powershell": 1028,
+    "edit_file": 2991,
+    "run_command": 1198,
+    "bash": 1028,
+    "apply_patch": 60,
+    "rename_path": 24,
+    "format_file": 23
+  },
+  "splits": {
+    "train": {
+      "families": 101,
+      "unknown_families": 33,
+      "unknown_requests": 66,
+      "labels": {
+        "False": 3836,
+        "True": 2456,
+        "unknown": 917
+      }
+    },
+    "validation": {
+      "families": 16,
+      "unknown_families": 8,
+      "unknown_requests": 16,
+      "labels": {
+        "False": 264,
+        "True": 328,
+        "unknown": 160
+      }
+    },
+    "calibration": {
+      "families": 16,
+      "unknown_families": 8,
+      "unknown_requests": 16,
+      "labels": {
+        "False": 264,
+        "unknown": 160,
+        "True": 328
+      }
+    },
+    "test": {
+      "families": 16,
+      "unknown_families": 8,
+      "unknown_requests": 16,
+      "labels": {
+        "False": 264,
+        "True": 328,
+        "unknown": 160
+      }
+    }
+  },
+  "source_train_counts": {
+    "mixed-r1": 2256,
+    "intent-uncertainty-r1": 2526,
+    "intent-v2-synthetic-r2": 2427
+  },
+  "evaluation_basis": "controlled_synthetic_experiment",
+  "note": "Shared structures remain. Only previous train rows imported; all canonical imported families stay in train. No independent human gold."
+}

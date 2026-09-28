@@ -66,3 +66,12 @@ expose remaining negation/scope and distribution failures. The live edit recover
 read-only false allows remain. Keep all Laya models shadow-only. Next: mixed old/new family
 rehearsal, prohibition scope/short request variation, versioned task-context input and
 independently reviewed real traces. See [results-intent-uncertainty.md](../training/results-intent-uncertainty.md).
+
+## Milestone16 follow-up
+
+Mixed historical training, canonical family IDs, shared argument roles and expanded unknown
+holdouts are implemented and trained. Known synthetic592/592; old regression574/580 recovers
+scoped file changes; manual17/20 and actual small-edit read-only controls still fail. Path
+interventions also flip5 unknown answers. Next: broad metadata distributions and indirect
+prerequisites/redirections, versioned goal/constraint context and independent real human review.
+All Laya checkpoints remain shadow-only. See[results-intent-mixed.md](../training/results-intent-mixed.md).

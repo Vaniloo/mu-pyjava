@@ -61,3 +61,27 @@ PYTHONPATH=python python3 training/train_laya.py \
 reviewed null labels from raw samples uses `training/judge_pipeline.py export --include-unknown`.
 `probe_harness.py --extended` also exercises a Chinese configuration edit and an authorized
 local unit-test command in temporary fixtures, while keeping the original denied-command task.
+
+## Mixed rehearsal and coherent path controls
+
+Milestone16 addresses dataset shortcuts and restores scoped file modifications. See
+[results-intent-mixed.md](results-intent-mixed.md); manual/live negative failures still prevent
+promotion. Frozen data and coherent path controls are in `datasets/intent-mixed-r1`.
+
+```sh
+PYTHONPATH=python python3 training/train_laya.py \
+  --data training/datasets/intent-mixed-r1/intent-v2.jsonl.gz \
+  --manual-eval training/manual_eval.jsonl --output work/checkpoints/mixed-new \
+  --init-checkpoint work/checkpoint-copy --epochs 3 --batch-size 16 \
+  --encoder-lr 0.000005 --head-lr 0.000025 --train-unknown --allow-synthetic-eval
+```
+
+Evaluate controls with `evaluate_intent.py --data .../path-controls-v2.jsonl.gz --split all`.
+The controls preserve request/action path relations and share parents with test: they are not
+extra independent holdout examples. `intent_interventions.paired_metrics` checks aligned parent
+predictions and checkpoint identity. Full reports publish family and distinct-request counts.
+
+For live fixtures, `probe_harness.py --extended --counterfactuals --samples work/new-samples.jsonl`
+also checks synthetic prohibited/unknown requests against actual argument metadata, without
+executing them. Focus a retry with `--task fix_then_test --max-steps 10`. Raw labels are never
+filled from model predictions. Pending independent reviewer packets are retained separately.

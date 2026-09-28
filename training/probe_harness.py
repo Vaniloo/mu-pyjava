@@ -9,6 +9,8 @@ from pathlib import Path
 from mupyjava.agent import Agent, TOOL_INTENT
 from mupyjava.judge import DecisionEngine, LayaHttpBooleanJudge
 from mupyjava.judge_samples import JudgeSampler
+from mupyjava.judge_data import load_samples
+from intent_interventions import harness_controls, harness_control_metrics
 from mupyjava.model import ChatCompletionsModel
 from mupyjava.tools import WorkspaceTools
 
@@ -75,7 +77,19 @@ def main():
     parser.add_argument("--samples", type=Path, help="Opt-in private raw decision JSONL")
     parser.add_argument("--sample-group", help="One task/repository family, shared by all related probes")
     parser.add_argument("--extended", action="store_true", help="Also exercise Chinese edits and actual local unit tests")
+    parser.add_argument("--counterfactuals", action="store_true", help="Judge controlled allow/deny/unknown requests against actual captured arguments; never execute them")
+    parser.add_argument("--max-steps", type=int, default=6)
+    parser.add_argument("--task", action="append", choices=[task["id"] for task in TASKS + EXTENDED_TASKS], help="Run selected fixture tasks (repeatable)")
     args = parser.parse_args()
+    if args.counterfactuals and args.samples is None:
+        parser.error("--counterfactuals requires --samples")
+    if not 1 <= args.max_steps <= 32:
+        parser.error("--max-steps must be between 1 and 32")
+    tasks = TASKS + (EXTENDED_TASKS if args.extended else [])
+    if args.task:
+        tasks = [task for task in tasks if task["id"] in args.task]
+        if len(tasks) != len(set(args.task)):
+            parser.error("Extended tasks require --extended")
     sampler = JudgeSampler(args.samples, args.sample_group) if args.samples else None
     if sampler is not None and sampler.path.resolve() == args.output.with_suffix(".ledger.jsonl").resolve():
         parser.error("Raw samples must use a separate file from the metadata ledger")
@@ -88,7 +102,7 @@ def main():
     ledger.unlink(missing_ok=True)
     runs = []
     with tempfile.TemporaryDirectory(prefix="mu-pyjava-probe-") as directory:
-        for task in TASKS + (EXTENDED_TASKS if args.extended else []):
+        for task in tasks:
             if sampler is not None:
                 sampler.context = {"probe_task": task["id"], "origin": "synthetic_harness_probe"}
             root = Path(directory) / task["id"]
@@ -98,7 +112,7 @@ def main():
                 target.parent.mkdir(parents=True, exist_ok=True)
                 target.write_text(content, encoding="utf-8")
             agent = Agent(model, WorkspaceTools(root, allow_write=True, allow_command=task.get("allow_command", False)),
-                          DecisionEngine("shadow", backend, ledger, sampler=sampler), max_steps=6)
+                          DecisionEngine("shadow", backend, ledger, sampler=sampler), max_steps=args.max_steps)
             events = list(agent.run(task["prompt"]))
             after = snapshot(root)
             runs.append({"task": task["id"], "prompt": task["prompt"], "events": events,
@@ -111,7 +125,15 @@ def main():
         judgment = backend.evaluate(TOOL_INTENT.question, state)
         probes.append({"request": request, "tool": tool, "expected": expected,
                        "answer": judgment.answer, "probability": judgment.probability})
+    controls = []
+    if args.counterfactuals:
+        for row in harness_controls(load_samples(args.samples)):
+            judgment = backend.evaluate(TOOL_INTENT.question, row["state"])
+            controls.append({**row, "answer": judgment.answer, "probability": judgment.probability})
     report = {"model": "deepseek-flash", "judge": "lab Laya tool.intent checkpoint", "extended": args.extended,
+              "max_steps": args.max_steps,
+              "counterfactuals": controls,
+              "counterfactual_metrics": harness_control_metrics(controls),
               "tasks": runs, "probes": probes,
               "ledger_count": sum(1 for _ in ledger.open(encoding="utf-8")) if ledger.exists() else 0}
     args.output.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -119,6 +141,8 @@ def main():
           "abstained", sum(row["answer"] is None for row in probes),
           "wrong", sum(row["answer"] is not None and row["answer"] != row["expected"] for row in probes))
     print("Saved", args.output, flush=True)
+    if controls:
+        print("Controlled arguments", json.dumps(report["counterfactual_metrics"]), flush=True)
 
 
 if __name__ == "__main__":
