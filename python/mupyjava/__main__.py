@@ -124,8 +124,10 @@ def main() -> int:
             def save_tool_event(call_id: str, kind: str, payload: dict) -> None:
                 store.append(kind, payload, turn_id, call_id)
                 if kind == "tool.change":
+                    location = ("\nFirst changed line: " + str(payload["first_changed_line"])) \
+                        if payload.get("first_changed_line") is not None else ""
                     emit(request_id, kind, f"{payload['path']}: {payload['before_bytes']} → "
-                         f"{payload['after_bytes']} bytes\n{payload['diff']}")
+                         f"{payload['after_bytes']} bytes" + location + "\n" + payload["diff"])
                 elif kind == "tool.result":
                     summary = format_result_details(payload["tool"], payload)
                     if summary:

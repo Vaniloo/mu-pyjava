@@ -77,6 +77,13 @@ def format_result_details(tool: str, result: dict) -> str:
     if result.get("is_error"):
         return tool + ": " + details.get("error_type", "Error")
     parts = []
+    change = details.get("change", {})
+    if not isinstance(change, dict):
+        change = {}
+    if change.get("first_changed_line") is not None:
+        parts.append(str(change.get("path", tool)) + ":" + str(change["first_changed_line"]))
+    if change.get("used_fuzzy_match"):
+        parts.append("fuzzy normalization used")
     if "exit_code" in details:
         parts.append("exit code " + str(details["exit_code"]))
     if "output_bytes" in details:

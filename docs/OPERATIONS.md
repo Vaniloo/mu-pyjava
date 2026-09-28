@@ -36,7 +36,7 @@ Definitions live in `python/mupyjava/file_ops.py`, `search_ops.py`, `command_ops
 - Search discovery should stop at 10,000 candidates; grep should respect its requested raw line bound. Tool code independently applies the public match, text and byte limits. The local adapter honors `.gitignore` through ripgrep.
 - Command callbacks must be serial, contain bytes, and finish before `execute` returns or raises. The shared output collector retains a 12 KB tail, sends bounded updates, and stores the complete stream when truncated. `read_command_output` retrieves that local artifact even when the bytes came from an alternate backend.
 - Cancellation raises `TurnCancelled`; timeout raises `subprocess.TimeoutExpired`; transport and I/O failures raise `OSError` or `ValueError`. Operations must settle outstanding I/O before returning. The tool boundary checks cancellation again after search, Git and command calls so a cancelled action cannot be reported as successful.
-- Mutations still pass through the same approval/revision checks and per-path queue. `replace_text` must finish its atomic commit before returning. Cancellation around a completed atomic commit can leave a complete changed file; replay never repeats that side effect.
+- Mutations still pass through the same approval/revision checks and per-path queue, including fresh approvals for actual fuzzy matches. Their patch/navigation metadata is computed from the exact backend before/after text; see [EDITING.md](EDITING.md). `replace_text` must finish its atomic commit before returning. Cancellation around a completed atomic commit can leave a complete changed file; replay never repeats that side effect.
 
 ## Remote implementation requirements
 

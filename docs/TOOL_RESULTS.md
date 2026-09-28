@@ -17,7 +17,7 @@
 | Read text | `offset`, `output_lines`, `output_bytes`, `truncated`, `next_offset` |
 | List/find/grep | `count`, `truncated`; grep also records `record_count` including context lines |
 | Git inspection | Displayed `output_bytes` and `truncated` |
-| Write/edit | `change`: path, operation, before/after hashes and byte counts, diff, edit count |
+| Write/edit | `change`: path, operation, hashes/bytes, approval and numbered diffs, standard patch, first changed line, hunks, edit count and fuzzy matching metadata |
 | Command/shell | `exit_code`, total `output_bytes`, `truncated`, `artifact_id`, `mode` |
 | Output retrieval | `artifact_id`, `offset`, page `output_bytes`, `truncated`, `next_offset` |
 | Expected failure | `error_type`, error text, `is_error=true` |
@@ -27,6 +27,8 @@ A nonzero command exit code sets `is_error=true` while retaining its exit code a
 The agent persists a versioned `tool.result` event with the tool-call ID for each completed/failed call. Java receives a readable `tool.detail` summary; these summaries are saved for history. The Chat Completions adapter receives textual tool replies plus properly ordered image attachment messages when the model supports images. Version 1 now supports `image` blocks (`data`, `mime_type`) alongside `text`; the legacy `.text`/`execute(...)` view excludes binary data. Custom tools return the same contract and their structured details are journaled. See [images and extensions](IMAGES_AND_EXTENSIONS.md).
 
 ## Shell tools
+
+For patch fields, navigation coordinates and exact/opt-in fuzzy edit behavior, see [EDITING.md](EDITING.md).
 
 `bash` and `powershell` accept `command` (the complete script) and optional `timeout` (1–120 seconds, default 30). They share the command permission gate, fresh per-call approval, process cancellation, streaming, bounded tail and full-output retrieval. `--allow-command` is the explicit broad override for all three execution tools.
 

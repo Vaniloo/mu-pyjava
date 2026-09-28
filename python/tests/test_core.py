@@ -474,6 +474,9 @@ class CoreTests(unittest.TestCase):
                         name, arguments = "custom_export", {"path": "export.txt"}
                     elif prompt == "Read picture":
                         name, arguments = "read_file", {"path": "picture.png"}
+                    elif prompt == "Fuzzy edit":
+                        name, arguments = "edit_file", {"path": "fuzzy.txt", "old_text": 'value = "old"',
+                                            "new_text": 'value = "new"', "allow_fuzzy": True}
                     else:
                         name, arguments = "write_file", {"path": "note.txt", "content": "created"}
                     message = {"role": "assistant", "content": None, "tool_calls": [{
@@ -538,6 +541,27 @@ class CoreTests(unittest.TestCase):
                 self.assertEqual(failed.returncode, 0, failed.stderr)
                 self.assertIn("old_text must occur exactly once", failed.stdout)
                 self.assertEqual((Path(directory) / "note.txt").read_text(), "updated")
+                fuzzy_path = Path(directory) / "fuzzy.txt"
+                fuzzy_original = 'keep “unchanged”  \nvalue = “old”  \n'
+                fuzzy_path.write_text(fuzzy_original)
+                for answer in ("deny", "once"):
+                    fuzzy = subprocess.run(["java", "-cp", str(classes), "dev.mupyjava.Main",
+                                            "--workspace", directory, "--smoke", "Fuzzy edit",
+                                            "--smoke-approval", answer], cwd=repository, env=env,
+                                           capture_output=True, text=True, timeout=15)
+                    self.assertEqual(fuzzy.returncode, 0, fuzzy.stderr)
+                    if answer == "deny":
+                        self.assertEqual(fuzzy_path.read_text(), fuzzy_original)
+                    else:
+                        self.assertEqual(fuzzy_path.read_text(), 'keep “unchanged”  \nvalue = "new"\n')
+                        self.assertIn("First changed line: 2", fuzzy.stdout)
+                        self.assertIn("tool.detail: edit_file: fuzzy.txt:2", fuzzy.stdout)
+                store = SessionStore.open(Path(directory), Path(directory) / "sessions", resume=True)
+                edit_result = next(item["payload"] for item in reversed(store.events())
+                                   if item["type"] == "tool.result" and item["payload"]["tool"] == "edit_file")
+                self.assertTrue(edit_result["details"]["change"]["used_fuzzy_match"])
+                self.assertTrue(edit_result["details"]["change"]["patch"].startswith("--- a/fuzzy.txt"))
+                self.assertTrue(any("fuzzy.txt:2" in text for _, text in store.history()))
                 if shutil.which("bash"):
                     for answer in ("deny", "once"):
                         shell = subprocess.run(["java", "-cp", str(classes), "dev.mupyjava.Main",

@@ -15,6 +15,7 @@ from typing import Any, Callable, Dict, List, Optional
 from .cancel import CancellationToken, TurnCancelled
 from .capabilities import ModelCapabilities
 from .file_ops import FileMutationQueue, FileOperations, LocalFileOperations
+from .editing import apply_edits, change_metadata
 from .command_ops import CommandOperations, CommandOutput, LocalCommandOperations
 from .search_ops import GitOperations, LocalGitOperations, LocalSearchOperations, SearchOperations
 from .shell_ops import LocalShellOperations, ShellOperations
@@ -104,10 +105,10 @@ TOOL_SCHEMAS: List[Dict[str, Any]] = [
         "type": "function",
         "function": {
             "name": "edit_file",
-            "description": "Edit a UTF-8 file with one or more unique, non-overlapping replacements from the original content. Prefer edits for multiple changes; old_text/new_text remains supported. Requires write permission.",
+            "description": "Edit a UTF-8 file with unique, non-overlapping replacements against original content. Exact matching is default. Optional allow_fuzzy enables Unicode/trailing-space normalization and requires fresh desktop approval if used. Returns patch and first-changed-line metadata. Requires write permission.",
             "parameters": {
                 "type": "object", "properties": {
-                    "path": {"type": "string"}, "old_text": {"type": "string"},
+                    "path": {"type": "string"}, "allow_fuzzy": {"type": "boolean"}, "old_text": {"type": "string"},
                     "new_text": {"type": "string"},
                     "edits": {"type": "array", "items": {"type": "object", "properties": {
                         "old_text": {"type": "string"}, "new_text": {"type": "string"},
@@ -195,6 +196,7 @@ class WorkspaceTools:
         target = self._path(arguments["path"])
         relative = str(target.relative_to(self.root))
         existed = self.file_ops.exists(target)
+        matching = {"used_fuzzy_match": False, "fuzzy_edit_indices": [], "normalized_line_ranges": []}
         if name == "write_file":
             updated = arguments["content"]
             if not isinstance(updated, str) or len(updated.encode("utf-8")) > 1_000_000:
@@ -219,28 +221,7 @@ class WorkspaceTools:
             first_lf = body.find("\n")
             ending = "\r\n" if first_lf > 0 and body[first_lf - 1] == "\r" else "\n"
             normalized = body.replace("\r\n", "\n").replace("\r", "\n")
-            matches = []
-            for index, edit in enumerate(edits):
-                if not isinstance(edit, dict):
-                    raise ValueError(f"edits[{index}] must be an object")
-                old_text, new_text = edit.get("old_text"), edit.get("new_text")
-                if not isinstance(old_text, str) or not old_text or not isinstance(new_text, str):
-                    raise ValueError("old_text must be nonempty and new_text must be text")
-                old_text = old_text.replace("\r\n", "\n").replace("\r", "\n")
-                new_text = new_text.replace("\r\n", "\n").replace("\r", "\n")
-                if normalized.count(old_text) != 1:
-                    label = "old_text" if len(edits) == 1 else f"edits[{index}].old_text"
-                    raise ValueError(f"{label} must occur exactly once")
-                matches.append((normalized.index(old_text), len(old_text), new_text, index))
-            matches.sort()
-            for left, right in zip(matches, matches[1:]):
-                if left[0] + left[1] > right[0]:
-                    raise ValueError(f"edits[{left[3]}] and edits[{right[3]}] overlap")
-            revised = normalized
-            for start, length, replacement, _ in reversed(matches):
-                revised = revised[:start] + replacement + revised[start + length:]
-            if revised == normalized:
-                raise ValueError("Edits did not change the file")
+            revised, matching = apply_edits(normalized, edits, arguments.get("allow_fuzzy", False))
             updated = bom + (revised.replace("\n", ending) if ending == "\r\n" else revised)
             edit_count = len(edits)
             if len(updated.encode("utf-8")) > 1_000_000:
@@ -274,7 +255,8 @@ class WorkspaceTools:
                 "after_sha256": hashlib.sha256(updated.encode("utf-8")).hexdigest(),
                 "before_bytes": len(original.encode("utf-8")) if existed else 0,
                 "after_bytes": len(updated.encode("utf-8")), "diff": diff, "content": updated,
-                "edit_count": edit_count}
+                "edit_count": edit_count, **matching,
+                **change_metadata(target.relative_to(self.root).as_posix(), original, updated, existed)}
 
     def _path(self, raw: str) -> Path:
         if not isinstance(raw, str) or not raw.strip():

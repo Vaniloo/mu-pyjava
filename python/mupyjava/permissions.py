@@ -31,10 +31,17 @@ def action_preview(tools: WorkspaceTools, name: str, arguments: dict,
                      or target.name == ".env" or target.name.startswith(".env."))
         grant = None if protected else "file:" + str(relative)
         change = prepared_change or tools.prepare_change(name, arguments)
+        if change.get("used_fuzzy_match"):
+            grant = None
         if change["path"] != str(relative):
             raise ValueError("Path changed while preparing approval")
         verb = "Edit" if name == "edit_file" else ("Replace" if change["existed"] else "Create")
         preview = change["diff"] or "(No content change)"
+        if change.get("used_fuzzy_match"):
+            summary = "Fuzzy normalization used on lines: " + ", ".join(
+                str(item["start_line"]) + "–" + str(item["end_line"])
+                for item in change["normalized_line_ranges"])
+            preview = summary + "\nReview the entire changed lines; normalization can alter other characters on them.\n\n" + preview
         return (f"{verb} {relative} ({change['after_bytes']} bytes)", preview, grant, target)
     if name in COMMAND_TOOLS:
         command = arguments["command"]

@@ -96,6 +96,7 @@ class Agent:
                             edits = [*edits, {"old_text": arguments.get("old_text"),
                                               "new_text": arguments.get("new_text")}]
                         judged_arguments = {"path": arguments.get("path"), "edit_count": len(edits),
+                                            "allow_fuzzy": arguments.get("allow_fuzzy", False),
                                             "old_text_bytes": sum(len(str(edit.get("old_text", "")).encode("utf-8"))
                                                                   for edit in edits if isinstance(edit, dict)),
                                             "new_text_bytes": sum(len(str(edit.get("new_text", "")).encode("utf-8"))
@@ -156,6 +157,13 @@ class Agent:
                 except (KeyError, TypeError, ValueError, PermissionError, OSError, subprocess.TimeoutExpired) as error:
                     structured_result = ToolResult.failed(error)
                 result = structured_result.text
+                change = structured_result.details.get("change", {})
+                if not isinstance(change, dict):
+                    change = {}
+                if change.get("first_changed_line") is not None:
+                    result += "\nFirst changed line: " + str(change["first_changed_line"])
+                if change.get("used_fuzzy_match"):
+                    result += "\nFuzzy normalization used on lines: " + json.dumps(change.get("normalized_line_ranges", []))
                 if on_tool_event is not None:
                     on_tool_event(call_id, "tool.result", {"tool": name, **structured_result.to_payload()})
                 tool_content = result if len(result) <= 60_000 else result[:59_900] + "\n[Tool result clipped at 60,000 characters]"

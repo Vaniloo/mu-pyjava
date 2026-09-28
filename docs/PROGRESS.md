@@ -30,6 +30,7 @@ The ordered gap audit and acceptance criteria are in [NEXT_PHASE.md](NEXT_PHASE.
 - [x] Add approved Bash/PowerShell tools and unified content/details/error results, with saved Java metadata and shell lifecycle tests. Native PowerShell awaits an installed platform.
 - [x] Add bounded image reading/conversion with explicit model capabilities, correct Chat Completions attachment ordering and completed-session restoration.
 - [x] Add trusted custom-tool modules with validated schemas, fresh mutation approvals, judge/cancel/result handling and Java process coverage.
+- [x] Add replayable standard patches, numbered display diffs and navigation metadata; implement explicit fuzzy normalization with fresh approvals, ambiguity checks, untouched-line preservation and Java history coverage.
 - [ ] Collect independently labeled decisions for all mutating tools, including `edit_file`, and resolve confident false positives before enabling the trained judge.
 - [ ] Add branch/fork sessions, provider-side HTTP request abort and background jobs after the single-path format is stable.
 - [ ] Typed choice/score decisions, judge routing, and output admission.
