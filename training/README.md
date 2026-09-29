@@ -99,3 +99,22 @@ independent deployment benchmarks. No new weights or active promotion.
 PYTHONPATH=python python3 training/intent_ablation.py build --output work/ablation-new
 PYTHONPATH=python python3 training/intent_ablation.py build --joint-bytes --output work/joint-new
 ```
+
+## Scope paraphrase training
+
+Milestone18 freezes whole file/command phrase families and file-goal families,with old mixed
+train rehearsal and a separate24-case challenge. Prerequisite templates share structure with
+held-out executable goals;all labels remain synthetic/retained teacher,not independent human gold.
+See[results-intent-scope.md](results-intent-scope.md) for status and prescribed evaluation.
+
+```sh
+PYTHONPATH=python python3 training/build_intent_scope.py --output work/scope-new
+PYTHONPATH=python python3 training/train_laya.py \
+  --data work/scope-new/dataset/intent-v2.jsonl.gz --manual-eval training/manual_eval.jsonl \
+  --init-checkpoint work/mixed-checkpoint-copy --output work/checkpoints/scope-new \
+  --epochs 3 --batch-size 16 --encoder-lr 0.000005 --head-lr 0.000025 \
+  --train-unknown --allow-synthetic-eval
+```
+
+Use a separate checkpoint copy. `review_scope_challenge.py` provides a prediction-blind external
+model check;its teacher outputs never enter training,calibration or checkpoint selection.

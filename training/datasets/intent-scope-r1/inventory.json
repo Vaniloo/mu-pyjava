@@ -1,0 +1,71 @@
+{
+  "counts": {
+    "train": 12195,
+    "validation": 1602,
+    "calibration": 1602,
+    "test": 2130
+  },
+  "excluded": {
+    "duplicate": 72
+  },
+  "protected_input_exclusions": {},
+  "tools": {
+    "bash": 1436,
+    "write_file": 6497,
+    "run_command": 1606,
+    "edit_file": 6447,
+    "powershell": 1436,
+    "format_file": 23,
+    "rename_path": 24,
+    "apply_patch": 60
+  },
+  "splits": {
+    "train": {
+      "families": 117,
+      "labels": {
+        "True": 4118,
+        "None": 2579,
+        "False": 5498
+      },
+      "unknown_requests": 98
+    },
+    "validation": {
+      "families": 10,
+      "labels": {
+        "True": 534,
+        "None": 534,
+        "False": 534
+      },
+      "unknown_requests": 20
+    },
+    "calibration": {
+      "families": 10,
+      "labels": {
+        "True": 534,
+        "None": 534,
+        "False": 534
+      },
+      "unknown_requests": 20
+    },
+    "test": {
+      "families": 13,
+      "labels": {
+        "None": 710,
+        "False": 710,
+        "True": 710
+      },
+      "unknown_requests": 26
+    }
+  },
+  "source_train_counts": {
+    "intent-mixed-r1": 7209,
+    "scope-r1": 4986
+  },
+  "limitations": [
+    "Constructed labels, no independent human gold.",
+    "Whole file/command bilingual phrase and file-goal families isolated; prerequisite templates shared with held-out executables.",
+    "Conceptual and lexical overlap remains; unknown-request counts include shared prerequisite phrasing.",
+    "Old inspected diagnosis is regression only; exact old manual/control/holdout inputs excluded.",
+    "Rehearsal preserves all previous train rows; prior hypothetical extension rows remain training-only."
+  ]
+}

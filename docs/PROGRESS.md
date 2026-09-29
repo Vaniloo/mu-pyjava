@@ -203,3 +203,17 @@ transitions/runtime provenance published. No training or promotion; pending inde
 remain unfilled. Software gate:**210 tests,209 passed,1 native PowerShell skip**. See
 [diagnosis and next training work](../training/results-intent-ablation.md).
 GitHub:[milestone17](https://github.com/Vaniloo/mu-pyjava/issues/17).
+
+## Milestone 18 — scope paraphrases (in progress)
+
+Frozen12,195 train with7,209 prior train states unchanged and4,986 new rows;1,602 validation,
+1,602 calibration,2,130 test. File/command phrase families and file goals stay in one partition;
+prerequisite templates share structure with held-out executable goals.24 multi-sentence challenge
+cases are protected from exports and independently reviewed by DeepSeek without labels or judge
+predictions:24 agreements. This is teacher verification,not independent human gold.
+
+Candidate initialized from a mixed-r1 copy,three epochs with predeclared validation-only epoch
+selection and separate calibration. Original/v1/mixed serving baselines completed. Five dataset
+guards pass;candidate serving,retention,live harness and full software gate are pending.
+See[scope experiment](../training/results-intent-scope.md).
+GitHub:[milestone18](https://github.com/Vaniloo/mu-pyjava/issues/18).
