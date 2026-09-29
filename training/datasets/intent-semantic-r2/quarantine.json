@@ -1,0 +1,41 @@
+{
+  "families": {
+    "teacher/command/01": [
+      "blind_label_disagreement"
+    ],
+    "teacher/command/02": [
+      "duplicate_input"
+    ],
+    "teacher/command/06": [
+      "duplicate_input"
+    ],
+    "teacher/command/07": [
+      "duplicate_input"
+    ],
+    "teacher/command/08": [
+      "duplicate_input"
+    ],
+    "teacher/command/09": [
+      "duplicate_input"
+    ],
+    "teacher/command/10": [
+      "duplicate_input"
+    ],
+    "teacher/command/13": [
+      "duplicate_input"
+    ],
+    "teacher/command/14": [
+      "duplicate_input"
+    ],
+    "teacher/command/15": [
+      "duplicate_input"
+    ],
+    "teacher/file/12": [
+      "duplicate_input"
+    ]
+  },
+  "accepted_fresh": 280,
+  "submitted_fresh": 350,
+  "missing_reviews": 0,
+  "human_gold": 0
+}

@@ -1,0 +1,13 @@
+Run the first prespecified pilot of the revised semantic training design.
+
+Data plan, fixed before model inference: 32 teacher-written training families (16 file families with two positive/negative pairs per language plus unknowns; 16 command families with one pair per language plus unknowns), 24 separately authored bilingual synthetic families split 8 validation / 8 calibration / 8 test, and up to 384 deterministic prior-training rehearsal rows. No metadata sweep. All labels retain teacher/synthetic provenance; no independent human-gold claim.
+
+Teacher review sees only IDs, exact states and criteria, with no construction labels or judge predictions. Quarantine every whole family containing a review disagreement, duplicate, protected input, or malformed record before freezing. If a partition becomes empty or required pairs disappear, stop for data repair before any judge inference. Do not adjust labels to match judge predictions. Freeze one dataset for both arms.
+
+Train uniform-control and family/request-weighted arms from the same separate mixed-r1 checkpoint copy: seed 20260927, batch 16, encoder LR 5e-6, head LR 2.5e-5, maximum 3 epochs, epoch-zero eligibility, patience 1 and min_delta .001. Rehearsal mass .25 in both arms. Each arm selects on validation alone and fits temperature only on calibration. No configuration change based on either arm's results.
+
+After selection, compare new-test serving of mixed-r1, scope-r1 and both candidates, plus old 72-case boundary, 24-case challenge and manual 20 regressions. Include the prespecified common-temperature 1.5331206321716309 control for new candidates. Report known errors, abstentions, unknown behavior, paired authorization order, language/tool/family outcomes, and the small synthetic pilot's limits. Retain both candidates, keep shadow-only, and do not choose a deployment model from these diagnostics.
+
+
+## Pre-inference preparation log
+Initial requests without an explicit JSON word were rejected by the API except JSON-path seeds. After diagnosing HTTP 400, the prompt was corrected. Completed malformed families 01, 06, 07, 09, 11 were excluded; the retry result for 09 was not used. API transport/schema attempts are retained in generation-attempts.json.gz. 27 teacher families and 24 authored synthetic holdout families entered blind review. A further 11 complete teacher families were quarantined (10 repeated placeholder inputs, one label disagreement). No generated label was changed. Final fresh train: 136 rows / 16 families; rehearsal: 384 rows. Each holdout: 48 rows / 8 families. Small pilot; no human gold.
