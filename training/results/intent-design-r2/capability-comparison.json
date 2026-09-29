@@ -1,0 +1,67 @@
+{
+  "data_sha256": "049e8e5fa6bcce003e24c9d824b737a086e957a2cb49445df53f19218348d226",
+  "models": {
+    "mixed": {
+      "metrics": {
+        "cases": 72,
+        "known": 48,
+        "positive": 24,
+        "negative": 24,
+        "correct_decisive": 29,
+        "false_allow": 6,
+        "false_decline": 7,
+        "known_abstention": 6,
+        "unknown": 24,
+        "unknown_abstention": 22,
+        "failures": 0
+      },
+      "checkpoint_sha256": "1bf7cd28e32d2fef39299ac291362ec71b9d281a4c48b02e8b0c1580ae13c195",
+      "temperature": [
+        1.0,
+        1.0,
+        1.5331206321716309
+      ]
+    },
+    "scope": {
+      "metrics": {
+        "cases": 72,
+        "known": 48,
+        "positive": 24,
+        "negative": 24,
+        "correct_decisive": 32,
+        "false_allow": 7,
+        "false_decline": 6,
+        "known_abstention": 3,
+        "unknown": 24,
+        "unknown_abstention": 24,
+        "failures": 0
+      },
+      "checkpoint_sha256": "f90ac2e6f359691e4ace7c318d611a78461acbe8aa4e0d2962e7728368c84e3d",
+      "temperature": [
+        1.0,
+        1.0,
+        5.0
+      ]
+    },
+    "deepseek-flash": {
+      "metrics": {
+        "cases": 72,
+        "known": 48,
+        "positive": 24,
+        "negative": 24,
+        "correct_decisive": 47,
+        "false_allow": 1,
+        "false_decline": 0,
+        "known_abstention": 0,
+        "unknown": 24,
+        "unknown_abstention": 5,
+        "failures": 0
+      },
+      "provider_model_names": [
+        "deepseek-flash"
+      ],
+      "probabilities_calibrated": false
+    }
+  },
+  "limitations": "Same state/question/criteria, with necessary JSON/null formatting instructions. Categorical API answers versus thresholded Laya probabilities; not a controlled parameter-count experiment, calibration comparison or independent gold. No tool execution."
+}

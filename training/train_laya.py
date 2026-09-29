@@ -20,15 +20,17 @@ from mupyjava.judge_samples import digest
 from mupyjava.judge import LayaBooleanJudge
 from evaluate_intent import metrics as serving_metrics
 from intent_targets import target_probability
+from training_design import audit_design, design_weights, load_design, ValidationStop
 
 
 def read_rows(path):
     return read_jsonl(path)
 
 
-def prepare(rows, tokenizer, config):
+def prepare(rows, tokenizer, config, design=None):
     items = []
-    for row in rows:
+    weights = design_weights(rows, design) if design else [1.] * len(rows)
+    for row, weight in zip(rows, weights):
         question = row.get("question", "Does the user's latest request clearly call for this tool action?")
         criteria = row.get("criteria", LayaBooleanJudge.CRITERIA)
         ids, markers = build_sequence(
@@ -40,7 +42,7 @@ def prepare(rows, tokenizer, config):
         )
         if len(markers) != 2:
             raise ValueError("Expected two markers for a yes/no decision")
-        items.append({"ids": ids, "markers": markers, "label": target_probability(row["label"])})
+        items.append({"ids": ids, "markers": markers, "label": target_probability(row["label"]), "weight": weight})
     return items
 
 
@@ -61,6 +63,7 @@ def collate(items, pad_id, device):
         torch.ones((len(items), 2), dtype=torch.bool, device=device),
         torch.full((len(items),), QTYPES["noul"], dtype=torch.long, device=device),
         torch.tensor([item["label"] for item in items], dtype=torch.float32, device=device),
+        torch.tensor([item.get("weight", 1.) for item in items], dtype=torch.float32, device=device),
     )
 
 
@@ -82,19 +85,24 @@ def predict(model, items, pad_id, device, batch_size, temperature=1.0):
     return logits, labels, serving_metrics(rows, probabilities.tolist())
 
 
-def target_loss(logits, targets):
+def target_loss(logits, targets, weights=None):
     """Unknown is a uniform soft target, never coerced into a negative label."""
     distribution = torch.stack((1 - targets, targets), dim=-1)
-    return F.cross_entropy(logits.float(), distribution)
+    losses = F.cross_entropy(logits.float(), distribution, reduction="none")
+    if weights is not None:
+        if weights.shape != losses.shape or not torch.isfinite(weights).all() or (weights <= 0).any():
+            raise ValueError("Loss weights must be finite positive values matching the batch")
+        losses = losses * weights
+    return losses.mean()
 
 
-def fit_temperature(logits, labels):
+def fit_temperature(logits, labels, weights=None):
     log_temp = torch.zeros((), requires_grad=True)
     optimizer = torch.optim.LBFGS([log_temp], lr=0.1, max_iter=80)
 
     def closure():
         optimizer.zero_grad()
-        loss = target_loss(logits / log_temp.exp(), labels)
+        loss = target_loss(logits / log_temp.exp(), labels, weights)
         loss.backward()
         return loss
 
@@ -117,6 +125,7 @@ def main():
     parser.add_argument("--train-unknown", action="store_true", help="Train null labels toward a uniform Boolean distribution")
     parser.add_argument("--encoder-lr", type=float, default=2e-5)
     parser.add_argument("--head-lr", type=float, default=1e-4)
+    parser.add_argument("--design", type=Path, help="Opt-in semantic weighting, protected-input preflight and epoch-zero early stopping")
     args = parser.parse_args()
     if args.epochs < 1 or args.batch_size < 1 or not 0 < args.encoder_lr <= 1e-2 or not 0 < args.head_lr <= 1e-2:
         raise ValueError("Invalid training parameters")
@@ -127,6 +136,10 @@ def main():
     if versioned:
         manifest = json.loads(args.data.with_name("manifest.json").read_text(encoding="utf-8"))
         validate_manifest(rows, manifest, args.allow_synthetic_eval, args.train_unknown)
+    design = load_design(args.design) if args.design else None
+    if design and not versioned:
+        raise ValueError("Training design requires a versioned frozen dataset")
+    design_audit = audit_design(rows, design, Path(__file__).resolve().parents[1]) if design else None
     manual_rows = read_rows(args.manual_eval)
     if not manual_rows or any(type(row.get("label")) is not bool for row in manual_rows):
         raise ValueError("Manual regression set must contain Boolean labels")
@@ -153,14 +166,16 @@ def main():
     model.encoder.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False})
     model.head_checkpointing = True
 
-    train = prepare(partitions["train"], tokenizer, config)
-    validation = prepare(partitions["validation"], tokenizer, config)
-    calibration = prepare(partitions["calibration"], tokenizer, config) if versioned else validation
+    train = prepare(partitions["train"], tokenizer, config, design)
+    validation = prepare(partitions["validation"], tokenizer, config, design)
+    calibration = prepare(partitions["calibration"], tokenizer, config, design) if versioned else validation
     test = prepare(partitions["test"], tokenizer, config) if versioned else []
     manual = prepare(manual_rows, tokenizer, config)
     if not train or not validation or not manual:
         raise ValueError("Train, validation and manual evaluation must all be nonempty")
-    baseline_validation = predict(model, validation, tokenizer.pad_token_id, device, args.batch_size)[2]
+    baseline_logits, baseline_labels, baseline_validation = predict(model, validation, tokenizer.pad_token_id, device, args.batch_size)
+    validation_weights = torch.tensor([item["weight"] for item in validation]) if design else None
+    initial_validation_loss = float(target_loss(baseline_logits, baseline_labels, validation_weights))
     baseline_manual = predict(model, manual, tokenizer.pad_token_id, device, args.batch_size)[2]
     print("baseline", json.dumps({"validation": baseline_validation, "manual": baseline_manual}), flush=True)
 
@@ -170,9 +185,11 @@ def main():
         {"params": encoder, "lr": args.encoder_lr},
         {"params": head, "lr": args.head_lr},
     ], weight_decay=0.01)
-    best_loss = float("inf")
-    best_state = None
-    best_epoch = None
+    stop = ValidationStop(initial_validation_loss, design["patience"], design["min_delta"]) if design else None
+    best_loss = initial_validation_loss if design else float("inf")
+    best_state = {key: value.detach().cpu().clone() for key, value in model.state_dict().items()} if design else None
+    best_epoch = 0 if design else None
+    history = []
     for epoch in range(args.epochs):
         random.Random(20260927 + epoch).shuffle(train)
         model.train()
@@ -182,27 +199,36 @@ def main():
             optimizer.zero_grad(set_to_none=True)
             with torch.autocast("cuda", dtype=torch.bfloat16, enabled=device.type == "cuda"):
                 logits, _ = model(*batch[:5])
-                loss = target_loss(logits, batch[5])
+                loss = target_loss(logits, batch[5], batch[6] if design else None)
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
             optimizer.step()
-            losses.append(float(loss.detach()))
+            losses.append((float(loss.detach()), len(batch[5])))
         val_logits, val_labels, val_metrics = predict(
             model, validation, tokenizer.pad_token_id, device, args.batch_size
         )
-        val_loss = float(target_loss(val_logits, val_labels))
-        print("epoch", epoch + 1, "train_loss", round(sum(losses) / len(losses), 4),
+        val_loss = float(target_loss(val_logits, val_labels, validation_weights))
+        print("epoch", epoch + 1, "train_loss", round(sum(loss * count for loss, count in losses) / sum(count for _, count in losses), 4),
               "validation_loss", round(val_loss, 4), "metrics", val_metrics, flush=True)
-        if val_loss < best_loss:
+        improved, should_stop = stop.observe(epoch + 1, val_loss) if stop else (val_loss < best_loss, False)
+        history.append({"epoch": epoch + 1, "validation_loss": val_loss, "selected": improved,
+                        "training_loss": sum(loss * count for loss, count in losses) / sum(count for _, count in losses),
+                        "validation_metrics": val_metrics})
+        if improved:
             best_epoch = epoch + 1
             best_loss = val_loss
-            best_state = {key: value.detach().half().cpu().clone() for key, value in model.state_dict().items()}
+            best_state = {key: (value.detach() if design else value.detach().half()).cpu().clone() for key, value in model.state_dict().items()}
+
+        if should_stop:
+            print("early_stop", epoch + 1, "best_epoch", best_epoch, flush=True)
+            break
 
     if best_state is None:
         raise RuntimeError("No checkpoint was selected")
     model.load_state_dict(best_state, strict=True)
     calibration_logits, calibration_labels, _ = predict(model, calibration, tokenizer.pad_token_id, device, args.batch_size)
-    temperature = fit_temperature(calibration_logits, calibration_labels)
+    calibration_weights = torch.tensor([item["weight"] for item in calibration]) if design else None
+    temperature = fit_temperature(calibration_logits, calibration_labels, calibration_weights)
     trained_validation = predict(model, validation, tokenizer.pad_token_id, device, args.batch_size, temperature)[2]
     trained_manual = predict(model, manual, tokenizer.pad_token_id, device, args.batch_size, temperature)[2]
     trained_test = predict(model, test, tokenizer.pad_token_id, device, args.batch_size, temperature)[2] if test else None
@@ -241,6 +267,12 @@ def main():
         "noul_temperature": temperature,
         "best_validation_loss": best_loss,
         "best_epoch": best_epoch,
+        "initial_validation_loss": initial_validation_loss,
+        "training_design": design_audit,
+        "epoch_history": history,
+        "completed_epochs": len(history),
+        "selected_initial_weights": best_epoch == 0,
+        "temperature_at_bound": temperature <= .5 or temperature >= 5.,
         "epochs": args.epochs,
         "encoder_lr": args.encoder_lr,
         "head_lr": args.head_lr,

@@ -1,5 +1,7 @@
 # Tool-intent judge experiment
 
+For new experiments, use the [revised semantic training design](TRAINING_DESIGN.md) and its `--design` preflight. The original commands below document historical runs. See the [implemented changes and capability comparison](results-training-design.md).
+
 TypeSafe Jev is a hosted model and mu does not provide its weights. This experiment fine-tunes the Apache-2.0 [Laya multilingual checkpoint](https://huggingface.co/convaiinnovations/laya-multilingual) for the first mu-pyjava decision point, `tool.intent`.
 
 `build_data.py` generates bilingual synthetic train and validation examples. `deepseek_reviewed.jsonl` contains 37 additional training candidates generated with DeepSeek Flash and manually screened for three ambiguous or mismatched examples; the label distribution is 29 positive / 8 negative. The API key is never stored. `manual_eval.jsonl` contains 20 separately written cases and must not be used for training or temperature calibration. These small sets are sufficient to test the pipeline, not to establish broad reliability. The model should stay in shadow mode until it is assessed against real, independently labeled decisions.

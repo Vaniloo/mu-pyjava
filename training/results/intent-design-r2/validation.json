@@ -1,0 +1,15 @@
+{
+  "local_suite": {
+    "tests": 230,
+    "passed": 229,
+    "skipped": 1,
+    "skip_reason": "native PowerShell unavailable"
+  },
+  "torch_cpu_runtime": {
+    "tests": 3,
+    "passed": 3,
+    "model": "miniature fixture only",
+    "new_laya_candidate_trained": false
+  },
+  "new_independent_human_labels": 0
+}

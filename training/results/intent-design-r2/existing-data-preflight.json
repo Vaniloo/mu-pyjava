@@ -1,0 +1,8 @@
+{
+  "source": "training/datasets/intent-scope-r1/intent-v2.jsonl.gz",
+  "source_sha256": "48deadfcf55b6962a2f269f957226571e164daa6599a8f97c48d4d6b85c5ba54",
+  "accepted": false,
+  "reason": "New dataset overlaps 5334 protected previously inspected inputs",
+  "new_dataset_built": false,
+  "new_candidate_trained": false
+}

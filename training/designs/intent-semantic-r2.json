@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "name": "intent-semantic-r2",
+  "weighting": "family_request",
+  "patience": 1,
+  "min_delta": 0.001,
+  "protected_inputs": [
+    {
+      "path": "training/datasets/intent-mixed-r1/intent-v2.jsonl.gz",
+      "selection": "nontrain"
+    },
+    {
+      "path": "training/datasets/intent-scope-r1/intent-v2.jsonl.gz",
+      "selection": "nontrain"
+    },
+    {
+      "path": "training/datasets/intent-uncertainty-r1/intent-v2.jsonl.gz",
+      "selection": "nontrain"
+    },
+    {
+      "path": "training/datasets/intent-v2-synthetic-r1/intent-v2.jsonl.gz",
+      "selection": "nontrain"
+    },
+    {
+      "path": "training/datasets/intent-v2-synthetic-r2/intent-v2.jsonl.gz",
+      "selection": "nontrain"
+    },
+    {
+      "path": "training/datasets/intent-ablation-joint-r1/controls.jsonl.gz",
+      "selection": "all"
+    },
+    {
+      "path": "training/datasets/intent-ablation-r1/controls.jsonl.gz",
+      "selection": "all"
+    },
+    {
+      "path": "training/datasets/intent-mixed-r1/path-controls-v2.jsonl.gz",
+      "selection": "all"
+    },
+    {
+      "path": "training/datasets/intent-boundary-r1/cases.jsonl",
+      "selection": "all"
+    },
+    {
+      "path": "training/scope_challenge.jsonl",
+      "selection": "all"
+    },
+    {
+      "path": "training/manual_eval.jsonl",
+      "selection": "all"
+    },
+    {
+      "path": "training/results/intent-mixed-r1/mixed-harness-fix-retry-samples.jsonl",
+      "selection": "all"
+    },
+    {
+      "path": "training/results/intent-mixed-r1/mixed-harness-samples.jsonl",
+      "selection": "all"
+    },
+    {
+      "path": "training/results/intent-mixed-r1/pending-review.samples.jsonl",
+      "selection": "all"
+    },
+    {
+      "path": "training/results/intent-scope-r1/scope-harness-samples.jsonl",
+      "selection": "all"
+    },
+    {
+      "path": "training/results/intent-uncertainty-r1/uncertainty-harness-samples.jsonl",
+      "selection": "all"
+    }
+  ],
+  "rehearsal_fraction": 0.25
+}

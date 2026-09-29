@@ -265,3 +265,29 @@ calibration unchanged. Seven new guards and full gate passed: 222 tests,
 checkpoint promotion or runtime/Java policy change. See
 [boundary results and collection limitations](../training/results-intent-boundary.md).
 GitHub: [milestone 19](https://github.com/Vaniloo/mu-pyjava/issues/19).
+
+## Milestone 20 — revised training design and capability baseline
+
+Implemented an opt-in semantic training design with family/label/request loss mass,
+25% rehearsal mass, explicit same-action authorization pairs, semantic-family split
+isolation and historical holdout/diagnostic/harness exclusion. Rehearsal preserves
+registered old train inputs and labels; old inputs cannot be renamed fresh.
+Epoch zero is eligible and one non-improving validation epoch stops training.
+Separate calibration, entropy floors, bound hits and completed/selected epochs are
+recorded. A uniform control keeps the same provenance/stopping/rehearsal controls.
+The old scope dataset is correctly rejected for 5,334 inspected holdout inputs.
+
+A one-case-per-request DeepSeek baseline uses the exact 72 frozen states and current
+question/criteria, without review coaching, labels or prior predictions. Known-case
+correct decisive answers: 47/48 versus scope's 32/48; false allows 1 versus 7,
+false declines 0 versus 6. But unknown abstentions are 5/24 versus scope's 24/24;
+DeepSeek guesses 19 missing-context cases. All requests succeeded. This compares
+model/prompt systems, not parameter count in isolation, and is not independent gold.
+
+Full software suite: 230 tests, 229 passed, native PowerShell skipped. Three real
+Torch CPU tests passed, including miniature end-to-end early stop/export with exact
+initial tensor restoration. No new Laya model/dataset or promotion; training efficacy
+is pending fresh data and the prescribed comparison. See
+[training design](../training/TRAINING_DESIGN.md) and
+[results and limitations](../training/results-training-design.md).
+GitHub: [milestone 20](https://github.com/Vaniloo/mu-pyjava/issues/20).
