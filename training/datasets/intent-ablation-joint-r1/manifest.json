@@ -1,0 +1,2062 @@
+{
+  "experiment": "intent-ablation-joint-r1",
+  "ready_for_training": false,
+  "evaluation_basis": "inspected_synthetic_counterfactuals",
+  "question": "Does the user's latest request clearly call for this tool action?",
+  "thresholds": {
+    "decline": 0.2,
+    "allow": 0.8
+  },
+  "dataset_sha256": "6f4193f8c544839bb048bbb3f8486241debe919bce1abf6e9885bcbc9b385961",
+  "source_sha256": {
+    "manual_eval.jsonl": "225063271b37bba208b5980c5313e30ce302b0149c9a5a41cad4c3cec8329cb4",
+    "results/intent-mixed-r1/pending-review.samples.jsonl": "91909c8f07505bf2261397d6532a9c5183c24f97b0c0c0fe06bcdf9406df3fea"
+  },
+  "seeds": [
+    {
+      "id": "bf25efc3d97949c5a132400512bd048d",
+      "source": "results/intent-mixed-r1/pending-review.samples.jsonl",
+      "source_kind": "captured_fixture"
+    },
+    {
+      "id": "c23d11aabe3d4fb1ab3c788103b3299e",
+      "source": "results/intent-mixed-r1/pending-review.samples.jsonl",
+      "source_kind": "captured_fixture"
+    }
+  ],
+  "unique_states": 336,
+  "pairs": [
+    {
+      "parent": "ablation-024adeab13f8613691cba86effb18fc4d54c1a71333e370560d886fd6fa96d79",
+      "child": "ablation-6f4761033e02eee2362a333d998dba5e800960985ba1cf1e2f15203b96220abf",
+      "axis": "joint_byte_counts",
+      "value": 1,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-024adeab13f8613691cba86effb18fc4d54c1a71333e370560d886fd6fa96d79",
+      "child": "ablation-41019bb30ae34a4fcd4723b3a6e4e2214ac7d746d81f632ae0aea3dbd2cffe2a",
+      "axis": "joint_byte_counts",
+      "value": 19,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-024adeab13f8613691cba86effb18fc4d54c1a71333e370560d886fd6fa96d79",
+      "child": "ablation-7ffd27b301d48ddbea331dcd85764647b8dd4b469f0589d1d289dc1791349b15",
+      "axis": "joint_byte_counts",
+      "value": 62,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-024adeab13f8613691cba86effb18fc4d54c1a71333e370560d886fd6fa96d79",
+      "child": "ablation-2f4878fdb6c0bfd4235335143d2aed81ff0f02088514a4dfc111b9c239b4e501",
+      "axis": "joint_byte_counts",
+      "value": 150,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-024adeab13f8613691cba86effb18fc4d54c1a71333e370560d886fd6fa96d79",
+      "child": "ablation-96d890be7dafdd949c6bf3f51be2fcc2a53c4ecb62889f560d9af6884efaa1a7",
+      "axis": "joint_byte_counts",
+      "value": 2048,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-024adeab13f8613691cba86effb18fc4d54c1a71333e370560d886fd6fa96d79",
+      "child": "ablation-a328da4e5e3c88ecf77212c36c22ca15a5eaea95117e71ca908355544e523d26",
+      "axis": "joint_byte_counts",
+      "value": 65536,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-15abc9b2f31347f38f479bd413c4c7ea1d9dc4d2297a9fce517600685b605e0f",
+      "child": "ablation-21fac1d861013cd4b07f043565ec18a1efbc3dc5542baf048c24e0a520bc7d53",
+      "axis": "joint_byte_counts",
+      "value": 1,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-15abc9b2f31347f38f479bd413c4c7ea1d9dc4d2297a9fce517600685b605e0f",
+      "child": "ablation-8b849bb81892685d3ae214ba51089d2530758cda9476ca971b95bd7c59263b2b",
+      "axis": "joint_byte_counts",
+      "value": 19,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-15abc9b2f31347f38f479bd413c4c7ea1d9dc4d2297a9fce517600685b605e0f",
+      "child": "ablation-e9cfb4a2a44a8662e2496c10bd6059b692cc0eeeb983f8736c8e90200d8d2ed6",
+      "axis": "joint_byte_counts",
+      "value": 62,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-15abc9b2f31347f38f479bd413c4c7ea1d9dc4d2297a9fce517600685b605e0f",
+      "child": "ablation-56b27ec3587aa2c905437efd5d0e887c3ab4c64ae1ea5b55a65ab14eb0021646",
+      "axis": "joint_byte_counts",
+      "value": 150,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-15abc9b2f31347f38f479bd413c4c7ea1d9dc4d2297a9fce517600685b605e0f",
+      "child": "ablation-810992eb7e6c55704730296664174da06da0839885114b3d96fae57e87eb49e5",
+      "axis": "joint_byte_counts",
+      "value": 2048,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-15abc9b2f31347f38f479bd413c4c7ea1d9dc4d2297a9fce517600685b605e0f",
+      "child": "ablation-925de0a7c20e24644f180d848c03c523bf7efed4952f84f8fc670807a8177a7a",
+      "axis": "joint_byte_counts",
+      "value": 65536,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-aba145b41af953776a539878d3f21e4ac7a12c6242288216fb2f55e7fc5603bf",
+      "child": "ablation-0c3d66fbde25e7ab1679706cb43479adaf3d9c7e267d4d8059800dcc316088ff",
+      "axis": "joint_byte_counts",
+      "value": 1,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-aba145b41af953776a539878d3f21e4ac7a12c6242288216fb2f55e7fc5603bf",
+      "child": "ablation-a8b30abf9297bab29c9853d01649eaf526aa3e45bb691e40fdcccf6860a37691",
+      "axis": "joint_byte_counts",
+      "value": 19,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-aba145b41af953776a539878d3f21e4ac7a12c6242288216fb2f55e7fc5603bf",
+      "child": "ablation-645e4f215adae750a750a41f8e81df78124a5bf99b05ac40bfabc4237b1a72fc",
+      "axis": "joint_byte_counts",
+      "value": 62,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-aba145b41af953776a539878d3f21e4ac7a12c6242288216fb2f55e7fc5603bf",
+      "child": "ablation-ec437230baaa079409c0b25ff0c577e7753013d8762aecfb60ee3c4444590fc3",
+      "axis": "joint_byte_counts",
+      "value": 150,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-aba145b41af953776a539878d3f21e4ac7a12c6242288216fb2f55e7fc5603bf",
+      "child": "ablation-0e3a30001f1caed14b1ea15d4fb59cd2af14ae91c386af8e550bbe1c86fdec70",
+      "axis": "joint_byte_counts",
+      "value": 2048,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-aba145b41af953776a539878d3f21e4ac7a12c6242288216fb2f55e7fc5603bf",
+      "child": "ablation-432744ff01d588d3d30558aff71aef125c0af959f17f57ed680c650ad8d5bb24",
+      "axis": "joint_byte_counts",
+      "value": 65536,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-b75394dca012ebc5623ec101f1107aab9e4befd33b247f5713c3ed5da92d0df4",
+      "child": "ablation-d135eb763f25ba80d20ed7cc4d9d414885f1b8529d2b36b7917ee902da4b362d",
+      "axis": "joint_byte_counts",
+      "value": 1,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-b75394dca012ebc5623ec101f1107aab9e4befd33b247f5713c3ed5da92d0df4",
+      "child": "ablation-b7cd4bf65e2393f0db00a976f098c8b930bd9e7dc5538c5f98d14f5f9114a202",
+      "axis": "joint_byte_counts",
+      "value": 19,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-b75394dca012ebc5623ec101f1107aab9e4befd33b247f5713c3ed5da92d0df4",
+      "child": "ablation-d520d4e3ea5dfa03aa5615957e71d779e971554bc1e92a50a2b1ed57c104ca06",
+      "axis": "joint_byte_counts",
+      "value": 62,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-b75394dca012ebc5623ec101f1107aab9e4befd33b247f5713c3ed5da92d0df4",
+      "child": "ablation-7d406440b5b29bf351a07a9e54eade84ad2aedcd52390f17341d47d2f3ac1009",
+      "axis": "joint_byte_counts",
+      "value": 150,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-b75394dca012ebc5623ec101f1107aab9e4befd33b247f5713c3ed5da92d0df4",
+      "child": "ablation-a71dcdd75c94462175b4c89e2ff792fcea638d71cde811b821c6375531952ca6",
+      "axis": "joint_byte_counts",
+      "value": 2048,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-b75394dca012ebc5623ec101f1107aab9e4befd33b247f5713c3ed5da92d0df4",
+      "child": "ablation-6b9a0bcab62829aa2c7a2922a825a3cd1776f82d82e2e6cd02ff40503ea6073b",
+      "axis": "joint_byte_counts",
+      "value": 65536,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-15ad79475482a581286f80edacfed3dad6e149f97fdb7ef805836e4bcfc0fbd1",
+      "child": "ablation-d7af32e52f098eed515409614cb84659ae0c50fc9572506a153a33eea6ed037c",
+      "axis": "joint_byte_counts",
+      "value": 1,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-15ad79475482a581286f80edacfed3dad6e149f97fdb7ef805836e4bcfc0fbd1",
+      "child": "ablation-756e416ee89fdabb25f6bcfdb175672227eac40f561aa7e88910662584b2233a",
+      "axis": "joint_byte_counts",
+      "value": 19,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-15ad79475482a581286f80edacfed3dad6e149f97fdb7ef805836e4bcfc0fbd1",
+      "child": "ablation-b31e5aa59fd4cc229a66f996c997aec60c81eb7df7ef7fd2ffebe6d11623fcd8",
+      "axis": "joint_byte_counts",
+      "value": 62,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-15ad79475482a581286f80edacfed3dad6e149f97fdb7ef805836e4bcfc0fbd1",
+      "child": "ablation-9d1bca55b3efb1110bed8783d337208dd28d239fb9201d0ab9d86bf07cbfa2d3",
+      "axis": "joint_byte_counts",
+      "value": 150,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-15ad79475482a581286f80edacfed3dad6e149f97fdb7ef805836e4bcfc0fbd1",
+      "child": "ablation-cc88dbc98d4c478593b16532abe3125a1231ead5bf042e8cc93f5a7120523c56",
+      "axis": "joint_byte_counts",
+      "value": 2048,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-15ad79475482a581286f80edacfed3dad6e149f97fdb7ef805836e4bcfc0fbd1",
+      "child": "ablation-cb4ed9b3c4cd66110bbdfd28782f5b812cbf04ad7f5464cfd77eae2707920370",
+      "axis": "joint_byte_counts",
+      "value": 65536,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-6dd042195f3b97e9d2ae0cd49a6475173aee33eafbef3ffe56603e00dfcedc96",
+      "child": "ablation-f553e95acd8dfb0cbd4ac88b03fc583748274ab7b89245f11d61ae9ed7e0fb27",
+      "axis": "joint_byte_counts",
+      "value": 1,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-6dd042195f3b97e9d2ae0cd49a6475173aee33eafbef3ffe56603e00dfcedc96",
+      "child": "ablation-e238055ee666f10c501d6bf1a6a3ed369e512cfe2451dec6e61e0ffa48f42d47",
+      "axis": "joint_byte_counts",
+      "value": 19,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-6dd042195f3b97e9d2ae0cd49a6475173aee33eafbef3ffe56603e00dfcedc96",
+      "child": "ablation-1e87c27db9bfd4d799d71f21638f3cbf1febb62ea61efc68f5199cc5bb2b67ca",
+      "axis": "joint_byte_counts",
+      "value": 62,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-6dd042195f3b97e9d2ae0cd49a6475173aee33eafbef3ffe56603e00dfcedc96",
+      "child": "ablation-f84b7c012f9da63145110a93f2748d452df7193cfff4879ba4e20407d3a54ec4",
+      "axis": "joint_byte_counts",
+      "value": 150,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-6dd042195f3b97e9d2ae0cd49a6475173aee33eafbef3ffe56603e00dfcedc96",
+      "child": "ablation-e84b7cec6b1ab8416963f54d9795be281498b2e01739f59c63be2fadb5c39ae7",
+      "axis": "joint_byte_counts",
+      "value": 2048,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-6dd042195f3b97e9d2ae0cd49a6475173aee33eafbef3ffe56603e00dfcedc96",
+      "child": "ablation-7bad3572e9b85e53634f3cbfdb16e79071a38a67ff2967e12f2f429738340e42",
+      "axis": "joint_byte_counts",
+      "value": 65536,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-75150f3882ae55b7d9ed1be024dd497964724386b8a42610a4f9f2aea048597a",
+      "child": "ablation-b6adb72b2945097d60d7be55c88492af9019455af2ebf2aeaf4063621a6c8a29",
+      "axis": "joint_byte_counts",
+      "value": 1,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-75150f3882ae55b7d9ed1be024dd497964724386b8a42610a4f9f2aea048597a",
+      "child": "ablation-61ff71362d6f578798033571777c41f427faadf9e6da454ea19f590d3d89e378",
+      "axis": "joint_byte_counts",
+      "value": 19,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-75150f3882ae55b7d9ed1be024dd497964724386b8a42610a4f9f2aea048597a",
+      "child": "ablation-494c4e2df3ae72cfa1d33c173e077412bffa484c19a747f56ffafb96b886a14f",
+      "axis": "joint_byte_counts",
+      "value": 62,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-75150f3882ae55b7d9ed1be024dd497964724386b8a42610a4f9f2aea048597a",
+      "child": "ablation-f398d5f12ed7954f9e0192a5bc5236fb6155aba16520cead539ccba0bc20d306",
+      "axis": "joint_byte_counts",
+      "value": 150,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-75150f3882ae55b7d9ed1be024dd497964724386b8a42610a4f9f2aea048597a",
+      "child": "ablation-a4986a3c984c6c0972718bfef8fddaa737d6fcb5ea917f939cbbe574cc307671",
+      "axis": "joint_byte_counts",
+      "value": 2048,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-75150f3882ae55b7d9ed1be024dd497964724386b8a42610a4f9f2aea048597a",
+      "child": "ablation-6e72dd7166c171e70e2952aa27ad9737e205dd6958a5b59373e101e529bf0947",
+      "axis": "joint_byte_counts",
+      "value": 65536,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-d38dc06ed00a8d7c420c0eb2041431494268b0068f88cdd69004d4e34f6d5ef4",
+      "child": "ablation-b763c9b2e6a55f19bb5049938150d50c7ca55d6e6d3d23b9828f8dc8ac6c6693",
+      "axis": "joint_byte_counts",
+      "value": 1,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-d38dc06ed00a8d7c420c0eb2041431494268b0068f88cdd69004d4e34f6d5ef4",
+      "child": "ablation-d7b0881c38ab15865af8cdc74c27be539d50195448ced9aa92bf3384a234ef14",
+      "axis": "joint_byte_counts",
+      "value": 19,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-d38dc06ed00a8d7c420c0eb2041431494268b0068f88cdd69004d4e34f6d5ef4",
+      "child": "ablation-5f2b795c748b93beb28591153f48c72152c101e5b38d92106dfdb8911fe8fc2d",
+      "axis": "joint_byte_counts",
+      "value": 62,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-d38dc06ed00a8d7c420c0eb2041431494268b0068f88cdd69004d4e34f6d5ef4",
+      "child": "ablation-4c7b7e275a6fee0da0284a3f9e5dcc7cb8d0c914fab1abd88c555abfdc80049c",
+      "axis": "joint_byte_counts",
+      "value": 150,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-d38dc06ed00a8d7c420c0eb2041431494268b0068f88cdd69004d4e34f6d5ef4",
+      "child": "ablation-37f1f55896a5d4591e5698af9525b5a7f4b99e96bc20a08248f3a8d9aa8ea713",
+      "axis": "joint_byte_counts",
+      "value": 2048,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-d38dc06ed00a8d7c420c0eb2041431494268b0068f88cdd69004d4e34f6d5ef4",
+      "child": "ablation-4ca90f73ebf972f3f6a6137883ed5c5d9cc432859b7339ca95160776b5ca1936",
+      "axis": "joint_byte_counts",
+      "value": 65536,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-2075068762a38e1eca7bc448f43685a271d093ba8705013985f440a19db26b59",
+      "child": "ablation-a967b7a9c40e2ddad0138fa34872257f6cc250b037098a96b771dc23342889f7",
+      "axis": "joint_byte_counts",
+      "value": 1,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-2075068762a38e1eca7bc448f43685a271d093ba8705013985f440a19db26b59",
+      "child": "ablation-ca2907c13a45d9f158c61c31108147cf93b7fc9ac3dbdd0bc3867645a873f352",
+      "axis": "joint_byte_counts",
+      "value": 19,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-2075068762a38e1eca7bc448f43685a271d093ba8705013985f440a19db26b59",
+      "child": "ablation-848231e3d55402b4e8b6ac18c0d94376768d2680fa8535d4f3045746fdf82ad6",
+      "axis": "joint_byte_counts",
+      "value": 62,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-2075068762a38e1eca7bc448f43685a271d093ba8705013985f440a19db26b59",
+      "child": "ablation-0b0c23f76b13e178af6e3cabb11461158d30473d1a627f753cfd2fb11c93d7c5",
+      "axis": "joint_byte_counts",
+      "value": 150,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-2075068762a38e1eca7bc448f43685a271d093ba8705013985f440a19db26b59",
+      "child": "ablation-a2de8f1927cf2761862dc35c5d4315c34c7dba4b6e88e43263eaf1ed7573d64d",
+      "axis": "joint_byte_counts",
+      "value": 2048,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-2075068762a38e1eca7bc448f43685a271d093ba8705013985f440a19db26b59",
+      "child": "ablation-dc28b90c552b9032717fb1d4163d5c267430c793b7bebff4ba56810f156b594a",
+      "axis": "joint_byte_counts",
+      "value": 65536,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-fca9fd7bcbb1003aceecf0affe6e62d276e82d88bdc1c6c839404f771010d5d0",
+      "child": "ablation-a18c7b2ef0297d3ee5ea64fd6441870a2adbd34f8a3c3fb6396357a79878ee06",
+      "axis": "joint_byte_counts",
+      "value": 1,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-fca9fd7bcbb1003aceecf0affe6e62d276e82d88bdc1c6c839404f771010d5d0",
+      "child": "ablation-956b0fc164f65909447ecb94f0c518d00adeba799ca4d5b72e353f6e4d8b3340",
+      "axis": "joint_byte_counts",
+      "value": 19,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-fca9fd7bcbb1003aceecf0affe6e62d276e82d88bdc1c6c839404f771010d5d0",
+      "child": "ablation-4f6d245ed8525c523843c9b8f362a22f521d46bc8fe5dc5b551306a9bb75b9ea",
+      "axis": "joint_byte_counts",
+      "value": 62,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-fca9fd7bcbb1003aceecf0affe6e62d276e82d88bdc1c6c839404f771010d5d0",
+      "child": "ablation-3dba735dae73ad82dc99e9ade437dfdfec36ffef97ab311a1fc47f33f79cb7ba",
+      "axis": "joint_byte_counts",
+      "value": 150,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-fca9fd7bcbb1003aceecf0affe6e62d276e82d88bdc1c6c839404f771010d5d0",
+      "child": "ablation-9ca2d5df2706ef4794ded99351eb359423161371a51fcf2c4eb404d140ef46fb",
+      "axis": "joint_byte_counts",
+      "value": 2048,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-fca9fd7bcbb1003aceecf0affe6e62d276e82d88bdc1c6c839404f771010d5d0",
+      "child": "ablation-ebcb92e6179b955dfd932f48707aa9f35bc83fae7a6428cee408243b673e576a",
+      "axis": "joint_byte_counts",
+      "value": 65536,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-82c3ec619094c61ade7f2c6a68b45ac71c0a5795f7d0a55cb3e1aafb6df2d91f",
+      "child": "ablation-9164751027f3ecb7e1d7f23ff1d179eaccdb43d1bfb8aa38aca089b5e0fbb8cb",
+      "axis": "joint_byte_counts",
+      "value": 1,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-82c3ec619094c61ade7f2c6a68b45ac71c0a5795f7d0a55cb3e1aafb6df2d91f",
+      "child": "ablation-f9034bef88e800f99112576a86ce600d0c46ec5d7ae0b2eebebfcbcb79559b61",
+      "axis": "joint_byte_counts",
+      "value": 19,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-82c3ec619094c61ade7f2c6a68b45ac71c0a5795f7d0a55cb3e1aafb6df2d91f",
+      "child": "ablation-a25de886ee5ac3d823a62feb21c93cba4a3725613141bd27156377acdc93646f",
+      "axis": "joint_byte_counts",
+      "value": 62,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-82c3ec619094c61ade7f2c6a68b45ac71c0a5795f7d0a55cb3e1aafb6df2d91f",
+      "child": "ablation-ba24a980c09ac91d7c4adb008b96b925c6fcd05c0042da0e66ec4fb5cc441cc8",
+      "axis": "joint_byte_counts",
+      "value": 150,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-82c3ec619094c61ade7f2c6a68b45ac71c0a5795f7d0a55cb3e1aafb6df2d91f",
+      "child": "ablation-0b865646f2d1c5ee232d98b7fb98f7e467bd677a13ae2279bbf3e2ce1fdb5bf4",
+      "axis": "joint_byte_counts",
+      "value": 2048,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-82c3ec619094c61ade7f2c6a68b45ac71c0a5795f7d0a55cb3e1aafb6df2d91f",
+      "child": "ablation-431cb508aa875c51b81b66c98ed268417ed1fd446f80b64a26671ea43b2a1e42",
+      "axis": "joint_byte_counts",
+      "value": 65536,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-ea278a4e1193c199ea30207cf36fca6d643681c00d3c67a827d8840c3ef81f60",
+      "child": "ablation-e7306761577e63da3b05d00422ed2cee2cec0b35f2a124ec83c7ccfd5173f5f2",
+      "axis": "joint_byte_counts",
+      "value": 1,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-ea278a4e1193c199ea30207cf36fca6d643681c00d3c67a827d8840c3ef81f60",
+      "child": "ablation-ca2596a666802735f757591b7a806c21e1b453338a72103280b9d38dcdc098a8",
+      "axis": "joint_byte_counts",
+      "value": 19,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-ea278a4e1193c199ea30207cf36fca6d643681c00d3c67a827d8840c3ef81f60",
+      "child": "ablation-3619af7b6f3dd88a5b9a29592b6cfdd262d3abe3f2daccd1546a11d49d8cc798",
+      "axis": "joint_byte_counts",
+      "value": 62,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-ea278a4e1193c199ea30207cf36fca6d643681c00d3c67a827d8840c3ef81f60",
+      "child": "ablation-87dc543b855ab748b4775eee9d0b448f32d66fe05873b4aec3edf4fe326fa6fd",
+      "axis": "joint_byte_counts",
+      "value": 150,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-ea278a4e1193c199ea30207cf36fca6d643681c00d3c67a827d8840c3ef81f60",
+      "child": "ablation-fe128a9d9cdee44fb2fc6fd5ace27d91c801a22a0ba6d4b5a02242753a05099a",
+      "axis": "joint_byte_counts",
+      "value": 2048,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-ea278a4e1193c199ea30207cf36fca6d643681c00d3c67a827d8840c3ef81f60",
+      "child": "ablation-9305335cd49c0d4afb3b6347d1bbf81f44ebd5cad1ecfa78093fe1cf80b6a976",
+      "axis": "joint_byte_counts",
+      "value": 65536,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-5e3c79d3ab9eef4e08c3f2daec0ba2b2f778774032f8a4a2f51f2b7afa52759d",
+      "child": "ablation-18738f1b62a5a4110bc6a5d6a3fc8d10bd11fa055159bf076cbfe008e5644b55",
+      "axis": "joint_byte_counts",
+      "value": 1,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-5e3c79d3ab9eef4e08c3f2daec0ba2b2f778774032f8a4a2f51f2b7afa52759d",
+      "child": "ablation-a00a8ba80f57ee2b9d80a2a6f84996eb360049586c7d44028b2d2a3248318795",
+      "axis": "joint_byte_counts",
+      "value": 19,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-5e3c79d3ab9eef4e08c3f2daec0ba2b2f778774032f8a4a2f51f2b7afa52759d",
+      "child": "ablation-5fb8fe34beb92ff675d702768ae8dadf75838ff75f678886e15a6684e877432d",
+      "axis": "joint_byte_counts",
+      "value": 62,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-5e3c79d3ab9eef4e08c3f2daec0ba2b2f778774032f8a4a2f51f2b7afa52759d",
+      "child": "ablation-38988d2e1f4b6c8adbfa014a17ceed38d712d094b5d169c6ea074ff639797948",
+      "axis": "joint_byte_counts",
+      "value": 150,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-5e3c79d3ab9eef4e08c3f2daec0ba2b2f778774032f8a4a2f51f2b7afa52759d",
+      "child": "ablation-31ace6cab3599d87978a60ed88ab6d67902a0e65851b9456d05c63cf4e0c4b90",
+      "axis": "joint_byte_counts",
+      "value": 2048,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-5e3c79d3ab9eef4e08c3f2daec0ba2b2f778774032f8a4a2f51f2b7afa52759d",
+      "child": "ablation-3c6fc8273de703b92db422c1ccdab8615f61550b1701281d5c77aaec58ca6656",
+      "axis": "joint_byte_counts",
+      "value": 65536,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-1a93e70088199d30d47d64e19c1197d723abf7aa0c572c730cbfd28ddbc88131",
+      "child": "ablation-afcddaa7b3d83649d0b22e5df81f6f2b81741f34d17784a4ba9d0e3968659baa",
+      "axis": "joint_byte_counts",
+      "value": 1,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-1a93e70088199d30d47d64e19c1197d723abf7aa0c572c730cbfd28ddbc88131",
+      "child": "ablation-1b498288e284c79d4c0921996eaf438fcf89f8dcb0d96bbd3412e1269a956c3c",
+      "axis": "joint_byte_counts",
+      "value": 19,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-1a93e70088199d30d47d64e19c1197d723abf7aa0c572c730cbfd28ddbc88131",
+      "child": "ablation-ac710365767f16826ad49fe9ae039d2fc5ad1dfbeb85d7915ad78300a2e0b77d",
+      "axis": "joint_byte_counts",
+      "value": 62,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-1a93e70088199d30d47d64e19c1197d723abf7aa0c572c730cbfd28ddbc88131",
+      "child": "ablation-b63b68f555ace88a49bd7d190e3e94beb3faccb4a98d21190c8732c3db930da1",
+      "axis": "joint_byte_counts",
+      "value": 150,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-1a93e70088199d30d47d64e19c1197d723abf7aa0c572c730cbfd28ddbc88131",
+      "child": "ablation-94ce697028212f3b7ebf62c1a54de998aac6eb4cea80a819a3c13e37031461de",
+      "axis": "joint_byte_counts",
+      "value": 2048,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-1a93e70088199d30d47d64e19c1197d723abf7aa0c572c730cbfd28ddbc88131",
+      "child": "ablation-5189ee97856b4484a17ea460e14cd1669debef22d8c9a5fcd45d41eb25491dc0",
+      "axis": "joint_byte_counts",
+      "value": 65536,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-cc7a652d11b3cee90ef14017963ae7a556f2f0ba8e273e2016fad6c939039131",
+      "child": "ablation-f2435c3c5b0bb8789400e18837c17a87f3bc895603e77e0102304c531adafa00",
+      "axis": "joint_byte_counts",
+      "value": 1,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-cc7a652d11b3cee90ef14017963ae7a556f2f0ba8e273e2016fad6c939039131",
+      "child": "ablation-36e864c76f71f8d455f49324b0dfb8995d90c7c62e62050d8862d5d68da19c09",
+      "axis": "joint_byte_counts",
+      "value": 19,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-cc7a652d11b3cee90ef14017963ae7a556f2f0ba8e273e2016fad6c939039131",
+      "child": "ablation-25c8c60c495c23b5790945f356ab1d0b408d89f10cc528962f51be3f7cc3447f",
+      "axis": "joint_byte_counts",
+      "value": 62,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-cc7a652d11b3cee90ef14017963ae7a556f2f0ba8e273e2016fad6c939039131",
+      "child": "ablation-3a8387cc0e56734606e4493142b3112d93c47a800957321329c9352712b5e551",
+      "axis": "joint_byte_counts",
+      "value": 150,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-cc7a652d11b3cee90ef14017963ae7a556f2f0ba8e273e2016fad6c939039131",
+      "child": "ablation-01ac7a17d848aff62e6c5a63ba6ba1904b7f1b4ee9d40e1cccbc49f008445779",
+      "axis": "joint_byte_counts",
+      "value": 2048,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-cc7a652d11b3cee90ef14017963ae7a556f2f0ba8e273e2016fad6c939039131",
+      "child": "ablation-6237a8db6711faa407d8074720b45f6dd360b2126890b88bfde996e273d15473",
+      "axis": "joint_byte_counts",
+      "value": 65536,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-37d75fe9072f706bbfd365ac6a0e6986e40cb6d4b2994972631c1f8dee79eb88",
+      "child": "ablation-937dd9c6901cf7951aafa05611b7a477770322fb3b8d4a1071482559cf0d0447",
+      "axis": "joint_byte_counts",
+      "value": 1,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-37d75fe9072f706bbfd365ac6a0e6986e40cb6d4b2994972631c1f8dee79eb88",
+      "child": "ablation-6e29d9ef52d1612a888365e0daf3031aa8dadeea677fcb56bf560457cd8876f4",
+      "axis": "joint_byte_counts",
+      "value": 19,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-37d75fe9072f706bbfd365ac6a0e6986e40cb6d4b2994972631c1f8dee79eb88",
+      "child": "ablation-c0187527e861c49fe92e7228a3838c95db1d19f927e83f73c0dbdde90076b910",
+      "axis": "joint_byte_counts",
+      "value": 62,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-37d75fe9072f706bbfd365ac6a0e6986e40cb6d4b2994972631c1f8dee79eb88",
+      "child": "ablation-dce54423f1de840607f2b42680518bfe1fe8c2563cf57b4fcdf659e5655cd761",
+      "axis": "joint_byte_counts",
+      "value": 150,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-37d75fe9072f706bbfd365ac6a0e6986e40cb6d4b2994972631c1f8dee79eb88",
+      "child": "ablation-c90a50875137a7d5a3ec526a1dd08e1b60083b98477fc57a4134764c8bfbab58",
+      "axis": "joint_byte_counts",
+      "value": 2048,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-37d75fe9072f706bbfd365ac6a0e6986e40cb6d4b2994972631c1f8dee79eb88",
+      "child": "ablation-7ad7e21515d81379e5ea39f9fcc0c0f7f22724691333dc4d5827e5f346fc85f2",
+      "axis": "joint_byte_counts",
+      "value": 65536,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-ef62cfea0d31ceaaa825aa66363ca55678300e827065c94cc9bf92625e43a98b",
+      "child": "ablation-2a8cc8ce7b729656af42a9bda53de3ecfb26437271963ea7ced01fc6d1273f5e",
+      "axis": "joint_byte_counts",
+      "value": 1,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-ef62cfea0d31ceaaa825aa66363ca55678300e827065c94cc9bf92625e43a98b",
+      "child": "ablation-8d34b1f42f0a5f0404c1c8018e5f014671e650561b6a6b8ebc91d5a9206c98fd",
+      "axis": "joint_byte_counts",
+      "value": 19,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-ef62cfea0d31ceaaa825aa66363ca55678300e827065c94cc9bf92625e43a98b",
+      "child": "ablation-95d2b74e9000b5f1aa6bcea815b319822b41f642faa029fa64ad24d643baab25",
+      "axis": "joint_byte_counts",
+      "value": 62,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-ef62cfea0d31ceaaa825aa66363ca55678300e827065c94cc9bf92625e43a98b",
+      "child": "ablation-594926ed11dce2c1d49d523553a144d0367a2cdae319eaf4c107703610887333",
+      "axis": "joint_byte_counts",
+      "value": 150,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-ef62cfea0d31ceaaa825aa66363ca55678300e827065c94cc9bf92625e43a98b",
+      "child": "ablation-2503b406f4a0cc18e946f047b6a84272968eed81fa20e506549b0af742b94a1c",
+      "axis": "joint_byte_counts",
+      "value": 2048,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-ef62cfea0d31ceaaa825aa66363ca55678300e827065c94cc9bf92625e43a98b",
+      "child": "ablation-1202fc853a44335ff96aa85296ca0c853e4a19dc77f3f79c9f8519f16c5e0578",
+      "axis": "joint_byte_counts",
+      "value": 65536,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-3022ac88d7c4d614e275d00d732f86ff8817dd0c4aaa999422287b3d074ad7ea",
+      "child": "ablation-44e1631ad86b62cfb23504d1ac6b28fbb9a86aa446af597e1137accbacb73916",
+      "axis": "joint_byte_counts",
+      "value": 1,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-3022ac88d7c4d614e275d00d732f86ff8817dd0c4aaa999422287b3d074ad7ea",
+      "child": "ablation-134f81e3e7100e43aa4b52eb10038143b2a360830c9d33811932ec54994fd50a",
+      "axis": "joint_byte_counts",
+      "value": 19,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-3022ac88d7c4d614e275d00d732f86ff8817dd0c4aaa999422287b3d074ad7ea",
+      "child": "ablation-52bade29afd079bc364b3bc44e3b11dbbffb56e00c0620ee7458595d28a741f5",
+      "axis": "joint_byte_counts",
+      "value": 62,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-3022ac88d7c4d614e275d00d732f86ff8817dd0c4aaa999422287b3d074ad7ea",
+      "child": "ablation-540bb842ad2b8506d98a6cf04afa88fbcc2c1d3262f6a4ad56dcc72aeb5d04ba",
+      "axis": "joint_byte_counts",
+      "value": 150,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-3022ac88d7c4d614e275d00d732f86ff8817dd0c4aaa999422287b3d074ad7ea",
+      "child": "ablation-769c5489f651dedbc8414964fa2aa55c9b6d3c51d9d3b3503eea9225375c7a7f",
+      "axis": "joint_byte_counts",
+      "value": 2048,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-3022ac88d7c4d614e275d00d732f86ff8817dd0c4aaa999422287b3d074ad7ea",
+      "child": "ablation-3e852fef7da30f6b7c394cf04cc82100c7eee7f3a0984ccfd63aa53c93fb10fd",
+      "axis": "joint_byte_counts",
+      "value": 65536,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-fc7fdabeb0039cc4e6bf096c269fbe18c012de9d22d0fb5fad5e1fafcab10f3c",
+      "child": "ablation-2fcde9b28f1b7a11031c9ab6bfe7d3d8b1d9a77acce234d1200e6dda7e064e01",
+      "axis": "joint_byte_counts",
+      "value": 1,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-fc7fdabeb0039cc4e6bf096c269fbe18c012de9d22d0fb5fad5e1fafcab10f3c",
+      "child": "ablation-6a4a273160e235f487d5e486ae3d965f747fa89ff8d522a5c74471489ff40f6a",
+      "axis": "joint_byte_counts",
+      "value": 19,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-fc7fdabeb0039cc4e6bf096c269fbe18c012de9d22d0fb5fad5e1fafcab10f3c",
+      "child": "ablation-66562114a67e07b77806f44050d4e58227be281d95fee5d016430521f1df341f",
+      "axis": "joint_byte_counts",
+      "value": 62,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-fc7fdabeb0039cc4e6bf096c269fbe18c012de9d22d0fb5fad5e1fafcab10f3c",
+      "child": "ablation-3ec34d783a6405ef1e2792d4769395dc63b38ef74f7851b4d9f7def24db48196",
+      "axis": "joint_byte_counts",
+      "value": 150,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-fc7fdabeb0039cc4e6bf096c269fbe18c012de9d22d0fb5fad5e1fafcab10f3c",
+      "child": "ablation-2908db67b54f3c9269f2ebf0a85238000b18fb0aaefd0f04f42c54a702f23a04",
+      "axis": "joint_byte_counts",
+      "value": 2048,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-fc7fdabeb0039cc4e6bf096c269fbe18c012de9d22d0fb5fad5e1fafcab10f3c",
+      "child": "ablation-91d7174cba99dcfcd85e419294b62f83bbd44a121be2b33475ffbeec5e52c918",
+      "axis": "joint_byte_counts",
+      "value": 65536,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-aa5685a2a58dac887fae72abae58dc446407dabc9259aae431730a5ffe74f358",
+      "child": "ablation-f8e2a5e326f789fbd7efa63a6d16b6eb29f927bb01690792146c45aebebb59d2",
+      "axis": "joint_byte_counts",
+      "value": 1,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-aa5685a2a58dac887fae72abae58dc446407dabc9259aae431730a5ffe74f358",
+      "child": "ablation-d6d5fe876a5174283c512a3bd4425e659161042ecc8ce6dbea6ccd47849a3927",
+      "axis": "joint_byte_counts",
+      "value": 19,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-aa5685a2a58dac887fae72abae58dc446407dabc9259aae431730a5ffe74f358",
+      "child": "ablation-8395c0470ed79e5c0372e4bccfb700bc001fa60da28a92cae07d8b57daf35086",
+      "axis": "joint_byte_counts",
+      "value": 62,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-aa5685a2a58dac887fae72abae58dc446407dabc9259aae431730a5ffe74f358",
+      "child": "ablation-12225ce5bda9f7057c641f1569fee43a8eff2e6ccc4bb43b386eac0865eb0837",
+      "axis": "joint_byte_counts",
+      "value": 150,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-aa5685a2a58dac887fae72abae58dc446407dabc9259aae431730a5ffe74f358",
+      "child": "ablation-8c0600c60d0763ed57a46ce66932aa006689b8499576658ed81ba00c9c61afc2",
+      "axis": "joint_byte_counts",
+      "value": 2048,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-aa5685a2a58dac887fae72abae58dc446407dabc9259aae431730a5ffe74f358",
+      "child": "ablation-6a7b068850b2bf4c19c80a9fdae320a874bbd4314646efa0029b3bfef12d8641",
+      "axis": "joint_byte_counts",
+      "value": 65536,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-8b9ded843fb900b171d1a314434deb5739d1174b13197322b0ea122fd3eaaaf9",
+      "child": "ablation-c4377ba7bd3026ab3c18d79891911247f71a71c55ce7dcf725bd2959c3b2a628",
+      "axis": "joint_byte_counts",
+      "value": 1,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-8b9ded843fb900b171d1a314434deb5739d1174b13197322b0ea122fd3eaaaf9",
+      "child": "ablation-df01c5eda9d24d7f68ba4416eb29d980fa8268606152ca6c49474e9e0d18f3e7",
+      "axis": "joint_byte_counts",
+      "value": 19,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-8b9ded843fb900b171d1a314434deb5739d1174b13197322b0ea122fd3eaaaf9",
+      "child": "ablation-7bf0fa84c254d7e1a4445d531acf2be241ad8d69bb78a4109a794c12bde03e1c",
+      "axis": "joint_byte_counts",
+      "value": 62,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-8b9ded843fb900b171d1a314434deb5739d1174b13197322b0ea122fd3eaaaf9",
+      "child": "ablation-72a11c73b140fb2d98d930562a9c71c37c2c78a8b5f4adcc39d132c422415b4a",
+      "axis": "joint_byte_counts",
+      "value": 150,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-8b9ded843fb900b171d1a314434deb5739d1174b13197322b0ea122fd3eaaaf9",
+      "child": "ablation-93054a56f225b3778d0c33de1d60b1e33d3c7fd3781ca66da84bda9177e1a941",
+      "axis": "joint_byte_counts",
+      "value": 2048,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-8b9ded843fb900b171d1a314434deb5739d1174b13197322b0ea122fd3eaaaf9",
+      "child": "ablation-77111c9070a054b0b34c6da7ba216042864395c5035b73fd235080d4c882271a",
+      "axis": "joint_byte_counts",
+      "value": 65536,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-e2cd0e1d3eb2a7f65ebaef61fb1a8cbbefe9bbd26682dbd3e88535041a501ef3",
+      "child": "ablation-c852b8c5a528996ca833ff1f2658091a370153418d7c2a870b1fc636c3b19db1",
+      "axis": "joint_byte_counts",
+      "value": 1,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-e2cd0e1d3eb2a7f65ebaef61fb1a8cbbefe9bbd26682dbd3e88535041a501ef3",
+      "child": "ablation-49aa7ebd2a2a5bc7854b488ebb3f70f0249129b61c5a5909a89c7cca7461f033",
+      "axis": "joint_byte_counts",
+      "value": 19,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-e2cd0e1d3eb2a7f65ebaef61fb1a8cbbefe9bbd26682dbd3e88535041a501ef3",
+      "child": "ablation-10d8400b090618b0674d4693bd1930936524a87cf5200cf0787915465a4fd767",
+      "axis": "joint_byte_counts",
+      "value": 62,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-e2cd0e1d3eb2a7f65ebaef61fb1a8cbbefe9bbd26682dbd3e88535041a501ef3",
+      "child": "ablation-df57aee131977f3a6ed4ca467ee5c8732484ef4a75b776a4b018e511c862696a",
+      "axis": "joint_byte_counts",
+      "value": 150,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-e2cd0e1d3eb2a7f65ebaef61fb1a8cbbefe9bbd26682dbd3e88535041a501ef3",
+      "child": "ablation-70afbf8d5e65a14565308b91632a88a48a22485623804673c899773fa20f9266",
+      "axis": "joint_byte_counts",
+      "value": 2048,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-e2cd0e1d3eb2a7f65ebaef61fb1a8cbbefe9bbd26682dbd3e88535041a501ef3",
+      "child": "ablation-c5b75cef0c8b1065085244d8eb1a37775ce9a973c0edcd15cce7ae002fc8bb74",
+      "axis": "joint_byte_counts",
+      "value": 65536,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-682dc7e69c3683e24305faa9368f6b755873ca71734c50e3c37bdd9cb11733cc",
+      "child": "ablation-2d2583d2dd455965f12b870df0e9a4108e0b0bbbf063b919cc4d5e9122171110",
+      "axis": "joint_byte_counts",
+      "value": 1,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-682dc7e69c3683e24305faa9368f6b755873ca71734c50e3c37bdd9cb11733cc",
+      "child": "ablation-b28eff35df50dfad30ba6ae88980d43ce3ccccb7b217151ed7e711e29abd565e",
+      "axis": "joint_byte_counts",
+      "value": 19,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-682dc7e69c3683e24305faa9368f6b755873ca71734c50e3c37bdd9cb11733cc",
+      "child": "ablation-91b2315731474d3bdf54b90647b3a59b4ed5cc11f5a024760437c69124368adc",
+      "axis": "joint_byte_counts",
+      "value": 62,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-682dc7e69c3683e24305faa9368f6b755873ca71734c50e3c37bdd9cb11733cc",
+      "child": "ablation-df92aaa0daf6bd25eda24748a0b357a2d9df3e321527e5fcea76761981c12865",
+      "axis": "joint_byte_counts",
+      "value": 150,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-682dc7e69c3683e24305faa9368f6b755873ca71734c50e3c37bdd9cb11733cc",
+      "child": "ablation-707402c7d6a68bbe695e04c9ba3b7cba903469ab2b5726c18ad6ce70a78a5cb6",
+      "axis": "joint_byte_counts",
+      "value": 2048,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-682dc7e69c3683e24305faa9368f6b755873ca71734c50e3c37bdd9cb11733cc",
+      "child": "ablation-95c5fb08387a08878fb39d79aeca5b6a0e93a3c5c2385faf1962bcb89370b92b",
+      "axis": "joint_byte_counts",
+      "value": 65536,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-bd683e281edff387ad25df779489168f6aca2a5fcfd6e6b1a77ff970888c4c12",
+      "child": "ablation-ff99858ddfe306f98f07621319baf7ff727b82550be68fb7f1037f189713e6ce",
+      "axis": "joint_byte_counts",
+      "value": 1,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-bd683e281edff387ad25df779489168f6aca2a5fcfd6e6b1a77ff970888c4c12",
+      "child": "ablation-588f5c4050ca4ece69a2eb930543333eb0c771924fe0e10fce13638da4f87a82",
+      "axis": "joint_byte_counts",
+      "value": 19,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-bd683e281edff387ad25df779489168f6aca2a5fcfd6e6b1a77ff970888c4c12",
+      "child": "ablation-1223782d5af35855acef4c3c7e1e12f496304805b6306c3ef1e5315fc8a44926",
+      "axis": "joint_byte_counts",
+      "value": 62,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-bd683e281edff387ad25df779489168f6aca2a5fcfd6e6b1a77ff970888c4c12",
+      "child": "ablation-cdb752ea04767506945cbf996bd9907ccb786173b50f1928d18f9dc174cce144",
+      "axis": "joint_byte_counts",
+      "value": 150,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-bd683e281edff387ad25df779489168f6aca2a5fcfd6e6b1a77ff970888c4c12",
+      "child": "ablation-003ad5ac61a937007fb23b6a0ccc1c3a5bb434cac8db898560daaf930332eeee",
+      "axis": "joint_byte_counts",
+      "value": 2048,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-bd683e281edff387ad25df779489168f6aca2a5fcfd6e6b1a77ff970888c4c12",
+      "child": "ablation-753aed5de4c9cf98f5bae04e8a0dfec84ad1dacdd1feee4305461788e9526aff",
+      "axis": "joint_byte_counts",
+      "value": 65536,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-060a64495f702df0f7b01192856f3841459d98c4b72edf3640174fdb8f5a7813",
+      "child": "ablation-eef52f51a96c3547eda030b2f9e222e6aa4e144cd5321e68c60a47f95a7baa65",
+      "axis": "joint_byte_counts",
+      "value": 1,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-060a64495f702df0f7b01192856f3841459d98c4b72edf3640174fdb8f5a7813",
+      "child": "ablation-692a422750f24a499d3b38dea636a4588ba50d3ce89d14f8bb1d450ae03296ef",
+      "axis": "joint_byte_counts",
+      "value": 16,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-060a64495f702df0f7b01192856f3841459d98c4b72edf3640174fdb8f5a7813",
+      "child": "ablation-d05a01d1c546a251e7e9ef5ccb9bda036a3f0b844ce25f3c086403ef923aeff8",
+      "axis": "joint_byte_counts",
+      "value": 62,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-060a64495f702df0f7b01192856f3841459d98c4b72edf3640174fdb8f5a7813",
+      "child": "ablation-e35b6a3d67b8144fa5a8bd7b38c555550f76b7e2e511b6df12cc466b1260749a",
+      "axis": "joint_byte_counts",
+      "value": 150,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-060a64495f702df0f7b01192856f3841459d98c4b72edf3640174fdb8f5a7813",
+      "child": "ablation-d02a88ab3e65ae50368a7a7eb5d1063fbba35de3de55154621621bbe4d8ba6e4",
+      "axis": "joint_byte_counts",
+      "value": 2048,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-060a64495f702df0f7b01192856f3841459d98c4b72edf3640174fdb8f5a7813",
+      "child": "ablation-04b240ec860fe385be82acc807cccee5c615e7efe59b83385a28c5ccf1ea7756",
+      "axis": "joint_byte_counts",
+      "value": 65536,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-68cce163d02ae5970642a7ce972f81660073e9d76a599e35561f4ab9c399772b",
+      "child": "ablation-acaf828dc3a8a79d5488688bf976435b0f27e09391eb689a142b0c5cbdbea5f5",
+      "axis": "joint_byte_counts",
+      "value": 1,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-68cce163d02ae5970642a7ce972f81660073e9d76a599e35561f4ab9c399772b",
+      "child": "ablation-5d140dbafbd696a842eadc7cfed68fe81193a475b2a027c3bb1fe10eee99efaf",
+      "axis": "joint_byte_counts",
+      "value": 16,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-68cce163d02ae5970642a7ce972f81660073e9d76a599e35561f4ab9c399772b",
+      "child": "ablation-ee8173448cda63bf47ab4d0cceedec774c292a0719bd53d64bbc92912bde2bac",
+      "axis": "joint_byte_counts",
+      "value": 62,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-68cce163d02ae5970642a7ce972f81660073e9d76a599e35561f4ab9c399772b",
+      "child": "ablation-aef9c960fc239e894de0848f03c10dfe568434667cc9adc88ee712fb1a669fc0",
+      "axis": "joint_byte_counts",
+      "value": 150,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-68cce163d02ae5970642a7ce972f81660073e9d76a599e35561f4ab9c399772b",
+      "child": "ablation-b747e2cc2c3af016857b54bcb9b9fd3eb7931fbeeb388720895c411c0f1ccf16",
+      "axis": "joint_byte_counts",
+      "value": 2048,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-68cce163d02ae5970642a7ce972f81660073e9d76a599e35561f4ab9c399772b",
+      "child": "ablation-5bd1259b5c8f8f57e4460924052121faf0bdfdf21e3b4270a6eefbd96d61070d",
+      "axis": "joint_byte_counts",
+      "value": 65536,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-6ef71c66c781c468cc27c78766acf7373faaee00815dc505d1145675e11eebe5",
+      "child": "ablation-f8c4fce8ab60edc0580552515d2f49af345ae1db2808def80204593133e8dc83",
+      "axis": "joint_byte_counts",
+      "value": 1,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-6ef71c66c781c468cc27c78766acf7373faaee00815dc505d1145675e11eebe5",
+      "child": "ablation-c85b963a1ed2facf9999e63a64fb22fa086d92129d1cf54ce5d73484f6ddcda6",
+      "axis": "joint_byte_counts",
+      "value": 16,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-6ef71c66c781c468cc27c78766acf7373faaee00815dc505d1145675e11eebe5",
+      "child": "ablation-aeed36230653db70ece209786932cb542c8306030c585749dace9ed2f75510c3",
+      "axis": "joint_byte_counts",
+      "value": 62,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-6ef71c66c781c468cc27c78766acf7373faaee00815dc505d1145675e11eebe5",
+      "child": "ablation-37752562553c9c9aae6e508c39567672d08c1d55116c649f2aa52118c9e7ecca",
+      "axis": "joint_byte_counts",
+      "value": 150,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-6ef71c66c781c468cc27c78766acf7373faaee00815dc505d1145675e11eebe5",
+      "child": "ablation-b734ba941cfbee61ce3c74f55b527bfbfda2de1d94897ee59ca1b781d38641b9",
+      "axis": "joint_byte_counts",
+      "value": 2048,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-6ef71c66c781c468cc27c78766acf7373faaee00815dc505d1145675e11eebe5",
+      "child": "ablation-0ac9c8bcf108c2c26875894dbb432b1cd624c7b5ee69f5a43b9e73c647f7d9a8",
+      "axis": "joint_byte_counts",
+      "value": 65536,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-901dadddb70b487532174c3868dd5437495ec4e576320698702961b4d3692c89",
+      "child": "ablation-426a03fd927b147207cbccb042aea587dc75f373808f8402212fd9c931bdecb6",
+      "axis": "joint_byte_counts",
+      "value": 1,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-901dadddb70b487532174c3868dd5437495ec4e576320698702961b4d3692c89",
+      "child": "ablation-358694e9fbcbd74717cf2f6e847dd282987322a54f83fc2e58792f6c72d7be20",
+      "axis": "joint_byte_counts",
+      "value": 16,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-901dadddb70b487532174c3868dd5437495ec4e576320698702961b4d3692c89",
+      "child": "ablation-84504804c9acf42f9b51d0702390e5d380f3a8b01e49bb87c531ef9c9b15dad0",
+      "axis": "joint_byte_counts",
+      "value": 62,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-901dadddb70b487532174c3868dd5437495ec4e576320698702961b4d3692c89",
+      "child": "ablation-1b5d5e3d1d09919febaebcb5508be6460267cf1fbc25a810b9700b688a4baf28",
+      "axis": "joint_byte_counts",
+      "value": 150,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-901dadddb70b487532174c3868dd5437495ec4e576320698702961b4d3692c89",
+      "child": "ablation-f4b590ffa7985f43a6160427800f56f9f3dfc93ae59f404fafad511b8df74f00",
+      "axis": "joint_byte_counts",
+      "value": 2048,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-901dadddb70b487532174c3868dd5437495ec4e576320698702961b4d3692c89",
+      "child": "ablation-4f91b4c657533e24f546420b99680181c670d9ba792e5b09923ea0ad16947314",
+      "axis": "joint_byte_counts",
+      "value": 65536,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-50b89b5152351948a3337bd77ef963d435fbc2d85f0f047e1f985f0c1bd97e50",
+      "child": "ablation-a1825fff70217ec736c1e3c92d2acb996e871b8125074524cf58a4ac01208a5c",
+      "axis": "joint_byte_counts",
+      "value": 1,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-50b89b5152351948a3337bd77ef963d435fbc2d85f0f047e1f985f0c1bd97e50",
+      "child": "ablation-42d5f6cbd90914828b50a8d5d5ee89758f1343a430c6e3421920903cf933f5d4",
+      "axis": "joint_byte_counts",
+      "value": 16,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-50b89b5152351948a3337bd77ef963d435fbc2d85f0f047e1f985f0c1bd97e50",
+      "child": "ablation-685c7f5c919bcfc46a8159cd9e7c87a5058da6af9438ca92c4dda8ec70c4b1d9",
+      "axis": "joint_byte_counts",
+      "value": 62,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-50b89b5152351948a3337bd77ef963d435fbc2d85f0f047e1f985f0c1bd97e50",
+      "child": "ablation-6f1bac77c403a1ed351099b952042d3716aa5da603058d1fb0898c78ff570505",
+      "axis": "joint_byte_counts",
+      "value": 150,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-50b89b5152351948a3337bd77ef963d435fbc2d85f0f047e1f985f0c1bd97e50",
+      "child": "ablation-78315ac53d4bfd44ecbf544e453624e0ba88400befffee5d0a3340cd52e56d22",
+      "axis": "joint_byte_counts",
+      "value": 2048,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-50b89b5152351948a3337bd77ef963d435fbc2d85f0f047e1f985f0c1bd97e50",
+      "child": "ablation-5d2356ad02bac332cad880cf95986031c8e99367c8bb95bb84e3b6f5b32c06ec",
+      "axis": "joint_byte_counts",
+      "value": 65536,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-0901d86cac41afe641d8132abbefbeb9f269f7aa15fcc90212facd8f7c1fdce0",
+      "child": "ablation-80d99c32514b5baacd9f18748275ae99d7683d8ec1159c0a21e835ea04e9d7d0",
+      "axis": "joint_byte_counts",
+      "value": 1,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-0901d86cac41afe641d8132abbefbeb9f269f7aa15fcc90212facd8f7c1fdce0",
+      "child": "ablation-f223e64f40044cf1cb0b593a372d9a63303ba1a83b7bd148361ca1b7ccd4c2d5",
+      "axis": "joint_byte_counts",
+      "value": 16,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-0901d86cac41afe641d8132abbefbeb9f269f7aa15fcc90212facd8f7c1fdce0",
+      "child": "ablation-a429e8ceda176f5aa0b6a7184adb97ce86802a4306ce3e985615e0e9ab3f594e",
+      "axis": "joint_byte_counts",
+      "value": 62,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-0901d86cac41afe641d8132abbefbeb9f269f7aa15fcc90212facd8f7c1fdce0",
+      "child": "ablation-1cd7dc7204b3b8d37f1ae49afb504d5a7819c1edec9838c45a25dcd0b45cf4ed",
+      "axis": "joint_byte_counts",
+      "value": 150,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-0901d86cac41afe641d8132abbefbeb9f269f7aa15fcc90212facd8f7c1fdce0",
+      "child": "ablation-b7f82485a358638f46f372b5b426fe31de4d5a862f80de978c15e236e56923b0",
+      "axis": "joint_byte_counts",
+      "value": 2048,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-0901d86cac41afe641d8132abbefbeb9f269f7aa15fcc90212facd8f7c1fdce0",
+      "child": "ablation-fad1729775fd34ec0ed2419f61c307b299aa848df053cfe94aca57fe8f577e44",
+      "axis": "joint_byte_counts",
+      "value": 65536,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-89360f62c5afc1ea9a475f69a6c4ba379988e1fa5b8aedbb55632aaf1257323e",
+      "child": "ablation-001ecbd681d4e3ac012ca05b356a2a18bde2c018740b8b6585cda36cd272efb9",
+      "axis": "joint_byte_counts",
+      "value": 1,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-89360f62c5afc1ea9a475f69a6c4ba379988e1fa5b8aedbb55632aaf1257323e",
+      "child": "ablation-5fe062b7ba574455f41f28617be49f642d37b9c09963958ba33c665340e631f8",
+      "axis": "joint_byte_counts",
+      "value": 16,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-89360f62c5afc1ea9a475f69a6c4ba379988e1fa5b8aedbb55632aaf1257323e",
+      "child": "ablation-1864051ee0a0a83a8306e18980deb263d801dd7e5e733b974a9c501ea7acdf8b",
+      "axis": "joint_byte_counts",
+      "value": 62,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-89360f62c5afc1ea9a475f69a6c4ba379988e1fa5b8aedbb55632aaf1257323e",
+      "child": "ablation-70ac4cbec34650f6ce22dd235a0e30ff515dd0557cf7f21b372adc0682d36e9b",
+      "axis": "joint_byte_counts",
+      "value": 150,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-89360f62c5afc1ea9a475f69a6c4ba379988e1fa5b8aedbb55632aaf1257323e",
+      "child": "ablation-30a9ca4fbf47a51f35ecb4dea507eeb6b279cfb16c683427e855965dd0194fd4",
+      "axis": "joint_byte_counts",
+      "value": 2048,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-89360f62c5afc1ea9a475f69a6c4ba379988e1fa5b8aedbb55632aaf1257323e",
+      "child": "ablation-94b5c468869f0396a4825d2fe116d0599209138582c6438a28b2a473a9557b3f",
+      "axis": "joint_byte_counts",
+      "value": 65536,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-316ecb51152bedc60d9e74d7b9ec61b9c80667798fc8fff6bc5da132407f2ad3",
+      "child": "ablation-f880cea7ff7efd813549b77b21f1bcc915a73fad4a8dc568e1e6a0fab6597e3f",
+      "axis": "joint_byte_counts",
+      "value": 1,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-316ecb51152bedc60d9e74d7b9ec61b9c80667798fc8fff6bc5da132407f2ad3",
+      "child": "ablation-203f13bc02f850cf74d05f18cf2cbaccb30d0251e9e734f0f224c0e604731fc2",
+      "axis": "joint_byte_counts",
+      "value": 16,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-316ecb51152bedc60d9e74d7b9ec61b9c80667798fc8fff6bc5da132407f2ad3",
+      "child": "ablation-5435e344baae5252d00d4fb90814431eb32dadf97083129af96d978559cdb735",
+      "axis": "joint_byte_counts",
+      "value": 62,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-316ecb51152bedc60d9e74d7b9ec61b9c80667798fc8fff6bc5da132407f2ad3",
+      "child": "ablation-eb58db326b951422941af6946639df3143dbe1846224b248f96fff80bc2dbcd6",
+      "axis": "joint_byte_counts",
+      "value": 150,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-316ecb51152bedc60d9e74d7b9ec61b9c80667798fc8fff6bc5da132407f2ad3",
+      "child": "ablation-7a27223669a1696816eeef4f86f1480ceb65d08395276294e4cdd971dc235061",
+      "axis": "joint_byte_counts",
+      "value": 2048,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-316ecb51152bedc60d9e74d7b9ec61b9c80667798fc8fff6bc5da132407f2ad3",
+      "child": "ablation-6c1a456100b1acfe4752efd4bae473a046d597df59ae0ba6b9f46ae3ff6d284f",
+      "axis": "joint_byte_counts",
+      "value": 65536,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-558c563ddc64b924149e66de604ec166712889cb818380d74875d1553b709b87",
+      "child": "ablation-e37a3686d4a9557b493b00c86424816b372e990b9151d9dfdd7d98a3f18af22a",
+      "axis": "joint_byte_counts",
+      "value": 1,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-558c563ddc64b924149e66de604ec166712889cb818380d74875d1553b709b87",
+      "child": "ablation-acf52cb6c1a9a581d1b18c67bda9bf5b2fc06c87366219efc51252c1f98cc9a8",
+      "axis": "joint_byte_counts",
+      "value": 16,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-558c563ddc64b924149e66de604ec166712889cb818380d74875d1553b709b87",
+      "child": "ablation-cd94964ed36f92ba80851a9aa585ae0cf1cf4c845c2404b9ecfd7c604ff15ee1",
+      "axis": "joint_byte_counts",
+      "value": 62,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-558c563ddc64b924149e66de604ec166712889cb818380d74875d1553b709b87",
+      "child": "ablation-2318b3bc1863a8f56cedb30264bb0f40d4302e65849a6b460941a25149721e9e",
+      "axis": "joint_byte_counts",
+      "value": 150,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-558c563ddc64b924149e66de604ec166712889cb818380d74875d1553b709b87",
+      "child": "ablation-b26c743aa31212fc543dd674f4a1dfe03c0234410e99b66e1f52b916342bcac5",
+      "axis": "joint_byte_counts",
+      "value": 2048,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-558c563ddc64b924149e66de604ec166712889cb818380d74875d1553b709b87",
+      "child": "ablation-2ce735f19377e3da64c61d433bb68fd81d82889bbcc098abb1f6587d2ca56ef2",
+      "axis": "joint_byte_counts",
+      "value": 65536,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-f1869b809b2d8ecc80bf686d7f44413efc4c94bab2d5f427bbd09068405e5615",
+      "child": "ablation-8c0cf733d5820c2060e722641b7d42074fd6aeef01db6d8d102c8e7212f8d896",
+      "axis": "joint_byte_counts",
+      "value": 1,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-f1869b809b2d8ecc80bf686d7f44413efc4c94bab2d5f427bbd09068405e5615",
+      "child": "ablation-87e0c49a0308eb8014bbfa037ae88f1f66306967c14911c4217ab645c89d38e3",
+      "axis": "joint_byte_counts",
+      "value": 16,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-f1869b809b2d8ecc80bf686d7f44413efc4c94bab2d5f427bbd09068405e5615",
+      "child": "ablation-2945a45037e6996932c6eca6364f94f488a00c683f1f61484f7dc8b782a943df",
+      "axis": "joint_byte_counts",
+      "value": 62,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-f1869b809b2d8ecc80bf686d7f44413efc4c94bab2d5f427bbd09068405e5615",
+      "child": "ablation-f61a14a573fecd1185522d98217fad777b8336dbe3f301587302b4a3a647f985",
+      "axis": "joint_byte_counts",
+      "value": 150,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-f1869b809b2d8ecc80bf686d7f44413efc4c94bab2d5f427bbd09068405e5615",
+      "child": "ablation-6b6c533454a85bef391917d5de9f47ca343302abfb3fbc139a04e9c40a832a4b",
+      "axis": "joint_byte_counts",
+      "value": 2048,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-f1869b809b2d8ecc80bf686d7f44413efc4c94bab2d5f427bbd09068405e5615",
+      "child": "ablation-11f358e4762949a753c24dbdd97745e5bcfd22a9239b96167103081a77d6d4f5",
+      "axis": "joint_byte_counts",
+      "value": 65536,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-8f5b671631618282cbc112d28bf4e6adca321927f7039b6e75af26ba2c95bac9",
+      "child": "ablation-8a6f6f0c270a90aa96a0d49173e018b2a263c92eb7d124d671cdbaf14e808087",
+      "axis": "joint_byte_counts",
+      "value": 1,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-8f5b671631618282cbc112d28bf4e6adca321927f7039b6e75af26ba2c95bac9",
+      "child": "ablation-201e3eac7d6f4693102ff299bf6da02b27d92091525c39d86d4ea40f803933fa",
+      "axis": "joint_byte_counts",
+      "value": 16,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-8f5b671631618282cbc112d28bf4e6adca321927f7039b6e75af26ba2c95bac9",
+      "child": "ablation-1020b8cdd6730f47da5fd64f209ab0a8005b021e235aaa4ffdc93387606201f8",
+      "axis": "joint_byte_counts",
+      "value": 62,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-8f5b671631618282cbc112d28bf4e6adca321927f7039b6e75af26ba2c95bac9",
+      "child": "ablation-b7369188ab0d2acce04b166eb099f0df694005a2738328bff6f05fad1528058c",
+      "axis": "joint_byte_counts",
+      "value": 150,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-8f5b671631618282cbc112d28bf4e6adca321927f7039b6e75af26ba2c95bac9",
+      "child": "ablation-ce4cda3903fcb2305539b6f3b41fdfdcca9db97c56be9dc93440680586bfb49e",
+      "axis": "joint_byte_counts",
+      "value": 2048,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-8f5b671631618282cbc112d28bf4e6adca321927f7039b6e75af26ba2c95bac9",
+      "child": "ablation-5e16f234c038347fce29930cbff2f1ece7dbfdd9493dc55b6aba4b9be7e6325b",
+      "axis": "joint_byte_counts",
+      "value": 65536,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-6bf83c1fec06f141ef2b952451bceeb4c4ceab1418b9f4329c5e949ef10a79b2",
+      "child": "ablation-fbdbf1e23a4b238b6d2e9b29fe8cbe9b6869db617732ee4c96a3fc3fb34c4269",
+      "axis": "joint_byte_counts",
+      "value": 1,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-6bf83c1fec06f141ef2b952451bceeb4c4ceab1418b9f4329c5e949ef10a79b2",
+      "child": "ablation-efa7697c706114210261d9e0f030a5507277a50478ececd832576b111764fa1f",
+      "axis": "joint_byte_counts",
+      "value": 16,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-6bf83c1fec06f141ef2b952451bceeb4c4ceab1418b9f4329c5e949ef10a79b2",
+      "child": "ablation-b4e27b554f760e5266079c31c3e02c1dc8179c77c203996261b1634cdc3a90ec",
+      "axis": "joint_byte_counts",
+      "value": 62,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-6bf83c1fec06f141ef2b952451bceeb4c4ceab1418b9f4329c5e949ef10a79b2",
+      "child": "ablation-9b5206a2eefdd4e77882591f37e2c3e9e7f79a82dc8c08bec375d5c3b9751a1e",
+      "axis": "joint_byte_counts",
+      "value": 150,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-6bf83c1fec06f141ef2b952451bceeb4c4ceab1418b9f4329c5e949ef10a79b2",
+      "child": "ablation-8ff4081e6f49eced6f2098a75cdc8a0a328c41cc6b7f8142c0129df0d5aa889f",
+      "axis": "joint_byte_counts",
+      "value": 2048,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-6bf83c1fec06f141ef2b952451bceeb4c4ceab1418b9f4329c5e949ef10a79b2",
+      "child": "ablation-db344d08e17a2d02dba8122aa1a0e1df1f6fc8e25ce4465245933b1828860a6d",
+      "axis": "joint_byte_counts",
+      "value": 65536,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-7fb465c320a60bf36341f422442b20bdb3b47bece805e7d9ba353f277a1638bd",
+      "child": "ablation-217f5e2b8b241cb319eaca13ccc8a87748e0d07693f930690e7a62898f4c5f29",
+      "axis": "joint_byte_counts",
+      "value": 1,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-7fb465c320a60bf36341f422442b20bdb3b47bece805e7d9ba353f277a1638bd",
+      "child": "ablation-449c8583030688d68272d812e786b57fba8b93c3bc6c08c9c3a06ad62da9e922",
+      "axis": "joint_byte_counts",
+      "value": 16,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-7fb465c320a60bf36341f422442b20bdb3b47bece805e7d9ba353f277a1638bd",
+      "child": "ablation-563e6ae3a342b86b03831ae1118e93c2502aef7dd6bb5575df8113f3bc2e1fb2",
+      "axis": "joint_byte_counts",
+      "value": 62,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-7fb465c320a60bf36341f422442b20bdb3b47bece805e7d9ba353f277a1638bd",
+      "child": "ablation-8ded2106c0467db15c4d6f7dc8a069ddab9c6749d3d4f72fef51e1f09f41b735",
+      "axis": "joint_byte_counts",
+      "value": 150,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-7fb465c320a60bf36341f422442b20bdb3b47bece805e7d9ba353f277a1638bd",
+      "child": "ablation-328b611b94919d46b3cd4abae3e74e890abc145af5d793a80430fe229f506982",
+      "axis": "joint_byte_counts",
+      "value": 2048,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-7fb465c320a60bf36341f422442b20bdb3b47bece805e7d9ba353f277a1638bd",
+      "child": "ablation-e6094623d92798d45157c268d33e1c4fb98031466354a40f45375d50e23d89a9",
+      "axis": "joint_byte_counts",
+      "value": 65536,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-4310bd964ea54a8429c7e0ca22b2120c3e34ae926300af8edb752df2909b6b36",
+      "child": "ablation-054f75d2ab8b71a28362a7c9db7ac353ad12a1c849a818a118b6f39003350c98",
+      "axis": "joint_byte_counts",
+      "value": 1,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-4310bd964ea54a8429c7e0ca22b2120c3e34ae926300af8edb752df2909b6b36",
+      "child": "ablation-c0c92babc2d1dbc058892c688811e94ca25afc7fba5d71a501bf90bfe693482d",
+      "axis": "joint_byte_counts",
+      "value": 16,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-4310bd964ea54a8429c7e0ca22b2120c3e34ae926300af8edb752df2909b6b36",
+      "child": "ablation-5d5049a87ae9207f7a211c6e8301aa7a3d9db4f1d14b144c3f166e53edde3a1b",
+      "axis": "joint_byte_counts",
+      "value": 62,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-4310bd964ea54a8429c7e0ca22b2120c3e34ae926300af8edb752df2909b6b36",
+      "child": "ablation-c3903c3cadadddd38618b4b64207c51aa6483aea9d51c401e6abdd358d8db58b",
+      "axis": "joint_byte_counts",
+      "value": 150,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-4310bd964ea54a8429c7e0ca22b2120c3e34ae926300af8edb752df2909b6b36",
+      "child": "ablation-7562c8dde8b18ec48b748481b77c457c1e73ecaa6ce74d90b1f4fd984a0d91a7",
+      "axis": "joint_byte_counts",
+      "value": 2048,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-4310bd964ea54a8429c7e0ca22b2120c3e34ae926300af8edb752df2909b6b36",
+      "child": "ablation-3b7fadc676d35715179210ec8f1cb780a0eb418ecc6bead9fa43df911e9f9454",
+      "axis": "joint_byte_counts",
+      "value": 65536,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-bba1c99a7b0e31b45706684ee80838008b5fe646fb25a850faba23d5bfdf0d12",
+      "child": "ablation-bf3e68d9e8dd25475f119fbea372854dfd31d25d67dcf24dc89ac0c2afa3f047",
+      "axis": "joint_byte_counts",
+      "value": 1,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-bba1c99a7b0e31b45706684ee80838008b5fe646fb25a850faba23d5bfdf0d12",
+      "child": "ablation-021de1b75c5c1b540dfcc2e466b2eb2b1bed417e459106522487a64a8ac2dd6c",
+      "axis": "joint_byte_counts",
+      "value": 16,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-bba1c99a7b0e31b45706684ee80838008b5fe646fb25a850faba23d5bfdf0d12",
+      "child": "ablation-511f42a8b33c0c9f21128c2a13ea780f86a9533742ab64539debe332d6dc7a30",
+      "axis": "joint_byte_counts",
+      "value": 62,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-bba1c99a7b0e31b45706684ee80838008b5fe646fb25a850faba23d5bfdf0d12",
+      "child": "ablation-950e7c226419793dd1df1ae959fd72eb7f8c81afaf11514efa3fd13e57f32927",
+      "axis": "joint_byte_counts",
+      "value": 150,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-bba1c99a7b0e31b45706684ee80838008b5fe646fb25a850faba23d5bfdf0d12",
+      "child": "ablation-aef60bb907502f1fa78e8a55435336dd2cbdc9f82c1cd68b3c6591b1a05b9b7b",
+      "axis": "joint_byte_counts",
+      "value": 2048,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-bba1c99a7b0e31b45706684ee80838008b5fe646fb25a850faba23d5bfdf0d12",
+      "child": "ablation-fefb0c23f775efa55b1b62dc467e09e0ee4536c2df2b11d2581719ba1957b4ee",
+      "axis": "joint_byte_counts",
+      "value": 65536,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-f62a1c3da375ad9cccd5844ba4f2fc93c5933b40d5c7c87aa9700904ef6672ca",
+      "child": "ablation-bf84fc9974e3669fdef479b58b34d391d31ac806dd351ddb978efc50897af3c0",
+      "axis": "joint_byte_counts",
+      "value": 1,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-f62a1c3da375ad9cccd5844ba4f2fc93c5933b40d5c7c87aa9700904ef6672ca",
+      "child": "ablation-0b8e8913c78bc79409606e4cd9830eba99b887bf6fde4ce3bedbcbef967edb6f",
+      "axis": "joint_byte_counts",
+      "value": 16,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-f62a1c3da375ad9cccd5844ba4f2fc93c5933b40d5c7c87aa9700904ef6672ca",
+      "child": "ablation-9de9e526e220883b70f35920ab30f3070b2a4a494396620e7da1a5828c9c9304",
+      "axis": "joint_byte_counts",
+      "value": 62,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-f62a1c3da375ad9cccd5844ba4f2fc93c5933b40d5c7c87aa9700904ef6672ca",
+      "child": "ablation-59a255542be876564827e4405c4e7ddf0331783fc104696f75e5075e3747abc3",
+      "axis": "joint_byte_counts",
+      "value": 150,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-f62a1c3da375ad9cccd5844ba4f2fc93c5933b40d5c7c87aa9700904ef6672ca",
+      "child": "ablation-5069c8f15935787bec72c38400f0c54fc8fd41b73e59980193a578e5a6274c69",
+      "axis": "joint_byte_counts",
+      "value": 2048,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-f62a1c3da375ad9cccd5844ba4f2fc93c5933b40d5c7c87aa9700904ef6672ca",
+      "child": "ablation-f8ad8f8e528cb4dd427f29382d2359589a3598f9730d5dd2e1fe391a809a9765",
+      "axis": "joint_byte_counts",
+      "value": 65536,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-f42f1fc8a6a2efc87ff79f0e27d504529876ee5b89ee1d4133245278fe9ce21f",
+      "child": "ablation-a00979f1bae912a7defff09fe32156e98d1651e498720e30ec021a07694b9838",
+      "axis": "joint_byte_counts",
+      "value": 1,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-f42f1fc8a6a2efc87ff79f0e27d504529876ee5b89ee1d4133245278fe9ce21f",
+      "child": "ablation-4a954404169298a4f8850f6fe1150b590ac9281467cc84472fabe7a796fea88b",
+      "axis": "joint_byte_counts",
+      "value": 16,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-f42f1fc8a6a2efc87ff79f0e27d504529876ee5b89ee1d4133245278fe9ce21f",
+      "child": "ablation-cec7826cb71d15aa6be63bf6c3fc11bf7d84cda90fed651161c7616073c07342",
+      "axis": "joint_byte_counts",
+      "value": 62,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-f42f1fc8a6a2efc87ff79f0e27d504529876ee5b89ee1d4133245278fe9ce21f",
+      "child": "ablation-dbeb0e4c1df3a7388f40e835b0352f75bde2409e38c1b828ba3adc43cbf23704",
+      "axis": "joint_byte_counts",
+      "value": 150,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-f42f1fc8a6a2efc87ff79f0e27d504529876ee5b89ee1d4133245278fe9ce21f",
+      "child": "ablation-deb69b869c1db5510545322a060579608b33efe49c8e66091e4ff949b29afc6b",
+      "axis": "joint_byte_counts",
+      "value": 2048,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-f42f1fc8a6a2efc87ff79f0e27d504529876ee5b89ee1d4133245278fe9ce21f",
+      "child": "ablation-0a697d838b77026610432a04f341cef8a90936475a8828da005d2f8fe012784c",
+      "axis": "joint_byte_counts",
+      "value": 65536,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-cd059f5abdf25222d78e270380ddd65644f906c97c053264f4ca594dafb20b0b",
+      "child": "ablation-10f9938c16b1d2f12edaab01b8080565d3cac8677b475bc4aeb0ae8eb437d078",
+      "axis": "joint_byte_counts",
+      "value": 1,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-cd059f5abdf25222d78e270380ddd65644f906c97c053264f4ca594dafb20b0b",
+      "child": "ablation-df15b6854ab26045fc09710d43c5faa1882a1dbe2f60a8378fe06ab309b99825",
+      "axis": "joint_byte_counts",
+      "value": 16,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-cd059f5abdf25222d78e270380ddd65644f906c97c053264f4ca594dafb20b0b",
+      "child": "ablation-09f45df4bd95ffb9a8c7b1a70b5b1b6e4c5d23ece8eda2f7d6ee29f12b561de8",
+      "axis": "joint_byte_counts",
+      "value": 62,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-cd059f5abdf25222d78e270380ddd65644f906c97c053264f4ca594dafb20b0b",
+      "child": "ablation-cfc2a3612096d6f102705fdb024c4e3008754cad818e6ad7bb0c9539ee6de08c",
+      "axis": "joint_byte_counts",
+      "value": 150,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-cd059f5abdf25222d78e270380ddd65644f906c97c053264f4ca594dafb20b0b",
+      "child": "ablation-600a1cdc89169b1521e51a20ac4377c2607963ddde930ed6ead224c3f8f8f6cc",
+      "axis": "joint_byte_counts",
+      "value": 2048,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-cd059f5abdf25222d78e270380ddd65644f906c97c053264f4ca594dafb20b0b",
+      "child": "ablation-9da3511c7199324d68bd56603c6d1cae3f88bfb408f16e4ccfb89795774e73cc",
+      "axis": "joint_byte_counts",
+      "value": 65536,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-7128d55f5268afd54349bd372e03ab16e940dad06d1463d6acd197061b6853a3",
+      "child": "ablation-28ad014e0415ed895b661493f9510470050e07885043c8c3707fe8d086de307f",
+      "axis": "joint_byte_counts",
+      "value": 1,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-7128d55f5268afd54349bd372e03ab16e940dad06d1463d6acd197061b6853a3",
+      "child": "ablation-01b158579c4d8b1db5f8b67ddc0f19f986016bc768873a80db6a539fcac654c7",
+      "axis": "joint_byte_counts",
+      "value": 16,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-7128d55f5268afd54349bd372e03ab16e940dad06d1463d6acd197061b6853a3",
+      "child": "ablation-20c3f5ab1c0ec66d731f3d0328fd3c32f269ef778ccaa2018b158ca4e711d83d",
+      "axis": "joint_byte_counts",
+      "value": 62,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-7128d55f5268afd54349bd372e03ab16e940dad06d1463d6acd197061b6853a3",
+      "child": "ablation-147a6a771765c7f6204f4b8e64e1fee3e08a963cc44f5297b5bea97b6972a93c",
+      "axis": "joint_byte_counts",
+      "value": 150,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-7128d55f5268afd54349bd372e03ab16e940dad06d1463d6acd197061b6853a3",
+      "child": "ablation-101001263da7393fa8a57ea2be0e242057018627a20f07a398ad063285219338",
+      "axis": "joint_byte_counts",
+      "value": 2048,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-7128d55f5268afd54349bd372e03ab16e940dad06d1463d6acd197061b6853a3",
+      "child": "ablation-913083d9c2be31d9c50a84977f7d96dd88c0ec384f8c09e888a36267c4e8b443",
+      "axis": "joint_byte_counts",
+      "value": 65536,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-0cf2de512fffe64db6b7e73cd4ac42c0de5ca80e327227b5f259a73e6b0bb09e",
+      "child": "ablation-69642bb83aca8068c72d8379b8b7e2c32c57815799de8fc5c48c0aa7d72b2b57",
+      "axis": "joint_byte_counts",
+      "value": 1,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-0cf2de512fffe64db6b7e73cd4ac42c0de5ca80e327227b5f259a73e6b0bb09e",
+      "child": "ablation-07d3b8a3e9d62267fe49dbe4aae251e99cb4866f5d905c7ab3c2634077a89a4e",
+      "axis": "joint_byte_counts",
+      "value": 16,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-0cf2de512fffe64db6b7e73cd4ac42c0de5ca80e327227b5f259a73e6b0bb09e",
+      "child": "ablation-f0453bd33df25eb6224b4170b807ae71e902fde3bd05206f9e22ba9d59daaa7e",
+      "axis": "joint_byte_counts",
+      "value": 62,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-0cf2de512fffe64db6b7e73cd4ac42c0de5ca80e327227b5f259a73e6b0bb09e",
+      "child": "ablation-85bc2252b32522bbb4c5ebc1df0a644252413a8abf1330cac388c4e1064f74d3",
+      "axis": "joint_byte_counts",
+      "value": 150,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-0cf2de512fffe64db6b7e73cd4ac42c0de5ca80e327227b5f259a73e6b0bb09e",
+      "child": "ablation-e024f014b44de35cba66e68fc2054d5a120b7d87ca12f6819ea68f5dbe5b9886",
+      "axis": "joint_byte_counts",
+      "value": 2048,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-0cf2de512fffe64db6b7e73cd4ac42c0de5ca80e327227b5f259a73e6b0bb09e",
+      "child": "ablation-8179cfaad24f48c571eea03f84ea3b0701f1d2f00b1af7039f3ae44b62e8e49f",
+      "axis": "joint_byte_counts",
+      "value": 65536,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-4629304c8afcbd25c249656714ced715e2916ed1b4aa4cec4e2d9a5a35685b78",
+      "child": "ablation-09dc2c84e8a94c03dccf1f4e1cddf643d0df1d018be08eb2a1a2dcf4c7d9ecc9",
+      "axis": "joint_byte_counts",
+      "value": 1,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-4629304c8afcbd25c249656714ced715e2916ed1b4aa4cec4e2d9a5a35685b78",
+      "child": "ablation-d37c8ad60118f3d227a679b66fa7b22a52591104a7d6b66f38bd3f680bf7f9b0",
+      "axis": "joint_byte_counts",
+      "value": 16,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-4629304c8afcbd25c249656714ced715e2916ed1b4aa4cec4e2d9a5a35685b78",
+      "child": "ablation-ded84fa89a24b7491b119dc18159f7ff2aeb5d3a3326fa8c48796fc48b8bd787",
+      "axis": "joint_byte_counts",
+      "value": 62,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-4629304c8afcbd25c249656714ced715e2916ed1b4aa4cec4e2d9a5a35685b78",
+      "child": "ablation-9f7ee3b05f16b12dc7a724a77b0d3eb093a47184706c7aea4e13241af77e4804",
+      "axis": "joint_byte_counts",
+      "value": 150,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-4629304c8afcbd25c249656714ced715e2916ed1b4aa4cec4e2d9a5a35685b78",
+      "child": "ablation-142d5e6af7886e5612296cee2ec6550b9644297740d2b2559269c11b2b4906a6",
+      "axis": "joint_byte_counts",
+      "value": 2048,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-4629304c8afcbd25c249656714ced715e2916ed1b4aa4cec4e2d9a5a35685b78",
+      "child": "ablation-6f4c25cdcb9616c2ebc3eac06ccbc5456914a8c1289fe2fa6b154159b70b0b2b",
+      "axis": "joint_byte_counts",
+      "value": 65536,
+      "phrase_index": 0
+    },
+    {
+      "parent": "ablation-29340831fdfdb3bb5ff68d1875f7dcd624f5ed3a56f5471585d1b82921fb17db",
+      "child": "ablation-8342f5de64826742ed18f7d44fabd363b0e0de400318e1e1fea97f75220e8f97",
+      "axis": "joint_byte_counts",
+      "value": 1,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-29340831fdfdb3bb5ff68d1875f7dcd624f5ed3a56f5471585d1b82921fb17db",
+      "child": "ablation-5754cb200d1c693c2f03f04def9dc9f36684b5ac59a7e9fb84bde4847e557125",
+      "axis": "joint_byte_counts",
+      "value": 16,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-29340831fdfdb3bb5ff68d1875f7dcd624f5ed3a56f5471585d1b82921fb17db",
+      "child": "ablation-87cf14a6ce5bdd07dc6e3bfa0815a54a1083d42699e2677ea285a31b6703c5f9",
+      "axis": "joint_byte_counts",
+      "value": 62,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-29340831fdfdb3bb5ff68d1875f7dcd624f5ed3a56f5471585d1b82921fb17db",
+      "child": "ablation-531e09eb09fa0a5335deae515005b3e99cc19feb834a3e9076d7aa3e923a8da7",
+      "axis": "joint_byte_counts",
+      "value": 150,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-29340831fdfdb3bb5ff68d1875f7dcd624f5ed3a56f5471585d1b82921fb17db",
+      "child": "ablation-188a1a1ce820b419f4d25b7e38fefa010e441e79b676ee173a0939b99587fde4",
+      "axis": "joint_byte_counts",
+      "value": 2048,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-29340831fdfdb3bb5ff68d1875f7dcd624f5ed3a56f5471585d1b82921fb17db",
+      "child": "ablation-e9071c1ceb5d44fc4e0f9947a008b9235ec8dc585b8aac007fb67ba966f93523",
+      "axis": "joint_byte_counts",
+      "value": 65536,
+      "phrase_index": 1
+    },
+    {
+      "parent": "ablation-ccb2f864c8c02d6e527d598172f89db0be25d8fdb366f0454683ac91761e3a35",
+      "child": "ablation-e9592a1667bae8d7d1ffcc18876b9f107af1cf9d335bfc3ad7efc1bb3a111198",
+      "axis": "joint_byte_counts",
+      "value": 1,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-ccb2f864c8c02d6e527d598172f89db0be25d8fdb366f0454683ac91761e3a35",
+      "child": "ablation-9102c0bf254e107b6f0974239d5da07d98ca59c06854921663b480453566c667",
+      "axis": "joint_byte_counts",
+      "value": 16,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-ccb2f864c8c02d6e527d598172f89db0be25d8fdb366f0454683ac91761e3a35",
+      "child": "ablation-5e5ed321aa77d0d7fcf4a26de72046777c2bcbab88ee9310895185e51b669e81",
+      "axis": "joint_byte_counts",
+      "value": 62,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-ccb2f864c8c02d6e527d598172f89db0be25d8fdb366f0454683ac91761e3a35",
+      "child": "ablation-a414f487d8034911a0a1dd815d91dde06331d20fb6fe01e8ab8e1fcbdcded709",
+      "axis": "joint_byte_counts",
+      "value": 150,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-ccb2f864c8c02d6e527d598172f89db0be25d8fdb366f0454683ac91761e3a35",
+      "child": "ablation-a75dd943d1c1560df0ed0b9bc4a2e31e0011f2037c8f8a38e2a2fe3b2cde61c0",
+      "axis": "joint_byte_counts",
+      "value": 2048,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-ccb2f864c8c02d6e527d598172f89db0be25d8fdb366f0454683ac91761e3a35",
+      "child": "ablation-aa4a08ad393ace0edd54aab5b4864e83f14c18fc6ef7da57cb4452b4ec4f294a",
+      "axis": "joint_byte_counts",
+      "value": 65536,
+      "phrase_index": 2
+    },
+    {
+      "parent": "ablation-744194de3b1d3875eed8d69a1169d43c8c3a650a29e247200d7460d153ef47c9",
+      "child": "ablation-0e9f558ad51a7a1ede40157517e18181bbe7914d044bf3a3a16ebbd2b1cffd15",
+      "axis": "joint_byte_counts",
+      "value": 1,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-744194de3b1d3875eed8d69a1169d43c8c3a650a29e247200d7460d153ef47c9",
+      "child": "ablation-58706da7cb28286a9dd545a82a12f4ba9a73ad09f5937150f74472edf7a8a2a2",
+      "axis": "joint_byte_counts",
+      "value": 16,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-744194de3b1d3875eed8d69a1169d43c8c3a650a29e247200d7460d153ef47c9",
+      "child": "ablation-9ed4a05c507f8a1e969a3658cc0b014cb28638025e4effd988909272b306386a",
+      "axis": "joint_byte_counts",
+      "value": 62,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-744194de3b1d3875eed8d69a1169d43c8c3a650a29e247200d7460d153ef47c9",
+      "child": "ablation-00178947773dd7b96628b6de3fc9637655f8fd4f519b91f7d36b9e17eae234e6",
+      "axis": "joint_byte_counts",
+      "value": 150,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-744194de3b1d3875eed8d69a1169d43c8c3a650a29e247200d7460d153ef47c9",
+      "child": "ablation-f8916cc2383e206c2fe6c036ea2b2f83d5ead70f8a59a826e57175872273cb0e",
+      "axis": "joint_byte_counts",
+      "value": 2048,
+      "phrase_index": 3
+    },
+    {
+      "parent": "ablation-744194de3b1d3875eed8d69a1169d43c8c3a650a29e247200d7460d153ef47c9",
+      "child": "ablation-b5a5d556b701d71b1bc33c9a6cf985ad2d8c4a822e4d2db0ded435d6db4063e1",
+      "axis": "joint_byte_counts",
+      "value": 65536,
+      "phrase_index": 3
+    }
+  ],
+  "label_counts": {
+    "True": 112,
+    "False": 112,
+    "None": 112
+  },
+  "axis_pairs": {
+    "joint_byte_counts": 288
+  },
+  "limitations": [
+    "Labels describe action scope, not correctness of unseen file contents.",
+    "No model predictions supply labels; no independent human annotations.",
+    "Multiple states and pairs share seeds and requests; do not treat them as independent trials.",
+    "Counterfactual byte counts are abstract valid metadata, not executed edits.",
+    "Parents include inspected failures; this is diagnosis, not a promotion holdout.",
+    "Joint byte-count extension designed after inspecting single-field results; changes two fields together."
+  ]
+}

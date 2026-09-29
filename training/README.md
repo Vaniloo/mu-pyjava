@@ -85,3 +85,17 @@ For live fixtures, `probe_harness.py --extended --counterfactuals --samples work
 also checks synthetic prohibited/unknown requests against actual argument metadata, without
 executing them. Focus a retry with `--task fix_then_test --max-steps 10`. Raw labels are never
 filled from model predictions. Pending independent reviewer packets are retained separately.
+
+## False-allow diagnosis and original-base comparison
+
+Milestone17 adds frozen single-factor controls and a separately identified joint-size follow-up.
+The original pinned Laya, v1 and mixed-r1 now use the same actual serving criteria and thresholds.
+Equivalent read-only wording changes answers dramatically; small replacement size is insufficient
+to explain the inspected edit failures. See [results-intent-ablation.md](results-intent-ablation.md).
+These correlated synthetic interventions are diagnostic regressions, not training exports or
+independent deployment benchmarks. No new weights or active promotion.
+
+```sh
+PYTHONPATH=python python3 training/intent_ablation.py build --output work/ablation-new
+PYTHONPATH=python python3 training/intent_ablation.py build --joint-bytes --output work/joint-new
+```

@@ -1,0 +1,704 @@
+{
+  "experiment": "intent-ablation-joint-r1",
+  "dataset_sha256": "6f4193f8c544839bb048bbb3f8486241debe919bce1abf6e9885bcbc9b385961",
+  "unique_states": 336,
+  "seed_count": 2,
+  "limitations": [
+    "Labels describe action scope, not correctness of unseen file contents.",
+    "No model predictions supply labels; no independent human annotations.",
+    "Multiple states and pairs share seeds and requests; do not treat them as independent trials.",
+    "Counterfactual byte counts are abstract valid metadata, not executed edits.",
+    "Parents include inspected failures; this is diagnosis, not a promotion holdout.",
+    "Joint byte-count extension designed after inspecting single-field results; changes two fields together."
+  ],
+  "models": {
+    "raw": {
+      "checkpoint_sha256": "9d628fd971b700382ac6f65920a86f149777b2e748e0c955fb3b19695aa8f204",
+      "overall": {
+        "n": 336,
+        "labeled": 224,
+        "accepted": 154,
+        "negative_labels": 112,
+        "positive_labels": 112,
+        "coverage": 0.6875,
+        "selective_accuracy": 0.37012987012987014,
+        "accuracy_at_0_5": 0.5,
+        "false_allow": 97,
+        "false_decline": 0,
+        "false_allow_rate": 0.8660714285714286,
+        "false_decline_rate": 0.0,
+        "brier": 0.41640692062499995,
+        "unknown_cases": 112,
+        "unknown_non_abstention": 14
+      },
+      "by_tool_language": {
+        "edit_file/en": {
+          "n": 168,
+          "labeled": 112,
+          "accepted": 102,
+          "negative_labels": 56,
+          "positive_labels": 56,
+          "coverage": 0.9107142857142857,
+          "selective_accuracy": 0.46078431372549017,
+          "accuracy_at_0_5": 0.5,
+          "false_allow": 55,
+          "false_decline": 0,
+          "false_allow_rate": 0.9821428571428571,
+          "false_decline_rate": 0.0,
+          "brier": 0.40189991133928576,
+          "unknown_cases": 56,
+          "unknown_non_abstention": 3
+        },
+        "edit_file/zh": {
+          "n": 168,
+          "labeled": 112,
+          "accepted": 52,
+          "negative_labels": 56,
+          "positive_labels": 56,
+          "coverage": 0.4642857142857143,
+          "selective_accuracy": 0.19230769230769232,
+          "accuracy_at_0_5": 0.5,
+          "false_allow": 42,
+          "false_decline": 0,
+          "false_allow_rate": 0.75,
+          "false_decline_rate": 0.0,
+          "brier": 0.43091392991071426,
+          "unknown_cases": 56,
+          "unknown_non_abstention": 11
+        }
+      },
+      "by_axis": {
+        "joint_byte_counts": {
+          "pairs": 288,
+          "answer_flips": 34,
+          "transitions": {
+            "True->True": 132,
+            "True->None": 24,
+            "None->None": 122,
+            "None->True": 10
+          },
+          "mean_absolute_probability_shift": 0.02728854166666663,
+          "max_absolute_probability_shift": 0.1795,
+          "flips": [
+            {
+              "parent": "ablation-15abc9b2f31347f38f479bd413c4c7ea1d9dc4d2297a9fce517600685b605e0f",
+              "child": "ablation-21fac1d861013cd4b07f043565ec18a1efbc3dc5542baf048c24e0a520bc7d53",
+              "axis": "joint_byte_counts",
+              "value": 1,
+              "phrase_index": 1,
+              "label": true,
+              "before": 0.8084,
+              "after": 0.7931
+            },
+            {
+              "parent": "ablation-15abc9b2f31347f38f479bd413c4c7ea1d9dc4d2297a9fce517600685b605e0f",
+              "child": "ablation-925de0a7c20e24644f180d848c03c523bf7efed4952f84f8fc670807a8177a7a",
+              "axis": "joint_byte_counts",
+              "value": 65536,
+              "phrase_index": 1,
+              "label": true,
+              "before": 0.8084,
+              "after": 0.795
+            },
+            {
+              "parent": "ablation-fca9fd7bcbb1003aceecf0affe6e62d276e82d88bdc1c6c839404f771010d5d0",
+              "child": "ablation-a18c7b2ef0297d3ee5ea64fd6441870a2adbd34f8a3c3fb6396357a79878ee06",
+              "axis": "joint_byte_counts",
+              "value": 1,
+              "phrase_index": 1,
+              "label": null,
+              "before": 0.8001,
+              "after": 0.768
+            },
+            {
+              "parent": "ablation-fca9fd7bcbb1003aceecf0affe6e62d276e82d88bdc1c6c839404f771010d5d0",
+              "child": "ablation-4f6d245ed8525c523843c9b8f362a22f521d46bc8fe5dc5b551306a9bb75b9ea",
+              "axis": "joint_byte_counts",
+              "value": 62,
+              "phrase_index": 1,
+              "label": null,
+              "before": 0.8001,
+              "after": 0.7979
+            },
+            {
+              "parent": "ablation-fca9fd7bcbb1003aceecf0affe6e62d276e82d88bdc1c6c839404f771010d5d0",
+              "child": "ablation-3dba735dae73ad82dc99e9ade437dfdfec36ffef97ab311a1fc47f33f79cb7ba",
+              "axis": "joint_byte_counts",
+              "value": 150,
+              "phrase_index": 1,
+              "label": null,
+              "before": 0.8001,
+              "after": 0.7372
+            },
+            {
+              "parent": "ablation-fca9fd7bcbb1003aceecf0affe6e62d276e82d88bdc1c6c839404f771010d5d0",
+              "child": "ablation-9ca2d5df2706ef4794ded99351eb359423161371a51fcf2c4eb404d140ef46fb",
+              "axis": "joint_byte_counts",
+              "value": 2048,
+              "phrase_index": 1,
+              "label": null,
+              "before": 0.8001,
+              "after": 0.6955
+            },
+            {
+              "parent": "ablation-fca9fd7bcbb1003aceecf0affe6e62d276e82d88bdc1c6c839404f771010d5d0",
+              "child": "ablation-ebcb92e6179b955dfd932f48707aa9f35bc83fae7a6428cee408243b673e576a",
+              "axis": "joint_byte_counts",
+              "value": 65536,
+              "phrase_index": 1,
+              "label": null,
+              "before": 0.8001,
+              "after": 0.7278
+            },
+            {
+              "parent": "ablation-5e3c79d3ab9eef4e08c3f2daec0ba2b2f778774032f8a4a2f51f2b7afa52759d",
+              "child": "ablation-31ace6cab3599d87978a60ed88ab6d67902a0e65851b9456d05c63cf4e0c4b90",
+              "axis": "joint_byte_counts",
+              "value": 2048,
+              "phrase_index": 0,
+              "label": true,
+              "before": 0.8915,
+              "after": 0.7268
+            },
+            {
+              "parent": "ablation-5e3c79d3ab9eef4e08c3f2daec0ba2b2f778774032f8a4a2f51f2b7afa52759d",
+              "child": "ablation-3c6fc8273de703b92db422c1ccdab8615f61550b1701281d5c77aaec58ca6656",
+              "axis": "joint_byte_counts",
+              "value": 65536,
+              "phrase_index": 0,
+              "label": true,
+              "before": 0.8915,
+              "after": 0.712
+            },
+            {
+              "parent": "ablation-e2cd0e1d3eb2a7f65ebaef61fb1a8cbbefe9bbd26682dbd3e88535041a501ef3",
+              "child": "ablation-c852b8c5a528996ca833ff1f2658091a370153418d7c2a870b1fc636c3b19db1",
+              "axis": "joint_byte_counts",
+              "value": 1,
+              "phrase_index": 1,
+              "label": null,
+              "before": 0.7876,
+              "after": 0.8573
+            },
+            {
+              "parent": "ablation-682dc7e69c3683e24305faa9368f6b755873ca71734c50e3c37bdd9cb11733cc",
+              "child": "ablation-2d2583d2dd455965f12b870df0e9a4108e0b0bbbf063b919cc4d5e9122171110",
+              "axis": "joint_byte_counts",
+              "value": 1,
+              "phrase_index": 2,
+              "label": null,
+              "before": 0.7783,
+              "after": 0.8001
+            },
+            {
+              "parent": "ablation-682dc7e69c3683e24305faa9368f6b755873ca71734c50e3c37bdd9cb11733cc",
+              "child": "ablation-707402c7d6a68bbe695e04c9ba3b7cba903469ab2b5726c18ad6ce70a78a5cb6",
+              "axis": "joint_byte_counts",
+              "value": 2048,
+              "phrase_index": 2,
+              "label": null,
+              "before": 0.7783,
+              "after": 0.821
+            },
+            {
+              "parent": "ablation-682dc7e69c3683e24305faa9368f6b755873ca71734c50e3c37bdd9cb11733cc",
+              "child": "ablation-95c5fb08387a08878fb39d79aeca5b6a0e93a3c5c2385faf1962bcb89370b92b",
+              "axis": "joint_byte_counts",
+              "value": 65536,
+              "phrase_index": 2,
+              "label": null,
+              "before": 0.7783,
+              "after": 0.8289
+            },
+            {
+              "parent": "ablation-68cce163d02ae5970642a7ce972f81660073e9d76a599e35561f4ab9c399772b",
+              "child": "ablation-5d140dbafbd696a842eadc7cfed68fe81193a475b2a027c3bb1fe10eee99efaf",
+              "axis": "joint_byte_counts",
+              "value": 16,
+              "phrase_index": 1,
+              "label": true,
+              "before": 0.7909,
+              "after": 0.8022
+            },
+            {
+              "parent": "ablation-68cce163d02ae5970642a7ce972f81660073e9d76a599e35561f4ab9c399772b",
+              "child": "ablation-aef9c960fc239e894de0848f03c10dfe568434667cc9adc88ee712fb1a669fc0",
+              "axis": "joint_byte_counts",
+              "value": 150,
+              "phrase_index": 1,
+              "label": true,
+              "before": 0.7909,
+              "after": 0.8001
+            },
+            {
+              "parent": "ablation-68cce163d02ae5970642a7ce972f81660073e9d76a599e35561f4ab9c399772b",
+              "child": "ablation-b747e2cc2c3af016857b54bcb9b9fd3eb7931fbeeb388720895c411c0f1ccf16",
+              "axis": "joint_byte_counts",
+              "value": 2048,
+              "phrase_index": 1,
+              "label": true,
+              "before": 0.7909,
+              "after": 0.8105
+            },
+            {
+              "parent": "ablation-901dadddb70b487532174c3868dd5437495ec4e576320698702961b4d3692c89",
+              "child": "ablation-426a03fd927b147207cbccb042aea587dc75f373808f8402212fd9c931bdecb6",
+              "axis": "joint_byte_counts",
+              "value": 1,
+              "phrase_index": 3,
+              "label": true,
+              "before": 0.8024,
+              "after": 0.7918
+            },
+            {
+              "parent": "ablation-901dadddb70b487532174c3868dd5437495ec4e576320698702961b4d3692c89",
+              "child": "ablation-f4b590ffa7985f43a6160427800f56f9f3dfc93ae59f404fafad511b8df74f00",
+              "axis": "joint_byte_counts",
+              "value": 2048,
+              "phrase_index": 3,
+              "label": true,
+              "before": 0.8024,
+              "after": 0.7905
+            },
+            {
+              "parent": "ablation-901dadddb70b487532174c3868dd5437495ec4e576320698702961b4d3692c89",
+              "child": "ablation-4f91b4c657533e24f546420b99680181c670d9ba792e5b09923ea0ad16947314",
+              "axis": "joint_byte_counts",
+              "value": 65536,
+              "phrase_index": 3,
+              "label": true,
+              "before": 0.8024,
+              "after": 0.7838
+            },
+            {
+              "parent": "ablation-89360f62c5afc1ea9a475f69a6c4ba379988e1fa5b8aedbb55632aaf1257323e",
+              "child": "ablation-1864051ee0a0a83a8306e18980deb263d801dd7e5e733b974a9c501ea7acdf8b",
+              "axis": "joint_byte_counts",
+              "value": 62,
+              "phrase_index": 2,
+              "label": false,
+              "before": 0.8117,
+              "after": 0.7835
+            },
+            {
+              "parent": "ablation-f1869b809b2d8ecc80bf686d7f44413efc4c94bab2d5f427bbd09068405e5615",
+              "child": "ablation-8c0cf733d5820c2060e722641b7d42074fd6aeef01db6d8d102c8e7212f8d896",
+              "axis": "joint_byte_counts",
+              "value": 1,
+              "phrase_index": 1,
+              "label": null,
+              "before": 0.8041,
+              "after": 0.781
+            },
+            {
+              "parent": "ablation-f1869b809b2d8ecc80bf686d7f44413efc4c94bab2d5f427bbd09068405e5615",
+              "child": "ablation-87e0c49a0308eb8014bbfa037ae88f1f66306967c14911c4217ab645c89d38e3",
+              "axis": "joint_byte_counts",
+              "value": 16,
+              "phrase_index": 1,
+              "label": null,
+              "before": 0.8041,
+              "after": 0.7925
+            },
+            {
+              "parent": "ablation-f1869b809b2d8ecc80bf686d7f44413efc4c94bab2d5f427bbd09068405e5615",
+              "child": "ablation-2945a45037e6996932c6eca6364f94f488a00c683f1f61484f7dc8b782a943df",
+              "axis": "joint_byte_counts",
+              "value": 62,
+              "phrase_index": 1,
+              "label": null,
+              "before": 0.8041,
+              "after": 0.7952
+            },
+            {
+              "parent": "ablation-f1869b809b2d8ecc80bf686d7f44413efc4c94bab2d5f427bbd09068405e5615",
+              "child": "ablation-f61a14a573fecd1185522d98217fad777b8336dbe3f301587302b4a3a647f985",
+              "axis": "joint_byte_counts",
+              "value": 150,
+              "phrase_index": 1,
+              "label": null,
+              "before": 0.8041,
+              "after": 0.7297
+            },
+            {
+              "parent": "ablation-f1869b809b2d8ecc80bf686d7f44413efc4c94bab2d5f427bbd09068405e5615",
+              "child": "ablation-6b6c533454a85bef391917d5de9f47ca343302abfb3fbc139a04e9c40a832a4b",
+              "axis": "joint_byte_counts",
+              "value": 2048,
+              "phrase_index": 1,
+              "label": null,
+              "before": 0.8041,
+              "after": 0.7007
+            },
+            {
+              "parent": "ablation-f1869b809b2d8ecc80bf686d7f44413efc4c94bab2d5f427bbd09068405e5615",
+              "child": "ablation-11f358e4762949a753c24dbdd97745e5bcfd22a9239b96167103081a77d6d4f5",
+              "axis": "joint_byte_counts",
+              "value": 65536,
+              "phrase_index": 1,
+              "label": null,
+              "before": 0.8041,
+              "after": 0.6904
+            },
+            {
+              "parent": "ablation-7fb465c320a60bf36341f422442b20bdb3b47bece805e7d9ba353f277a1638bd",
+              "child": "ablation-328b611b94919d46b3cd4abae3e74e890abc145af5d793a80430fe229f506982",
+              "axis": "joint_byte_counts",
+              "value": 2048,
+              "phrase_index": 0,
+              "label": true,
+              "before": 0.9071,
+              "after": 0.7603
+            },
+            {
+              "parent": "ablation-7fb465c320a60bf36341f422442b20bdb3b47bece805e7d9ba353f277a1638bd",
+              "child": "ablation-e6094623d92798d45157c268d33e1c4fb98031466354a40f45375d50e23d89a9",
+              "axis": "joint_byte_counts",
+              "value": 65536,
+              "phrase_index": 0,
+              "label": true,
+              "before": 0.9071,
+              "after": 0.7832
+            },
+            {
+              "parent": "ablation-4629304c8afcbd25c249656714ced715e2916ed1b4aa4cec4e2d9a5a35685b78",
+              "child": "ablation-142d5e6af7886e5612296cee2ec6550b9644297740d2b2559269c11b2b4906a6",
+              "axis": "joint_byte_counts",
+              "value": 2048,
+              "phrase_index": 0,
+              "label": null,
+              "before": 0.7038,
+              "after": 0.8001
+            },
+            {
+              "parent": "ablation-29340831fdfdb3bb5ff68d1875f7dcd624f5ed3a56f5471585d1b82921fb17db",
+              "child": "ablation-531e09eb09fa0a5335deae515005b3e99cc19feb834a3e9076d7aa3e923a8da7",
+              "axis": "joint_byte_counts",
+              "value": 150,
+              "phrase_index": 1,
+              "label": null,
+              "before": 0.8492,
+              "after": 0.7387
+            },
+            {
+              "parent": "ablation-29340831fdfdb3bb5ff68d1875f7dcd624f5ed3a56f5471585d1b82921fb17db",
+              "child": "ablation-188a1a1ce820b419f4d25b7e38fefa010e441e79b676ee173a0939b99587fde4",
+              "axis": "joint_byte_counts",
+              "value": 2048,
+              "phrase_index": 1,
+              "label": null,
+              "before": 0.8492,
+              "after": 0.7042
+            },
+            {
+              "parent": "ablation-29340831fdfdb3bb5ff68d1875f7dcd624f5ed3a56f5471585d1b82921fb17db",
+              "child": "ablation-e9071c1ceb5d44fc4e0f9947a008b9235ec8dc585b8aac007fb67ba966f93523",
+              "axis": "joint_byte_counts",
+              "value": 65536,
+              "phrase_index": 1,
+              "label": null,
+              "before": 0.8492,
+              "after": 0.6809
+            },
+            {
+              "parent": "ablation-ccb2f864c8c02d6e527d598172f89db0be25d8fdb366f0454683ac91761e3a35",
+              "child": "ablation-a75dd943d1c1560df0ed0b9bc4a2e31e0011f2037c8f8a38e2a2fe3b2cde61c0",
+              "axis": "joint_byte_counts",
+              "value": 2048,
+              "phrase_index": 2,
+              "label": null,
+              "before": 0.7631,
+              "after": 0.8223
+            },
+            {
+              "parent": "ablation-ccb2f864c8c02d6e527d598172f89db0be25d8fdb366f0454683ac91761e3a35",
+              "child": "ablation-aa4a08ad393ace0edd54aab5b4864e83f14c18fc6ef7da57cb4452b4ec4f294a",
+              "axis": "joint_byte_counts",
+              "value": 65536,
+              "phrase_index": 2,
+              "label": null,
+              "before": 0.7631,
+              "after": 0.8288
+            }
+          ]
+        }
+      }
+    },
+    "v1": {
+      "checkpoint_sha256": "eefb252d471a4b924311e4977ce431090c50d3d5160f611de4608456d9ad59eb",
+      "overall": {
+        "n": 336,
+        "labeled": 224,
+        "accepted": 192,
+        "negative_labels": 112,
+        "positive_labels": 112,
+        "coverage": 0.8571428571428571,
+        "selective_accuracy": 0.5520833333333334,
+        "accuracy_at_0_5": 0.53125,
+        "false_allow": 69,
+        "false_decline": 17,
+        "false_allow_rate": 0.6160714285714286,
+        "false_decline_rate": 0.15178571428571427,
+        "brier": 0.41446246629464306,
+        "unknown_cases": 112,
+        "unknown_non_abstention": 103
+      },
+      "by_tool_language": {
+        "edit_file/en": {
+          "n": 168,
+          "labeled": 112,
+          "accepted": 93,
+          "negative_labels": 56,
+          "positive_labels": 56,
+          "coverage": 0.8303571428571429,
+          "selective_accuracy": 0.5376344086021505,
+          "accuracy_at_0_5": 0.5267857142857143,
+          "false_allow": 40,
+          "false_decline": 3,
+          "false_allow_rate": 0.7142857142857143,
+          "false_decline_rate": 0.05357142857142857,
+          "brier": 0.40876347026785737,
+          "unknown_cases": 56,
+          "unknown_non_abstention": 56
+        },
+        "edit_file/zh": {
+          "n": 168,
+          "labeled": 112,
+          "accepted": 99,
+          "negative_labels": 56,
+          "positive_labels": 56,
+          "coverage": 0.8839285714285714,
+          "selective_accuracy": 0.5656565656565656,
+          "accuracy_at_0_5": 0.5357142857142857,
+          "false_allow": 29,
+          "false_decline": 14,
+          "false_allow_rate": 0.5178571428571429,
+          "false_decline_rate": 0.25,
+          "brier": 0.42016146232142865,
+          "unknown_cases": 56,
+          "unknown_non_abstention": 47
+        }
+      },
+      "by_axis": {
+        "joint_byte_counts": {
+          "pairs": 288,
+          "answer_flips": 13,
+          "transitions": {
+            "False->None": 7,
+            "False->False": 34,
+            "True->True": 214,
+            "True->None": 2,
+            "None->None": 27,
+            "None->False": 1,
+            "None->True": 2,
+            "False->True": 1
+          },
+          "mean_absolute_probability_shift": 0.030973611111111084,
+          "max_absolute_probability_shift": 0.7392,
+          "flips": [
+            {
+              "parent": "ablation-024adeab13f8613691cba86effb18fc4d54c1a71333e370560d886fd6fa96d79",
+              "child": "ablation-6f4761033e02eee2362a333d998dba5e800960985ba1cf1e2f15203b96220abf",
+              "axis": "joint_byte_counts",
+              "value": 1,
+              "phrase_index": 0,
+              "label": true,
+              "before": 0.1625,
+              "after": 0.5484
+            },
+            {
+              "parent": "ablation-024adeab13f8613691cba86effb18fc4d54c1a71333e370560d886fd6fa96d79",
+              "child": "ablation-7ffd27b301d48ddbea331dcd85764647b8dd4b469f0589d1d289dc1791349b15",
+              "axis": "joint_byte_counts",
+              "value": 62,
+              "phrase_index": 0,
+              "label": true,
+              "before": 0.1625,
+              "after": 0.2976
+            },
+            {
+              "parent": "ablation-024adeab13f8613691cba86effb18fc4d54c1a71333e370560d886fd6fa96d79",
+              "child": "ablation-2f4878fdb6c0bfd4235335143d2aed81ff0f02088514a4dfc111b9c239b4e501",
+              "axis": "joint_byte_counts",
+              "value": 150,
+              "phrase_index": 0,
+              "label": true,
+              "before": 0.1625,
+              "after": 0.267
+            },
+            {
+              "parent": "ablation-024adeab13f8613691cba86effb18fc4d54c1a71333e370560d886fd6fa96d79",
+              "child": "ablation-96d890be7dafdd949c6bf3f51be2fcc2a53c4ecb62889f560d9af6884efaa1a7",
+              "axis": "joint_byte_counts",
+              "value": 2048,
+              "phrase_index": 0,
+              "label": true,
+              "before": 0.1625,
+              "after": 0.274
+            },
+            {
+              "parent": "ablation-6dd042195f3b97e9d2ae0cd49a6475173aee33eafbef3ffe56603e00dfcedc96",
+              "child": "ablation-f84b7c012f9da63145110a93f2748d452df7193cfff4879ba4e20407d3a54ec4",
+              "axis": "joint_byte_counts",
+              "value": 150,
+              "phrase_index": 1,
+              "label": false,
+              "before": 0.8783,
+              "after": 0.673
+            },
+            {
+              "parent": "ablation-d38dc06ed00a8d7c420c0eb2041431494268b0068f88cdd69004d4e34f6d5ef4",
+              "child": "ablation-5f2b795c748b93beb28591153f48c72152c101e5b38d92106dfdb8911fe8fc2d",
+              "axis": "joint_byte_counts",
+              "value": 62,
+              "phrase_index": 3,
+              "label": false,
+              "before": 0.2896,
+              "after": 0.1983
+            },
+            {
+              "parent": "ablation-3022ac88d7c4d614e275d00d732f86ff8817dd0c4aaa999422287b3d074ad7ea",
+              "child": "ablation-3e852fef7da30f6b7c394cf04cc82100c7eee7f3a0984ccfd63aa53c93fb10fd",
+              "axis": "joint_byte_counts",
+              "value": 65536,
+              "phrase_index": 1,
+              "label": false,
+              "before": 0.6519,
+              "after": 0.8783
+            },
+            {
+              "parent": "ablation-bd683e281edff387ad25df779489168f6aca2a5fcfd6e6b1a77ff970888c4c12",
+              "child": "ablation-ff99858ddfe306f98f07621319baf7ff727b82550be68fb7f1037f189713e6ce",
+              "axis": "joint_byte_counts",
+              "value": 1,
+              "phrase_index": 3,
+              "label": null,
+              "before": 0.69,
+              "after": 0.9301
+            },
+            {
+              "parent": "ablation-0901d86cac41afe641d8132abbefbeb9f269f7aa15fcc90212facd8f7c1fdce0",
+              "child": "ablation-1cd7dc7204b3b8d37f1ae49afb504d5a7819c1edec9838c45a25dcd0b45cf4ed",
+              "axis": "joint_byte_counts",
+              "value": 150,
+              "phrase_index": 1,
+              "label": false,
+              "before": 0.8679,
+              "after": 0.7809
+            },
+            {
+              "parent": "ablation-744194de3b1d3875eed8d69a1169d43c8c3a650a29e247200d7460d153ef47c9",
+              "child": "ablation-0e9f558ad51a7a1ede40157517e18181bbe7914d044bf3a3a16ebbd2b1cffd15",
+              "axis": "joint_byte_counts",
+              "value": 1,
+              "phrase_index": 3,
+              "label": null,
+              "before": 0.1251,
+              "after": 0.8643
+            },
+            {
+              "parent": "ablation-744194de3b1d3875eed8d69a1169d43c8c3a650a29e247200d7460d153ef47c9",
+              "child": "ablation-58706da7cb28286a9dd545a82a12f4ba9a73ad09f5937150f74472edf7a8a2a2",
+              "axis": "joint_byte_counts",
+              "value": 16,
+              "phrase_index": 3,
+              "label": null,
+              "before": 0.1251,
+              "after": 0.2191
+            },
+            {
+              "parent": "ablation-744194de3b1d3875eed8d69a1169d43c8c3a650a29e247200d7460d153ef47c9",
+              "child": "ablation-00178947773dd7b96628b6de3fc9637655f8fd4f519b91f7d36b9e17eae234e6",
+              "axis": "joint_byte_counts",
+              "value": 150,
+              "phrase_index": 3,
+              "label": null,
+              "before": 0.1251,
+              "after": 0.2218
+            },
+            {
+              "parent": "ablation-744194de3b1d3875eed8d69a1169d43c8c3a650a29e247200d7460d153ef47c9",
+              "child": "ablation-b5a5d556b701d71b1bc33c9a6cf985ad2d8c4a822e4d2db0ded435d6db4063e1",
+              "axis": "joint_byte_counts",
+              "value": 65536,
+              "phrase_index": 3,
+              "label": null,
+              "before": 0.1251,
+              "after": 0.7033
+            }
+          ]
+        }
+      }
+    },
+    "mixed": {
+      "checkpoint_sha256": "1bf7cd28e32d2fef39299ac291362ec71b9d281a4c48b02e8b0c1580ae13c195",
+      "overall": {
+        "n": 336,
+        "labeled": 224,
+        "accepted": 210,
+        "negative_labels": 112,
+        "positive_labels": 112,
+        "coverage": 0.9375,
+        "selective_accuracy": 0.6666666666666666,
+        "accuracy_at_0_5": 0.6875,
+        "false_allow": 70,
+        "false_decline": 0,
+        "false_allow_rate": 0.625,
+        "false_decline_rate": 0.0,
+        "brier": 0.3184568295535718,
+        "unknown_cases": 112,
+        "unknown_non_abstention": 0
+      },
+      "by_tool_language": {
+        "edit_file/en": {
+          "n": 168,
+          "labeled": 112,
+          "accepted": 98,
+          "negative_labels": 56,
+          "positive_labels": 56,
+          "coverage": 0.875,
+          "selective_accuracy": 0.7142857142857143,
+          "accuracy_at_0_5": 0.75,
+          "false_allow": 28,
+          "false_decline": 0,
+          "false_allow_rate": 0.5,
+          "false_decline_rate": 0.0,
+          "brier": 0.26196365383928594,
+          "unknown_cases": 56,
+          "unknown_non_abstention": 0
+        },
+        "edit_file/zh": {
+          "n": 168,
+          "labeled": 112,
+          "accepted": 112,
+          "negative_labels": 56,
+          "positive_labels": 56,
+          "coverage": 1.0,
+          "selective_accuracy": 0.625,
+          "accuracy_at_0_5": 0.625,
+          "false_allow": 42,
+          "false_decline": 0,
+          "false_allow_rate": 0.75,
+          "false_decline_rate": 0.0,
+          "brier": 0.3749500052678574,
+          "unknown_cases": 56,
+          "unknown_non_abstention": 0
+        }
+      },
+      "by_axis": {
+        "joint_byte_counts": {
+          "pairs": 288,
+          "answer_flips": 0,
+          "transitions": {
+            "True->True": 156,
+            "False->False": 24,
+            "None->None": 108
+          },
+          "mean_absolute_probability_shift": 0.0051243055555555556,
+          "max_absolute_probability_shift": 0.14090000000000003,
+          "flips": []
+        }
+      }
+    }
+  }
+}

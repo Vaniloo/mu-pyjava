@@ -182,3 +182,24 @@ have no model predictions and no filled gold labels; independent human review re
 Software gate:**204 tests,203 passed, native PowerShell skipped**. Original weights unchanged;
 temporary service/tunnel stopped. See[results-intent-mixed.md](../training/results-intent-mixed.md).
 GitHub:[milestone16](https://github.com/Vaniloo/mu-pyjava/issues/16).
+
+## Milestone 17 — intent factor diagnosis and original-base comparison
+
+Frozen1,164 balanced diagnostic states from four inspected file-action seeds, with wording,
+coherent path, byte/count/fuzzy interventions. Separate post-inspection joint-size extension:
+336 states,288 pairs. Their union has1,452 unique states;96 distinct requests in the primary
+set include only eight unknown strings. Constructed labels are not independent human gold.
+
+Recovered the pinned original Laya into a new lab directory, verified revision blob identities,
+and compared original/v1/mixed actual serving under identical criteria and0.2/0.8 thresholds,
+retaining shipped temperatures. Primary negative false allows:292/388,272/388,210/388;
+unknown abstentions:249/388,19/388,388/388. Mixed still fails badly on diagnostic read-only cases.
+Equivalent phrasing changes an edit from .9999 wrong allow to .0096 correct decline; joint
+sizes1..65,536 yield0/288 mixed answer flips and preserve the inspected wrong allow. Wording
+and path effects are observed; a unique internal cause is not established.
+
+Retained hashes verified unchanged, all measured sequences fit512 tokens, predictions/paired
+transitions/runtime provenance published. No training or promotion; pending independent labels
+remain unfilled. Software gate:**210 tests,209 passed,1 native PowerShell skip**. See
+[diagnosis and next training work](../training/results-intent-ablation.md).
+GitHub:[milestone17](https://github.com/Vaniloo/mu-pyjava/issues/17).
