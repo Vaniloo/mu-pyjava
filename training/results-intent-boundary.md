@@ -1,5 +1,8 @@
 # Blind intake and focused boundary diagnostics — milestone 19
 
+**2026-09-29 correction:** milestone 21 found 18/72 boundary states assign shell syntax/builtins to direct `run_command`. The original numbers below remain historical diagnostics; they do not establish model quality on valid tool contracts. See [audit and correction](results-intent-semantic.md).
+
+
 Completed 2026-09-29. No retraining, calibration change, threshold change or
 checkpoint promotion. Both retained models remain shadow-only `tool.intent` Laya
 proxies for Jev. No Java or runtime permission policy changed.

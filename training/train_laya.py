@@ -20,6 +20,7 @@ from mupyjava.judge_samples import digest
 from mupyjava.judge import LayaBooleanJudge
 from evaluate_intent import metrics as serving_metrics
 from intent_targets import target_probability
+from tool_state_audit import require_command_states
 from training_design import audit_design, design_weights, load_design, ValidationStop
 
 
@@ -140,6 +141,8 @@ def main():
     if design and not versioned:
         raise ValueError("Training design requires a versioned frozen dataset")
     design_audit = audit_design(rows, design, Path(__file__).resolve().parents[1]) if design else None
+    if design:
+        require_command_states(rows)
     manual_rows = read_rows(args.manual_eval)
     if not manual_rows or any(type(row.get("label")) is not bool for row in manual_rows):
         raise ValueError("Manual regression set must contain Boolean labels")

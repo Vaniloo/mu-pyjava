@@ -291,3 +291,24 @@ is pending fresh data and the prescribed comparison. See
 [training design](../training/TRAINING_DESIGN.md) and
 [results and limitations](../training/results-training-design.md).
 GitHub: [milestone 20](https://github.com/Vaniloo/mu-pyjava/issues/20).
+
+
+## Milestone 21 — semantic pilot, rejected and audited
+
+Ran both prescribed arms on one frozen 664-row dataset (520 train, 48 each
+validation/calibration/test), including 136 fresh teacher training rows and 384
+historical rehearsal rows. Both stopped after epoch 2 and selected epoch 1.
+Neither supports promotion: known-case coverage fell to 13/32, with 19 abstentions.
+
+Post-training review found 25 tool-contract-inconsistent rows: shell syntax or
+builtins assigned to the shell-free run_command transport. The pilot is invalid
+for model-quality claims. Original data and predictions remain unchanged. A new
+preflight rejects such inputs before weights load; future templates use bash for
+shell actions. The old boundary set also contains 18 affected rows and its report
+now carries a correction. Teacher review alone was insufficient.
+
+235 software tests (234 passed, one platform skip), three Torch CPU tests and Java
+compile/smoke passed. Retained checkpoints/configs unchanged; both candidates are
+diagnostic only. Next: fresh valid harness states and independent evaluation
+families, protecting this inspected pilot. See [full results](../training/results-intent-semantic.md).
+GitHub: [milestone 21](https://github.com/Vaniloo/mu-pyjava/issues/21).

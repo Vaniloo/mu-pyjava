@@ -1,0 +1,278 @@
+{
+  "status": "invalid_for_model_quality_claims",
+  "found_after_training": true,
+  "data_unchanged": true,
+  "issues": [
+    {
+      "sample_id": "7a208e5c5c04c6eb822d1271e600ee3d",
+      "family": "authored/validation/compound_git",
+      "split": "validation",
+      "issue": "shell_syntax_without_shell"
+    },
+    {
+      "sample_id": "74aeeab6edc13c726c0d7f1df759b9cc",
+      "family": "authored/validation/compound_git",
+      "split": "validation",
+      "issue": "shell_syntax_without_shell"
+    },
+    {
+      "sample_id": "692bb778c86b1639ded3e5c90ae35001",
+      "family": "authored/validation/compound_git",
+      "split": "validation",
+      "issue": "shell_syntax_without_shell"
+    },
+    {
+      "sample_id": "48f286b35bcd036f6b36590a5fc62816",
+      "family": "authored/validation/compound_git",
+      "split": "validation",
+      "issue": "shell_syntax_without_shell"
+    },
+    {
+      "sample_id": "60d441ed11826e144db1305c67dcf4e3",
+      "family": "authored/validation/compound_git",
+      "split": "validation",
+      "issue": "shell_syntax_without_shell"
+    },
+    {
+      "sample_id": "1e2136542c7ea4dcdfbf8d85a12e4864",
+      "family": "authored/validation/compound_git",
+      "split": "validation",
+      "issue": "shell_syntax_without_shell"
+    },
+    {
+      "sample_id": "06ed267a1e5d3423bb5421da92a00523",
+      "family": "authored/calibration/lookup_rust",
+      "split": "calibration",
+      "issue": "shell_builtin_without_shell"
+    },
+    {
+      "sample_id": "fb12acc2d3159a3a1bb499365bd88e69",
+      "family": "authored/calibration/lookup_rust",
+      "split": "calibration",
+      "issue": "shell_builtin_without_shell"
+    },
+    {
+      "sample_id": "43c9fcd9f3bf5cfca9daecf521bea306",
+      "family": "authored/calibration/lookup_rust",
+      "split": "calibration",
+      "issue": "shell_builtin_without_shell"
+    },
+    {
+      "sample_id": "259763c1930a5b2a9760d729dcf5ef77",
+      "family": "authored/calibration/lookup_rust",
+      "split": "calibration",
+      "issue": "shell_builtin_without_shell"
+    },
+    {
+      "sample_id": "5cbbff79c2d275cda7251ad95e4fc1de",
+      "family": "authored/calibration/lookup_rust",
+      "split": "calibration",
+      "issue": "shell_builtin_without_shell"
+    },
+    {
+      "sample_id": "b029e3c1239a05d336b2d6b0fdaa8efd",
+      "family": "authored/calibration/lookup_rust",
+      "split": "calibration",
+      "issue": "shell_builtin_without_shell"
+    },
+    {
+      "sample_id": "2ab7f25611191130cce3272fa3ee46a6",
+      "family": "authored/test/compound_cleanup",
+      "split": "test",
+      "issue": "shell_syntax_without_shell"
+    },
+    {
+      "sample_id": "66d907a51ff3cd9c8e9fd066e5f64ae8",
+      "family": "authored/test/compound_cleanup",
+      "split": "test",
+      "issue": "shell_syntax_without_shell"
+    },
+    {
+      "sample_id": "2171b08665dc220da8036e151647469d",
+      "family": "authored/test/compound_cleanup",
+      "split": "test",
+      "issue": "shell_syntax_without_shell"
+    },
+    {
+      "sample_id": "5764fd03c32fa6ca95b8f6cd2bd16690",
+      "family": "authored/test/compound_cleanup",
+      "split": "test",
+      "issue": "shell_syntax_without_shell"
+    },
+    {
+      "sample_id": "089b8a7e12875429495ddbe838f2c3d4",
+      "family": "authored/test/compound_cleanup",
+      "split": "test",
+      "issue": "shell_syntax_without_shell"
+    },
+    {
+      "sample_id": "47f120bb858bc1ec42e28f78968fe86d",
+      "family": "authored/test/compound_cleanup",
+      "split": "test",
+      "issue": "shell_syntax_without_shell"
+    },
+    {
+      "sample_id": "5192be3956dbc1c4984ee5e68969270f",
+      "family": "teacher/command/05",
+      "split": "train",
+      "issue": "shell_builtin_without_shell"
+    },
+    {
+      "sample_id": "03d9fc7df7937e9db3144462378724dc",
+      "family": "teacher/command/05",
+      "split": "train",
+      "issue": "shell_builtin_without_shell"
+    },
+    {
+      "sample_id": "0d980130a1b86e44b0f0c71e2f379707",
+      "family": "teacher/command/05",
+      "split": "train",
+      "issue": "shell_builtin_without_shell"
+    },
+    {
+      "sample_id": "c37ac083647c948ba5ce94b086169f23",
+      "family": "teacher/command/05",
+      "split": "train",
+      "issue": "shell_builtin_without_shell"
+    },
+    {
+      "sample_id": "a7b5e6944a0df2dce3424f5763aa8e93",
+      "family": "teacher/command/05",
+      "split": "train",
+      "issue": "shell_builtin_without_shell"
+    },
+    {
+      "sample_id": "4d4865e38741e40c959bfb576cc84525",
+      "family": "teacher/command/05",
+      "split": "train",
+      "issue": "shell_builtin_without_shell"
+    },
+    {
+      "sample_id": "8ecba9c4da82197d3010d22f0bcc2649",
+      "family": "rehearsal/rehearsal/semantic/command/check-00",
+      "split": "train",
+      "issue": "shell_syntax_without_shell"
+    }
+  ],
+  "counts_by_split": {
+    "validation": 6,
+    "calibration": 6,
+    "test": 6,
+    "train": 7
+  },
+  "action": "Preserve raw experiment; require corrected transport semantics before any next training. No promotion.",
+  "historical_diagnostics": {
+    "training/datasets/intent-boundary-r1/cases.jsonl": [
+      {
+        "sample_id": "35673952acf2d84c94b30f42cf5f954f",
+        "family": "boundary/prerequisite_java",
+        "split": "diagnostic",
+        "issue": "shell_builtin_without_shell"
+      },
+      {
+        "sample_id": "1dd5e7b6bd4b41dc51fd26d6c3eead41",
+        "family": "boundary/prerequisite_java",
+        "split": "diagnostic",
+        "issue": "shell_builtin_without_shell"
+      },
+      {
+        "sample_id": "dcfd90945b863499f8e9dba0cec0c166",
+        "family": "boundary/prerequisite_java",
+        "split": "diagnostic",
+        "issue": "shell_builtin_without_shell"
+      },
+      {
+        "sample_id": "0c84ff9738acc2a3fab2712007f1c240",
+        "family": "boundary/prerequisite_java",
+        "split": "diagnostic",
+        "issue": "shell_builtin_without_shell"
+      },
+      {
+        "sample_id": "43860867c8a42fe94e7b99d644e59f50",
+        "family": "boundary/prerequisite_java",
+        "split": "diagnostic",
+        "issue": "shell_builtin_without_shell"
+      },
+      {
+        "sample_id": "198eeee4c7f293d7e434882c6d149c3b",
+        "family": "boundary/prerequisite_java",
+        "split": "diagnostic",
+        "issue": "shell_builtin_without_shell"
+      },
+      {
+        "sample_id": "464b42d8f51ce7d020d7f166ecbfd41b",
+        "family": "boundary/compound_java",
+        "split": "diagnostic",
+        "issue": "shell_syntax_without_shell"
+      },
+      {
+        "sample_id": "3b292b98e77142eab1b55915767b5017",
+        "family": "boundary/compound_java",
+        "split": "diagnostic",
+        "issue": "shell_syntax_without_shell"
+      },
+      {
+        "sample_id": "2dcb659af962bc3499f896d7b14237a7",
+        "family": "boundary/compound_java",
+        "split": "diagnostic",
+        "issue": "shell_syntax_without_shell"
+      },
+      {
+        "sample_id": "8f64fd3fca565f758ce6c7c2793205f0",
+        "family": "boundary/compound_java",
+        "split": "diagnostic",
+        "issue": "shell_syntax_without_shell"
+      },
+      {
+        "sample_id": "bdb1598e4b57057720eefb755a4ae70c",
+        "family": "boundary/compound_java",
+        "split": "diagnostic",
+        "issue": "shell_syntax_without_shell"
+      },
+      {
+        "sample_id": "80c7cd584da7476e1b7b1e331663e851",
+        "family": "boundary/compound_java",
+        "split": "diagnostic",
+        "issue": "shell_syntax_without_shell"
+      },
+      {
+        "sample_id": "32581fe1682652dfc26dda16356ced70",
+        "family": "boundary/compound_go",
+        "split": "diagnostic",
+        "issue": "shell_syntax_without_shell"
+      },
+      {
+        "sample_id": "0d1a0507cf657c25e10325654189451e",
+        "family": "boundary/compound_go",
+        "split": "diagnostic",
+        "issue": "shell_syntax_without_shell"
+      },
+      {
+        "sample_id": "63df811ea480e130d9d90a8bc5c65471",
+        "family": "boundary/compound_go",
+        "split": "diagnostic",
+        "issue": "shell_syntax_without_shell"
+      },
+      {
+        "sample_id": "d8a1bdf47c7536391088ce471d8bc382",
+        "family": "boundary/compound_go",
+        "split": "diagnostic",
+        "issue": "shell_syntax_without_shell"
+      },
+      {
+        "sample_id": "6899e5836e6bef6f39525d08bd85327d",
+        "family": "boundary/compound_go",
+        "split": "diagnostic",
+        "issue": "shell_syntax_without_shell"
+      },
+      {
+        "sample_id": "aa9faf422b270a7e503cd5c5cebb5938",
+        "family": "boundary/compound_go",
+        "split": "diagnostic",
+        "issue": "shell_syntax_without_shell"
+      }
+    ],
+    "training/scope_challenge.jsonl": [],
+    "training/manual_eval.jsonl": []
+  }
+}

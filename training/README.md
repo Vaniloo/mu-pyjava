@@ -1,5 +1,7 @@
 # Tool-intent judge experiment
 
+Latest: [semantic pilot results and data-contract correction](results-intent-semantic.md). Both arms completed; the frozen pilot is invalid for quality claims and current preflight intentionally rejects it.
+
 For new experiments, use the [revised semantic training design](TRAINING_DESIGN.md) and its `--design` preflight. The original commands below document historical runs. See the [implemented changes and capability comparison](results-training-design.md).
 
 TypeSafe Jev is a hosted model and mu does not provide its weights. This experiment fine-tunes the Apache-2.0 [Laya multilingual checkpoint](https://huggingface.co/convaiinnovations/laya-multilingual) for the first mu-pyjava decision point, `tool.intent`.

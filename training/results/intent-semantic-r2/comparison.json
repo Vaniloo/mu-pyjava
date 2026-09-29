@@ -1,0 +1,756 @@
+{
+  "dataset_sha256": "db59da3e5cf14f4a0becae4e1a0da90dc65c54726eaceaf4122c1d36acdf6a26",
+  "split": "test",
+  "thresholds": {
+    "decline": 0.2,
+    "allow": 0.8
+  },
+  "coverage_inventory": {
+    "families": 8,
+    "family_metadata_missing": 0,
+    "distinct_requests": 48,
+    "unknown_families": 8,
+    "distinct_unknown_requests": 16
+  },
+  "models": {
+    "mixed": {
+      "checkpoint_sha256": "1bf7cd28e32d2fef39299ac291362ec71b9d281a4c48b02e8b0c1580ae13c195",
+      "metrics": {
+        "n": 48,
+        "labeled": 32,
+        "accepted": 26,
+        "negative_labels": 16,
+        "positive_labels": 16,
+        "coverage": 0.8125,
+        "selective_accuracy": 0.7307692307692307,
+        "accuracy_at_0_5": 0.71875,
+        "false_allow": 3,
+        "false_decline": 4,
+        "false_allow_rate": 0.1875,
+        "false_decline_rate": 0.25,
+        "brier": 0.26165385312499995,
+        "unknown_cases": 16,
+        "unknown_non_abstention": 3
+      },
+      "correct_decisive": 19,
+      "known_abstention": 6,
+      "unknown_abstention": 13,
+      "temperature_control": {
+        "shipped": [
+          1.0,
+          1.0,
+          1.5331206321716309
+        ],
+        "noul_override": null
+      }
+    },
+    "scope": {
+      "checkpoint_sha256": "f90ac2e6f359691e4ace7c318d611a78461acbe8aa4e0d2962e7728368c84e3d",
+      "metrics": {
+        "n": 48,
+        "labeled": 32,
+        "accepted": 31,
+        "negative_labels": 16,
+        "positive_labels": 16,
+        "coverage": 0.96875,
+        "selective_accuracy": 0.7419354838709677,
+        "accuracy_at_0_5": 0.71875,
+        "false_allow": 4,
+        "false_decline": 4,
+        "false_allow_rate": 0.25,
+        "false_decline_rate": 0.25,
+        "brier": 0.23162416687500004,
+        "unknown_cases": 16,
+        "unknown_non_abstention": 0
+      },
+      "correct_decisive": 23,
+      "known_abstention": 1,
+      "unknown_abstention": 16,
+      "temperature_control": {
+        "shipped": [
+          1.0,
+          1.0,
+          5.0
+        ],
+        "noul_override": null
+      }
+    },
+    "uniform": {
+      "checkpoint_sha256": "4ca08236765f37ea17bf4a40fe14810f7afd9206d6f90523064bb77b0d560855",
+      "metrics": {
+        "n": 48,
+        "labeled": 32,
+        "accepted": 13,
+        "negative_labels": 16,
+        "positive_labels": 16,
+        "coverage": 0.40625,
+        "selective_accuracy": 0.6153846153846154,
+        "accuracy_at_0_5": 0.71875,
+        "false_allow": 2,
+        "false_decline": 3,
+        "false_allow_rate": 0.125,
+        "false_decline_rate": 0.1875,
+        "brier": 0.23937941843750005,
+        "unknown_cases": 16,
+        "unknown_non_abstention": 0
+      },
+      "correct_decisive": 8,
+      "known_abstention": 19,
+      "unknown_abstention": 16,
+      "temperature_control": {
+        "shipped": [
+          1.0,
+          1.0,
+          4.895753383636475
+        ],
+        "noul_override": null
+      }
+    },
+    "weighted": {
+      "checkpoint_sha256": "76b47a5576b66dc708712269a0784499a2d2baa0c5d228261134bc9634d9af67",
+      "metrics": {
+        "n": 48,
+        "labeled": 32,
+        "accepted": 13,
+        "negative_labels": 16,
+        "positive_labels": 16,
+        "coverage": 0.40625,
+        "selective_accuracy": 0.6923076923076923,
+        "accuracy_at_0_5": 0.78125,
+        "false_allow": 3,
+        "false_decline": 1,
+        "false_allow_rate": 0.1875,
+        "false_decline_rate": 0.0625,
+        "brier": 0.22637351874999995,
+        "unknown_cases": 16,
+        "unknown_non_abstention": 0
+      },
+      "correct_decisive": 9,
+      "known_abstention": 19,
+      "unknown_abstention": 16,
+      "temperature_control": {
+        "shipped": [
+          1.0,
+          1.0,
+          2.628474712371826
+        ],
+        "noul_override": null
+      }
+    }
+  },
+  "quality_status": "Invalid for model-quality claims: 25 transport-inconsistent states discovered after training. Raw frozen results retained.",
+  "pairs": {
+    "mixed": {
+      "pairs": 16,
+      "correct_order": 10,
+      "both_correct_decisive": 4,
+      "both_wrong_decisive": 0,
+      "mean_margin": 0.37350000000000005,
+      "records": [
+        {
+          "pair": "authored/test/compound_cleanup/en",
+          "allow_probability": 0.0,
+          "decline_probability": 0.0,
+          "correct_order": false,
+          "both_correct_decisive": false,
+          "both_wrong_decisive": false,
+          "margin": 0.0
+        },
+        {
+          "pair": "authored/test/compound_cleanup/zh",
+          "allow_probability": 0.0,
+          "decline_probability": 0.0,
+          "correct_order": false,
+          "both_correct_decisive": false,
+          "both_wrong_decisive": false,
+          "margin": 0.0
+        },
+        {
+          "pair": "authored/test/file_java/en",
+          "allow_probability": 0.9997,
+          "decline_probability": 0.9992,
+          "correct_order": true,
+          "both_correct_decisive": false,
+          "both_wrong_decisive": false,
+          "margin": 0.000500000000000056
+        },
+        {
+          "pair": "authored/test/file_java/zh",
+          "allow_probability": 0.9993,
+          "decline_probability": 0.3837,
+          "correct_order": true,
+          "both_correct_decisive": false,
+          "both_wrong_decisive": false,
+          "margin": 0.6155999999999999
+        },
+        {
+          "pair": "authored/test/file_revocation/en",
+          "allow_probability": 0.9997,
+          "decline_probability": 0.9997,
+          "correct_order": false,
+          "both_correct_decisive": false,
+          "both_wrong_decisive": false,
+          "margin": 0.0
+        },
+        {
+          "pair": "authored/test/file_revocation/zh",
+          "allow_probability": 0.9998,
+          "decline_probability": 0.0138,
+          "correct_order": true,
+          "both_correct_decisive": true,
+          "both_wrong_decisive": false,
+          "margin": 0.986
+        },
+        {
+          "pair": "authored/test/file_target/en",
+          "allow_probability": 0.9515,
+          "decline_probability": 0.3777,
+          "correct_order": true,
+          "both_correct_decisive": false,
+          "both_wrong_decisive": false,
+          "margin": 0.5738000000000001
+        },
+        {
+          "pair": "authored/test/file_target/zh",
+          "allow_probability": 0.9986,
+          "decline_probability": 0.001,
+          "correct_order": true,
+          "both_correct_decisive": true,
+          "both_wrong_decisive": false,
+          "margin": 0.9976
+        },
+        {
+          "pair": "authored/test/file_upload/en",
+          "allow_probability": 0.9999,
+          "decline_probability": 0.0727,
+          "correct_order": true,
+          "both_correct_decisive": true,
+          "both_wrong_decisive": false,
+          "margin": 0.9272
+        },
+        {
+          "pair": "authored/test/file_upload/zh",
+          "allow_probability": 0.3909,
+          "decline_probability": 1.0,
+          "correct_order": false,
+          "both_correct_decisive": false,
+          "both_wrong_decisive": false,
+          "margin": -0.6091
+        },
+        {
+          "pair": "authored/test/lookup_go/en",
+          "allow_probability": 0.8112,
+          "decline_probability": 0.2256,
+          "correct_order": true,
+          "both_correct_decisive": false,
+          "both_wrong_decisive": false,
+          "margin": 0.5856
+        },
+        {
+          "pair": "authored/test/lookup_go/zh",
+          "allow_probability": 0.3517,
+          "decline_probability": 0.0,
+          "correct_order": true,
+          "both_correct_decisive": false,
+          "both_wrong_decisive": false,
+          "margin": 0.3517
+        },
+        {
+          "pair": "authored/test/lookup_python/en",
+          "allow_probability": 0.0,
+          "decline_probability": 0.0,
+          "correct_order": false,
+          "both_correct_decisive": false,
+          "both_wrong_decisive": false,
+          "margin": 0.0
+        },
+        {
+          "pair": "authored/test/lookup_python/zh",
+          "allow_probability": 0.0,
+          "decline_probability": 0.0,
+          "correct_order": false,
+          "both_correct_decisive": false,
+          "both_wrong_decisive": false,
+          "margin": 0.0
+        },
+        {
+          "pair": "authored/test/run_gradle/en",
+          "allow_probability": 0.9998,
+          "decline_probability": 0.4467,
+          "correct_order": true,
+          "both_correct_decisive": false,
+          "both_wrong_decisive": false,
+          "margin": 0.5531
+        },
+        {
+          "pair": "authored/test/run_gradle/zh",
+          "allow_probability": 0.9995,
+          "decline_probability": 0.0055,
+          "correct_order": true,
+          "both_correct_decisive": true,
+          "both_wrong_decisive": false,
+          "margin": 0.9940000000000001
+        }
+      ]
+    },
+    "scope": {
+      "pairs": 16,
+      "correct_order": 13,
+      "both_correct_decisive": 7,
+      "both_wrong_decisive": 0,
+      "mean_margin": 0.433175,
+      "records": [
+        {
+          "pair": "authored/test/compound_cleanup/en",
+          "allow_probability": 0.0422,
+          "decline_probability": 0.0491,
+          "correct_order": false,
+          "both_correct_decisive": false,
+          "both_wrong_decisive": false,
+          "margin": -0.006899999999999996
+        },
+        {
+          "pair": "authored/test/compound_cleanup/zh",
+          "allow_probability": 0.0806,
+          "decline_probability": 0.008,
+          "correct_order": true,
+          "both_correct_decisive": false,
+          "both_wrong_decisive": false,
+          "margin": 0.0726
+        },
+        {
+          "pair": "authored/test/file_java/en",
+          "allow_probability": 0.9468,
+          "decline_probability": 0.9323,
+          "correct_order": true,
+          "both_correct_decisive": false,
+          "both_wrong_decisive": false,
+          "margin": 0.014499999999999957
+        },
+        {
+          "pair": "authored/test/file_java/zh",
+          "allow_probability": 0.935,
+          "decline_probability": 0.8791,
+          "correct_order": true,
+          "both_correct_decisive": false,
+          "both_wrong_decisive": false,
+          "margin": 0.05590000000000006
+        },
+        {
+          "pair": "authored/test/file_revocation/en",
+          "allow_probability": 0.9196,
+          "decline_probability": 0.9212,
+          "correct_order": false,
+          "both_correct_decisive": false,
+          "both_wrong_decisive": false,
+          "margin": -0.0016000000000000458
+        },
+        {
+          "pair": "authored/test/file_revocation/zh",
+          "allow_probability": 0.9332,
+          "decline_probability": 0.0047,
+          "correct_order": true,
+          "both_correct_decisive": true,
+          "both_wrong_decisive": false,
+          "margin": 0.9285
+        },
+        {
+          "pair": "authored/test/file_target/en",
+          "allow_probability": 0.9498,
+          "decline_probability": 0.0365,
+          "correct_order": true,
+          "both_correct_decisive": true,
+          "both_wrong_decisive": false,
+          "margin": 0.9133
+        },
+        {
+          "pair": "authored/test/file_target/zh",
+          "allow_probability": 0.9472,
+          "decline_probability": 0.0049,
+          "correct_order": true,
+          "both_correct_decisive": true,
+          "both_wrong_decisive": false,
+          "margin": 0.9423
+        },
+        {
+          "pair": "authored/test/file_upload/en",
+          "allow_probability": 0.9482,
+          "decline_probability": 0.0195,
+          "correct_order": true,
+          "both_correct_decisive": true,
+          "both_wrong_decisive": false,
+          "margin": 0.9287000000000001
+        },
+        {
+          "pair": "authored/test/file_upload/zh",
+          "allow_probability": 0.9127,
+          "decline_probability": 0.9468,
+          "correct_order": false,
+          "both_correct_decisive": false,
+          "both_wrong_decisive": false,
+          "margin": -0.03410000000000002
+        },
+        {
+          "pair": "authored/test/lookup_go/en",
+          "allow_probability": 0.8435,
+          "decline_probability": 0.0418,
+          "correct_order": true,
+          "both_correct_decisive": true,
+          "both_wrong_decisive": false,
+          "margin": 0.8017000000000001
+        },
+        {
+          "pair": "authored/test/lookup_go/zh",
+          "allow_probability": 0.4918,
+          "decline_probability": 0.0072,
+          "correct_order": true,
+          "both_correct_decisive": false,
+          "both_wrong_decisive": false,
+          "margin": 0.48460000000000003
+        },
+        {
+          "pair": "authored/test/lookup_python/en",
+          "allow_probability": 0.0196,
+          "decline_probability": 0.008,
+          "correct_order": true,
+          "both_correct_decisive": false,
+          "both_wrong_decisive": false,
+          "margin": 0.0116
+        },
+        {
+          "pair": "authored/test/lookup_python/zh",
+          "allow_probability": 0.0169,
+          "decline_probability": 0.0061,
+          "correct_order": true,
+          "both_correct_decisive": false,
+          "both_wrong_decisive": false,
+          "margin": 0.010799999999999997
+        },
+        {
+          "pair": "authored/test/run_gradle/en",
+          "allow_probability": 0.9353,
+          "decline_probability": 0.0435,
+          "correct_order": true,
+          "both_correct_decisive": true,
+          "both_wrong_decisive": false,
+          "margin": 0.8918
+        },
+        {
+          "pair": "authored/test/run_gradle/zh",
+          "allow_probability": 0.9226,
+          "decline_probability": 0.0055,
+          "correct_order": true,
+          "both_correct_decisive": true,
+          "both_wrong_decisive": false,
+          "margin": 0.9171
+        }
+      ]
+    },
+    "uniform": {
+      "pairs": 16,
+      "correct_order": 14,
+      "both_correct_decisive": 0,
+      "both_wrong_decisive": 0,
+      "mean_margin": 0.18298125,
+      "records": [
+        {
+          "pair": "authored/test/compound_cleanup/en",
+          "allow_probability": 0.1178,
+          "decline_probability": 0.0512,
+          "correct_order": true,
+          "both_correct_decisive": false,
+          "both_wrong_decisive": false,
+          "margin": 0.06659999999999999
+        },
+        {
+          "pair": "authored/test/compound_cleanup/zh",
+          "allow_probability": 0.4334,
+          "decline_probability": 0.0503,
+          "correct_order": true,
+          "both_correct_decisive": false,
+          "both_wrong_decisive": false,
+          "margin": 0.3831
+        },
+        {
+          "pair": "authored/test/file_java/en",
+          "allow_probability": 0.7993,
+          "decline_probability": 0.7093,
+          "correct_order": true,
+          "both_correct_decisive": false,
+          "both_wrong_decisive": false,
+          "margin": 0.08999999999999997
+        },
+        {
+          "pair": "authored/test/file_java/zh",
+          "allow_probability": 0.7558,
+          "decline_probability": 0.5096,
+          "correct_order": true,
+          "both_correct_decisive": false,
+          "both_wrong_decisive": false,
+          "margin": 0.24619999999999997
+        },
+        {
+          "pair": "authored/test/file_revocation/en",
+          "allow_probability": 0.8526,
+          "decline_probability": 0.8301,
+          "correct_order": true,
+          "both_correct_decisive": false,
+          "both_wrong_decisive": false,
+          "margin": 0.022500000000000075
+        },
+        {
+          "pair": "authored/test/file_revocation/zh",
+          "allow_probability": 0.8816,
+          "decline_probability": 0.4634,
+          "correct_order": true,
+          "both_correct_decisive": false,
+          "both_wrong_decisive": false,
+          "margin": 0.41820000000000007
+        },
+        {
+          "pair": "authored/test/file_target/en",
+          "allow_probability": 0.7047,
+          "decline_probability": 0.5,
+          "correct_order": true,
+          "both_correct_decisive": false,
+          "both_wrong_decisive": false,
+          "margin": 0.2047
+        },
+        {
+          "pair": "authored/test/file_target/zh",
+          "allow_probability": 0.6414,
+          "decline_probability": 0.4342,
+          "correct_order": true,
+          "both_correct_decisive": false,
+          "both_wrong_decisive": false,
+          "margin": 0.2072
+        },
+        {
+          "pair": "authored/test/file_upload/en",
+          "allow_probability": 0.8305,
+          "decline_probability": 0.4232,
+          "correct_order": true,
+          "both_correct_decisive": false,
+          "both_wrong_decisive": false,
+          "margin": 0.4073
+        },
+        {
+          "pair": "authored/test/file_upload/zh",
+          "allow_probability": 0.5948,
+          "decline_probability": 0.8981,
+          "correct_order": false,
+          "both_correct_decisive": false,
+          "both_wrong_decisive": false,
+          "margin": -0.3033
+        },
+        {
+          "pair": "authored/test/lookup_go/en",
+          "allow_probability": 0.6594,
+          "decline_probability": 0.4062,
+          "correct_order": true,
+          "both_correct_decisive": false,
+          "both_wrong_decisive": false,
+          "margin": 0.2532
+        },
+        {
+          "pair": "authored/test/lookup_go/zh",
+          "allow_probability": 0.5191,
+          "decline_probability": 0.0412,
+          "correct_order": true,
+          "both_correct_decisive": false,
+          "both_wrong_decisive": false,
+          "margin": 0.4779
+        },
+        {
+          "pair": "authored/test/lookup_python/en",
+          "allow_probability": 0.0552,
+          "decline_probability": 0.3654,
+          "correct_order": false,
+          "both_correct_decisive": false,
+          "both_wrong_decisive": false,
+          "margin": -0.31020000000000003
+        },
+        {
+          "pair": "authored/test/lookup_python/zh",
+          "allow_probability": 0.0425,
+          "decline_probability": 0.0259,
+          "correct_order": true,
+          "both_correct_decisive": false,
+          "both_wrong_decisive": false,
+          "margin": 0.016600000000000004
+        },
+        {
+          "pair": "authored/test/run_gradle/en",
+          "allow_probability": 0.8802,
+          "decline_probability": 0.4896,
+          "correct_order": true,
+          "both_correct_decisive": false,
+          "both_wrong_decisive": false,
+          "margin": 0.3906
+        },
+        {
+          "pair": "authored/test/run_gradle/zh",
+          "allow_probability": 0.6457,
+          "decline_probability": 0.2886,
+          "correct_order": true,
+          "both_correct_decisive": false,
+          "both_wrong_decisive": false,
+          "margin": 0.35710000000000003
+        }
+      ]
+    },
+    "weighted": {
+      "pairs": 16,
+      "correct_order": 13,
+      "both_correct_decisive": 0,
+      "both_wrong_decisive": 0,
+      "mean_margin": 0.22852499999999992,
+      "records": [
+        {
+          "pair": "authored/test/compound_cleanup/en",
+          "allow_probability": 0.2835,
+          "decline_probability": 0.013,
+          "correct_order": true,
+          "both_correct_decisive": false,
+          "both_wrong_decisive": false,
+          "margin": 0.27049999999999996
+        },
+        {
+          "pair": "authored/test/compound_cleanup/zh",
+          "allow_probability": 0.3833,
+          "decline_probability": 0.0017,
+          "correct_order": true,
+          "both_correct_decisive": false,
+          "both_wrong_decisive": false,
+          "margin": 0.3816
+        },
+        {
+          "pair": "authored/test/file_java/en",
+          "allow_probability": 0.9044,
+          "decline_probability": 0.8105,
+          "correct_order": true,
+          "both_correct_decisive": false,
+          "both_wrong_decisive": false,
+          "margin": 0.09389999999999998
+        },
+        {
+          "pair": "authored/test/file_java/zh",
+          "allow_probability": 0.7775,
+          "decline_probability": 0.4941,
+          "correct_order": true,
+          "both_correct_decisive": false,
+          "both_wrong_decisive": false,
+          "margin": 0.2834
+        },
+        {
+          "pair": "authored/test/file_revocation/en",
+          "allow_probability": 0.9084,
+          "decline_probability": 0.9272,
+          "correct_order": false,
+          "both_correct_decisive": false,
+          "both_wrong_decisive": false,
+          "margin": -0.01880000000000004
+        },
+        {
+          "pair": "authored/test/file_revocation/zh",
+          "allow_probability": 0.9337,
+          "decline_probability": 0.4313,
+          "correct_order": true,
+          "both_correct_decisive": false,
+          "both_wrong_decisive": false,
+          "margin": 0.5024
+        },
+        {
+          "pair": "authored/test/file_target/en",
+          "allow_probability": 0.6569,
+          "decline_probability": 0.4762,
+          "correct_order": true,
+          "both_correct_decisive": false,
+          "both_wrong_decisive": false,
+          "margin": 0.18070000000000003
+        },
+        {
+          "pair": "authored/test/file_target/zh",
+          "allow_probability": 0.631,
+          "decline_probability": 0.3614,
+          "correct_order": true,
+          "both_correct_decisive": false,
+          "both_wrong_decisive": false,
+          "margin": 0.2696
+        },
+        {
+          "pair": "authored/test/file_upload/en",
+          "allow_probability": 0.8416,
+          "decline_probability": 0.4408,
+          "correct_order": true,
+          "both_correct_decisive": false,
+          "both_wrong_decisive": false,
+          "margin": 0.4008
+        },
+        {
+          "pair": "authored/test/file_upload/zh",
+          "allow_probability": 0.6679,
+          "decline_probability": 0.951,
+          "correct_order": false,
+          "both_correct_decisive": false,
+          "both_wrong_decisive": false,
+          "margin": -0.2830999999999999
+        },
+        {
+          "pair": "authored/test/lookup_go/en",
+          "allow_probability": 0.7111,
+          "decline_probability": 0.3038,
+          "correct_order": true,
+          "both_correct_decisive": false,
+          "both_wrong_decisive": false,
+          "margin": 0.40729999999999994
+        },
+        {
+          "pair": "authored/test/lookup_go/zh",
+          "allow_probability": 0.5193,
+          "decline_probability": 0.0012,
+          "correct_order": true,
+          "both_correct_decisive": false,
+          "both_wrong_decisive": false,
+          "margin": 0.5181
+        },
+        {
+          "pair": "authored/test/lookup_python/en",
+          "allow_probability": 0.0102,
+          "decline_probability": 0.3223,
+          "correct_order": false,
+          "both_correct_decisive": false,
+          "both_wrong_decisive": false,
+          "margin": -0.3121
+        },
+        {
+          "pair": "authored/test/lookup_python/zh",
+          "allow_probability": 0.264,
+          "decline_probability": 0.1075,
+          "correct_order": true,
+          "both_correct_decisive": false,
+          "both_wrong_decisive": false,
+          "margin": 0.15650000000000003
+        },
+        {
+          "pair": "authored/test/run_gradle/en",
+          "allow_probability": 0.939,
+          "decline_probability": 0.4519,
+          "correct_order": true,
+          "both_correct_decisive": false,
+          "both_wrong_decisive": false,
+          "margin": 0.4870999999999999
+        },
+        {
+          "pair": "authored/test/run_gradle/zh",
+          "allow_probability": 0.6223,
+          "decline_probability": 0.3038,
+          "correct_order": true,
+          "both_correct_decisive": false,
+          "both_wrong_decisive": false,
+          "margin": 0.31849999999999995
+        }
+      ]
+    }
+  }
+}

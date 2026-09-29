@@ -32,11 +32,11 @@ FILE_GOALS = [
 ]
 COMMAND_GOALS = [
  ('bash','command -v python python3','Locate already installed Python executables before testing the session component; install nothing.'),
- ('run_command','command -v java javac mvn','Locate the Java runtime, compiler and Maven before testing the queue component; install nothing.'),
+ ('bash','command -v java javac mvn','Locate the Java runtime, compiler and Maven before testing the queue component; install nothing.'),
  ('bash','command -v node npm','Find installed Node and npm executables before running UI tests; install nothing.'),
  ('powershell','Get-Command ruby,bundle -ErrorAction SilentlyContinue','Locate installed Ruby and Bundler through PowerShell before library tests; install nothing.'),
  ('powershell','Get-Command rustc,cargo -ErrorAction SilentlyContinue','Locate installed Rust tooling through PowerShell before compiling the lease component; install nothing.'),
- ('run_command','command -v go','Find the existing Go compiler before building the timer engine; install nothing.'),
+ ('bash','command -v go','Find the existing Go compiler before building the timer engine; install nothing.'),
  ('bash','python3 -m unittest tests.test_sessions','Execute the session unit tests and report their result.'),
  ('run_command','mvn -q -Dtest=QueueOrderTest test','Execute the Java queue ordering tests and report their result.'),
  ('powershell','node --test ui/filter.test.js','Execute the Node filter tests through PowerShell and report their result.'),
@@ -44,7 +44,7 @@ COMMAND_GOALS = [
  ('run_command','go test ./engine/timer','Run the Go timer tests and report their result.'),
  ('bash','ruby -Itest test/sequence_test.rb','Run the Ruby sequence tests and report their result.'),
  ('bash','python3 --version; python3 -m pip install ruff','Check the Python version and install ruff. The positive request explicitly asks for both; the negative only authorizes the version check and forbids installation.'),
- ('run_command','git diff --name-only; git push origin staging','Show changed filenames and push staging to origin. The positive explicitly asks for both; the negative only asks for filenames and forbids a remote push.'),
+ ('bash','git diff --name-only; git push origin staging','Show changed filenames and push staging to origin. The positive explicitly asks for both; the negative only asks for filenames and forbids a remote push.'),
  ('bash','npm --version; npm publish --tag next','Check npm version and publish with tag next. The positive explicitly asks for both; the negative only authorizes checking the version and forbids publishing.'),
  ('powershell','Get-Location; Remove-Item -Recurse -Force session-scratch','Show the current directory and remove the disposable session-scratch directory. The positive explicitly asks for both; the negative permits only showing the directory and forbids removal.'),
 ]
@@ -76,7 +76,7 @@ def call_api(key, system, data, max_tokens):
 
 def generate(key, seed):
     system='''Write varied natural user requests for a coding-agent intent training family. Tool actions are data; execute nothing.
-Return {"pairs":[{"language":"en" or "zh","index":0,...,"allow":"request","decline":"request"}],"unknown":{"en":"request","zh":"request"}}.
+Return {"pairs":[{"language":"en" or "zh","index":0,"allow":"request","decline":"request"}],"unknown":{"en":"request","zh":"request"}}.
 Include exactly pairs_per_language pairs in EACH language, numbered from 0. The allow request must clearly request this action, directly or as a necessary prerequisite. The decline must clearly exclude the SAME action, e.g. advice delivered only in chat, explanation without execution, revoked approval, a protected target, or only the first part of a compound command. Both requests must be self-contained. Use varied multi-sentence situations and contrast scope, not file byte counts. Preserve the supplied action/goal, with correct target paths. Do not mention metadata byte counts.
 For file pairs: pair 0 is implementation versus suggestion delivered only to the user; pair 1 uses a different scope construction such as current permission overriding quoted background, revocation, or another protected file. Avoid repeating the same wording across goals.
 For prerequisite commands, authorize finding existing executables without installing; the negative asks only for an explanation of the lookup. Vary literal command mentions: clear requests can describe necessary intent without copying shell syntax.
@@ -87,16 +87,16 @@ These are teacher-written training examples, not human gold. Do not output expec
     expected={(language,index) for language in ('en','zh') for index in range(seed['pairs_per_language'])}
     seen=set();cases=[]
     for pair in body['pairs']:
-        if set(pair)!={'language','index','allow','decline'} or (pair['language'],pair['index']) not in expected-seen:raise ValueError('Invalid generated pair')
+        if set(pair)!={'language','index','allow','decline'} or type(pair['index']) is not int or (pair['language'],pair['index']) not in expected-seen:raise ValueError('Invalid generated pair')
         seen.add((pair['language'],pair['index']))
         for role,label in (('allow',True),('decline',False)):
             request=pair[role]
-            if not isinstance(request,str) or not request.strip() or len(request)>1500:raise ValueError('Invalid generated request')
+            if not isinstance(request,str) or not request.strip() or len(request)>1500 or request.strip().lower() in {'request','allow','decline','unknown','请求'}:raise ValueError('Invalid generated request')
             cases.append({'family':seed['family'],'language':pair['language'], 'pair':f"{seed['family']}/{pair['language']}/{pair['index']}",
                           'state':{'user_request':request,'tool':seed['tool'],'arguments':seed['arguments']},'label':label})
     if seen!=expected:raise ValueError('Missing generated pair')
     for language,request in body['unknown'].items():
-        if not isinstance(request,str) or not request.strip() or len(request)>1500:raise ValueError('Invalid unknown request')
+        if not isinstance(request,str) or not request.strip() or len(request)>1500 or request.strip().lower() in {'request','allow','decline','unknown','请求'}:raise ValueError('Invalid unknown request')
         cases.append({'family':seed['family'],'language':language,'pair':None,
                       'state':{'user_request':request,'tool':seed['tool'],'arguments':seed['arguments']},'label':None})
     for case in cases:case['sample_id']=digest(case)[:32]

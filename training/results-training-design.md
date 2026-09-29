@@ -1,5 +1,8 @@
 # Revised training design and capability baseline — milestone 20
 
+**2026-09-29 correction:** milestone 21 found 18/72 boundary states assign shell syntax/builtins to direct `run_command`. The original numbers below remain historical diagnostics; they do not establish model quality on valid tool contracts. See [audit and correction](results-intent-semantic.md).
+
+
 Completed 2026-09-29. The next training protocol is implemented in
 [TRAINING_DESIGN.md](TRAINING_DESIGN.md), two executable design configurations and
 the opt-in `train_laya.py --design` path. No new Laya candidate or full training

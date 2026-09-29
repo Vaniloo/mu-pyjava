@@ -46,3 +46,25 @@ class SemanticPilotTests(unittest.TestCase):
             self.assertEqual({row['label'] for row in values},{True,False})
             self.assertEqual(len({row['split'] for row in values}),1)
             self.assertEqual(values[0]['state']['arguments'],values[1]['state']['arguments'])
+
+    def test_pair_order_is_not_decisive_correctness_and_actions_must_match(self):
+        module=training_module('semantic_pair_metrics')
+        rows=[self.builder.convert(row) for row in self.builder.authored_cases()[:2]]
+        rows[0]['probability']=.6;rows[1]['probability']=.4
+        result=module.pair_metrics(rows)
+        self.assertEqual(result['correct_order'],1)
+        self.assertEqual(result['both_correct_decisive'],0)
+        rows[1]['state']=copy.deepcopy(rows[1]['state'])
+        rows[1]['state']['arguments']['path']='different.py'
+        with self.assertRaises(ValueError):module.pair_metrics(rows)
+
+    def test_direct_argv_rejects_shell_builtins_and_compounds_but_accepts_quoted_args(self):
+        module=training_module('tool_state_audit')
+        def state(command,tool='run_command'):return {'tool':tool,'arguments':{'command':command}}
+        for command in ['command -v python3','git status; git push','git status | cat','echo $(pwd)']:
+            self.assertIsNotNone(module.command_state_issue(state(command)))
+        for command in ['git status --short','python3 -m unittest','bash -c "git status; git diff"','printf ";"']:
+            self.assertIsNone(module.command_state_issue(state(command)))
+        self.assertIsNone(module.command_state_issue(state('command -v python3; git status','bash')))
+        with self.assertRaisesRegex(ValueError,'recollect'):
+            module.require_command_states([{'state':state('command -v python3')}])

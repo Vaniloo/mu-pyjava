@@ -8,6 +8,7 @@ from pathlib import Path
 
 from judge_pipeline import save_new
 from semantic_holdouts import HOLDOUTS
+from tool_state_audit import require_command_states
 from training_design import load_design, protected_key, audit_design
 from mupyjava.decision_points import TOOL_INTENT
 from mupyjava.judge import LayaBooleanJudge
@@ -117,6 +118,7 @@ def main():
                 families.add(family)
                 cases.extend({**row,'split':'train','origin':'teacher'} for row in body['cases'])
         if not families:raise ValueError('No valid teacher families')
+        require_command_states(cases)
         save_new(args.output,cases,jsonl=True)
         print(json.dumps({'cases':len(cases),'teacher_families':len(families)}));return
     cases=read_jsonl(args.cases);reviews={};review_artifacts=[]
@@ -137,6 +139,7 @@ def main():
               'split_strategy':'explicit_group_map','counts':counts,'excluded':{'families':len(reasons),'rows':len(cases)-len(accepted)},
               'dataset_digest':digest(rows),'evaluation_basis':'synthetic_experiment','unknown_target':'uniform_boolean_distribution',
               'ready_for_training':all(counts.get(s,0)>0 for s in ['train','validation','calibration','test'])}
+    require_command_states(rows)
     training_partitions(rows,True,True);validate_manifest(rows,manifest,True,True)
     audits={}
     for arm in ['intent-semantic-r2','intent-semantic-r2-uniform']:
