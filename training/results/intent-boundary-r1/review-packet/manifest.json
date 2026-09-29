@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "purpose": "holdout_review_only",
+  "source_file_sha256": [
+    "91909c8f07505bf2261397d6532a9c5183c24f97b0c0c0fe06bcdf9406df3fea",
+    "b085a3c675a288cb63074d4c3402c09d449dc29da5f2f1dd09c93dd8902814d3"
+  ],
+  "packet_digest": "c70c9240320934d020442e31643a01c0fcdea6e02c135c5efecf4394e8f49df8",
+  "groups": {
+    "synthetic/mixed-harness-r1": {
+      "kind": "constructed_harness",
+      "description": "Previously published synthetic DeepSeek mixed-r1 fixtures",
+      "attested_by": "repository provenance"
+    },
+    "scope-r1-fixtures": {
+      "kind": "constructed_harness",
+      "description": "Previously published synthetic DeepSeek scope-r1 fixtures",
+      "attested_by": "repository provenance"
+    }
+  },
+  "groups_digest": "5359935d923167dbfa7132d7cca054337f7663af07d08ed33791b563d5c00dde",
+  "samples": 15,
+  "prediction_blind": true,
+  "labels_filled": false,
+  "limitations": "Private exact inputs; not automatically redacted. Collection is attested, not verified. No model-generated human labels."
+}

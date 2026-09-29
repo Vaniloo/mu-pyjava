@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "dataset_digest": "ff4f3357aeec287f58852eecc6a0c81e434fe0bdd1d137bc7b3d76bf8a0d0f1b",
+  "cases": 72,
+  "families": 12,
+  "labels": {
+    "True": 24,
+    "False": 24,
+    "None": 24
+  },
+  "split": "diagnostic",
+  "training_allowed": false,
+  "tool_execution": false,
+  "protected_inputs": 17573,
+  "limitations": "Constructed after inspecting scope-r1 failures. No metadata expansion or independent human gold; not training, validation or calibration data."
+}

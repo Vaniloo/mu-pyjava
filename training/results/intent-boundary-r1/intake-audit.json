@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "samples": 15,
+  "reviewed_real_project_unique": 0,
+  "eligible_cases": [],
+  "excluded": {
+    "unreviewed": 15
+  },
+  "known_cases": 0,
+  "unknown_cases": 0,
+  "groups": 0,
+  "by_tool": {},
+  "packet_digest": "c70c9240320934d020442e31643a01c0fcdea6e02c135c5efecf4394e8f49df8",
+  "exclusions": [
+    {
+      "file": "intent-v2.jsonl.gz",
+      "sha256": "48deadfcf55b6962a2f269f957226571e164daa6599a8f97c48d4d6b85c5ba54",
+      "rows": 17529
+    },
+    {
+      "file": "scope_challenge.jsonl",
+      "sha256": "f096d319dd98a06c8bf1b62ffa8d66477241a404947cf5f89f75b661b7d6fff4",
+      "rows": 24
+    },
+    {
+      "file": "manual_eval.jsonl",
+      "sha256": "225063271b37bba208b5980c5313e30ce302b0149c9a5a41cad4c3cec8329cb4",
+      "rows": 20
+    },
+    {
+      "file": "cases.jsonl",
+      "sha256": "049e8e5fa6bcce003e24c9d824b737a086e957a2cb49445df53f19218348d226",
+      "rows": 72
+    }
+  ],
+  "ready_for_retraining": false,
+  "limitations": "Intake audit only; no accuracy or training export. Human identity and collection attestations are not independently verified. Exact exclusion applies only to listed files; semantic overlap and related repository groups require review."
+}
