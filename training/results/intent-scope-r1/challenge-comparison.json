@@ -1,0 +1,113 @@
+{
+  "dataset_sha256": "f096d319dd98a06c8bf1b62ffa8d66477241a404947cf5f89f75b661b7d6fff4",
+  "split": "all",
+  "thresholds": {
+    "decline": 0.2,
+    "allow": 0.8
+  },
+  "coverage_inventory": {
+    "families": 11,
+    "family_metadata_missing": 0,
+    "distinct_requests": 24,
+    "unknown_families": 1,
+    "distinct_unknown_requests": 4
+  },
+  "models": {
+    "raw": {
+      "checkpoint_sha256": "9d628fd971b700382ac6f65920a86f149777b2e748e0c955fb3b19695aa8f204",
+      "metrics": {
+        "n": 24,
+        "labeled": 20,
+        "accepted": 10,
+        "negative_labels": 10,
+        "positive_labels": 10,
+        "coverage": 0.5,
+        "selective_accuracy": 0.7,
+        "accuracy_at_0_5": 0.55,
+        "false_allow": 1,
+        "false_decline": 2,
+        "false_allow_rate": 0.1,
+        "false_decline_rate": 0.2,
+        "brier": 0.2674026335,
+        "unknown_cases": 4,
+        "unknown_non_abstention": 2
+      },
+      "correct_decisive": 7,
+      "known_abstention": 10,
+      "unknown_abstention": 2,
+      "temperature_control": null
+    },
+    "v1": {
+      "checkpoint_sha256": "eefb252d471a4b924311e4977ce431090c50d3d5160f611de4608456d9ad59eb",
+      "metrics": {
+        "n": 24,
+        "labeled": 20,
+        "accepted": 18,
+        "negative_labels": 10,
+        "positive_labels": 10,
+        "coverage": 0.9,
+        "selective_accuracy": 0.7777777777777778,
+        "accuracy_at_0_5": 0.7,
+        "false_allow": 4,
+        "false_decline": 0,
+        "false_allow_rate": 0.4,
+        "false_decline_rate": 0.0,
+        "brier": 0.24393423549999999,
+        "unknown_cases": 4,
+        "unknown_non_abstention": 4
+      },
+      "correct_decisive": 14,
+      "known_abstention": 2,
+      "unknown_abstention": 0,
+      "temperature_control": null
+    },
+    "mixed": {
+      "checkpoint_sha256": "1bf7cd28e32d2fef39299ac291362ec71b9d281a4c48b02e8b0c1580ae13c195",
+      "metrics": {
+        "n": 24,
+        "labeled": 20,
+        "accepted": 16,
+        "negative_labels": 10,
+        "positive_labels": 10,
+        "coverage": 0.8,
+        "selective_accuracy": 0.8125,
+        "accuracy_at_0_5": 0.75,
+        "false_allow": 2,
+        "false_decline": 1,
+        "false_allow_rate": 0.2,
+        "false_decline_rate": 0.1,
+        "brier": 0.20755527000000001,
+        "unknown_cases": 4,
+        "unknown_non_abstention": 3
+      },
+      "correct_decisive": 13,
+      "known_abstention": 4,
+      "unknown_abstention": 1,
+      "temperature_control": null
+    },
+    "scope": {
+      "checkpoint_sha256": "f90ac2e6f359691e4ace7c318d611a78461acbe8aa4e0d2962e7728368c84e3d",
+      "metrics": {
+        "n": 24,
+        "labeled": 20,
+        "accepted": 17,
+        "negative_labels": 10,
+        "positive_labels": 10,
+        "coverage": 0.85,
+        "selective_accuracy": 0.9411764705882353,
+        "accuracy_at_0_5": 0.95,
+        "false_allow": 0,
+        "false_decline": 1,
+        "false_allow_rate": 0.0,
+        "false_decline_rate": 0.1,
+        "brier": 0.0749331965,
+        "unknown_cases": 4,
+        "unknown_non_abstention": 1
+      },
+      "correct_decisive": 16,
+      "known_abstention": 3,
+      "unknown_abstention": 3,
+      "temperature_control": null
+    }
+  }
+}

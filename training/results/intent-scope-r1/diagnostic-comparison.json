@@ -1,0 +1,113 @@
+{
+  "dataset_sha256": "b951eb94c79c9b6d8dcd677f10c940afc1ca1815d2bbb717b7371bb2accec76d",
+  "split": "all",
+  "thresholds": {
+    "decline": 0.2,
+    "allow": 0.8
+  },
+  "coverage_inventory": {
+    "families": 4,
+    "family_metadata_missing": 0,
+    "distinct_requests": 96,
+    "unknown_families": 4,
+    "distinct_unknown_requests": 8
+  },
+  "models": {
+    "raw": {
+      "checkpoint_sha256": "9d628fd971b700382ac6f65920a86f149777b2e748e0c955fb3b19695aa8f204",
+      "metrics": {
+        "n": 1164,
+        "labeled": 776,
+        "accepted": 467,
+        "negative_labels": 388,
+        "positive_labels": 388,
+        "coverage": 0.6018041237113402,
+        "selective_accuracy": 0.3747323340471092,
+        "accuracy_at_0_5": 0.4832474226804124,
+        "false_allow": 292,
+        "false_decline": 0,
+        "false_allow_rate": 0.7525773195876289,
+        "false_decline_rate": 0.0,
+        "brier": 0.3995793907474228,
+        "unknown_cases": 388,
+        "unknown_non_abstention": 139
+      },
+      "correct_decisive": 175,
+      "known_abstention": 309,
+      "unknown_abstention": 249,
+      "temperature_control": null
+    },
+    "v1": {
+      "checkpoint_sha256": "eefb252d471a4b924311e4977ce431090c50d3d5160f611de4608456d9ad59eb",
+      "metrics": {
+        "n": 1164,
+        "labeled": 776,
+        "accepted": 683,
+        "negative_labels": 388,
+        "positive_labels": 388,
+        "coverage": 0.8801546391752577,
+        "selective_accuracy": 0.4699853587115666,
+        "accuracy_at_0_5": 0.46262886597938147,
+        "false_allow": 272,
+        "false_decline": 90,
+        "false_allow_rate": 0.7010309278350515,
+        "false_decline_rate": 0.23195876288659795,
+        "brier": 0.48690943239690726,
+        "unknown_cases": 388,
+        "unknown_non_abstention": 369
+      },
+      "correct_decisive": 321,
+      "known_abstention": 93,
+      "unknown_abstention": 19,
+      "temperature_control": null
+    },
+    "mixed": {
+      "checkpoint_sha256": "1bf7cd28e32d2fef39299ac291362ec71b9d281a4c48b02e8b0c1580ae13c195",
+      "metrics": {
+        "n": 1164,
+        "labeled": 776,
+        "accepted": 677,
+        "negative_labels": 388,
+        "positive_labels": 388,
+        "coverage": 0.8724226804123711,
+        "selective_accuracy": 0.689807976366322,
+        "accuracy_at_0_5": 0.7100515463917526,
+        "false_allow": 210,
+        "false_decline": 0,
+        "false_allow_rate": 0.5412371134020618,
+        "false_decline_rate": 0.0,
+        "brier": 0.28970184476804195,
+        "unknown_cases": 388,
+        "unknown_non_abstention": 0
+      },
+      "correct_decisive": 467,
+      "known_abstention": 99,
+      "unknown_abstention": 388,
+      "temperature_control": null
+    },
+    "scope": {
+      "checkpoint_sha256": "f90ac2e6f359691e4ace7c318d611a78461acbe8aa4e0d2962e7728368c84e3d",
+      "metrics": {
+        "n": 1164,
+        "labeled": 776,
+        "accepted": 654,
+        "negative_labels": 388,
+        "positive_labels": 388,
+        "coverage": 0.8427835051546392,
+        "selective_accuracy": 0.882262996941896,
+        "accuracy_at_0_5": 0.8672680412371134,
+        "false_allow": 77,
+        "false_decline": 0,
+        "false_allow_rate": 0.19845360824742267,
+        "false_decline_rate": 0.0,
+        "brier": 0.1175416888402059,
+        "unknown_cases": 388,
+        "unknown_non_abstention": 0
+      },
+      "correct_decisive": 577,
+      "known_abstention": 122,
+      "unknown_abstention": 388,
+      "temperature_control": null
+    }
+  }
+}

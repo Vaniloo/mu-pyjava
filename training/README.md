@@ -105,7 +105,9 @@ PYTHONPATH=python python3 training/intent_ablation.py build --joint-bytes --outp
 Milestone18 freezes whole file/command phrase families and file-goal families,with old mixed
 train rehearsal and a separate24-case challenge. Prerequisite templates share structure with
 held-out executable goals;all labels remain synthetic/retained teacher,not independent human gold.
-See[results-intent-scope.md](results-intent-scope.md) for status and prescribed evaluation.
+See [results-intent-scope.md](results-intent-scope.md) for completed results, selection,
+calibration tradeoffs, retention regressions and live harness limitations. The candidate
+remains shadow-only; weights are retained on lab rather than published in this repository.
 
 ```sh
 PYTHONPATH=python python3 training/build_intent_scope.py --output work/scope-new
@@ -118,3 +120,10 @@ PYTHONPATH=python python3 training/train_laya.py \
 
 Use a separate checkpoint copy. `review_scope_challenge.py` provides a prediction-blind external
 model check;its teacher outputs never enter training,calibration or checkpoint selection.
+
+`compare_intent.py --data DATA --split test --report NAME=REPORT --output COMPARISON`
+validates ordered inputs, dataset identity and recomputed metrics; compressed reports are
+supported. `evaluate_intent.py --noul-temperature VALUE` overrides temperature in memory
+for an explicitly recorded attribution control. It does not modify checkpoint files or
+replace calibration. The milestone 18 matched-temperature control was post-hoc and did
+not select another checkpoint.

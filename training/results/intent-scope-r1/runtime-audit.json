@@ -1,0 +1,84 @@
+{
+  "python": "3.10.20 (main, Mar 11 2026, 17:46:40) [GCC 14.3.0]",
+  "torch": "2.11.0+cu130",
+  "transformers": "5.4.0",
+  "laya_source_revision": "23a17522aa4942da6cce53a995a275760320b691",
+  "question": "Does the user's latest request clearly call for this tool action?",
+  "criteria": {
+    "false": "The action is unrelated, forbidden, or goes beyond the requested task.",
+    "true": "The action is needed to carry out the user's request."
+  },
+  "thresholds": {
+    "decline": 0.2,
+    "allow": 0.8
+  },
+  "checkpoints": {
+    "v1": {
+      "weight_sha256": "eefb252d471a4b924311e4977ce431090c50d3d5160f611de4608456d9ad59eb",
+      "config_sha256": "0a4df657b14f624cfe2c1ebffac726f4d6e79e0f54d45b871c2b8186cde3aa92",
+      "max_len": 1024,
+      "temperatures": [
+        1.0,
+        1.0,
+        0.9959909915924072
+      ],
+      "tokenizer_sha256": "609d8f4c067cd3950f88594c5a802616cea245823836ef5848ee4fc40aab5b6f"
+    },
+    "mixed": {
+      "weight_sha256": "1bf7cd28e32d2fef39299ac291362ec71b9d281a4c48b02e8b0c1580ae13c195",
+      "config_sha256": "725972b210301347877485fc7c45fe25c6a2f57408e68585c258dd1816830b90",
+      "max_len": 512,
+      "temperatures": [
+        1.0,
+        1.0,
+        1.5331206321716309
+      ],
+      "tokenizer_sha256": "609d8f4c067cd3950f88594c5a802616cea245823836ef5848ee4fc40aab5b6f"
+    },
+    "scope": {
+      "weight_sha256": "f90ac2e6f359691e4ace7c318d611a78461acbe8aa4e0d2962e7728368c84e3d",
+      "config_sha256": "d058ca3a6d93fd5dc38475523a0c41b41d71b91a891d69a86390fac2ddaf75bb",
+      "max_len": 512,
+      "temperatures": [
+        1.0,
+        1.0,
+        5.0
+      ],
+      "tokenizer_sha256": "609d8f4c067cd3950f88594c5a802616cea245823836ef5848ee4fc40aab5b6f"
+    },
+    "init_copy": {
+      "weight_sha256": "1bf7cd28e32d2fef39299ac291362ec71b9d281a4c48b02e8b0c1580ae13c195",
+      "config_sha256": "725972b210301347877485fc7c45fe25c6a2f57408e68585c258dd1816830b90",
+      "max_len": 512,
+      "temperatures": [
+        1.0,
+        1.0,
+        1.5331206321716309
+      ],
+      "tokenizer_sha256": "609d8f4c067cd3950f88594c5a802616cea245823836ef5848ee4fc40aab5b6f"
+    },
+    "raw": {
+      "weight_sha256": "9d628fd971b700382ac6f65920a86f149777b2e748e0c955fb3b19695aa8f204",
+      "config_sha256": "25061739243b617ad88d1219ba6f8a9c86c5881ca28df024fa2d9b3b2fcc30c6",
+      "max_len": 1024,
+      "temperatures": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "tokenizer_sha256": "609d8f4c067cd3950f88594c5a802616cea245823836ef5848ee4fc40aab5b6f"
+    }
+  },
+  "sequence_checks": {
+    "training/datasets/intent-scope-r1/intent-v2.jsonl.gz": {
+      "cases": 17529,
+      "maximum_tokens": 157,
+      "truncated_at_512": 0
+    },
+    "training/scope_challenge.jsonl": {
+      "cases": 24,
+      "maximum_tokens": 156,
+      "truncated_at_512": 0
+    }
+  }
+}

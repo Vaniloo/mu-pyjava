@@ -1,0 +1,144 @@
+{
+  "dataset_sha256": "48deadfcf55b6962a2f269f957226571e164daa6599a8f97c48d4d6b85c5ba54",
+  "split": "test",
+  "thresholds": {
+    "decline": 0.2,
+    "allow": 0.8
+  },
+  "coverage_inventory": {
+    "families": 13,
+    "family_metadata_missing": 0,
+    "distinct_requests": 414,
+    "unknown_families": 13,
+    "distinct_unknown_requests": 26
+  },
+  "models": {
+    "raw": {
+      "checkpoint_sha256": "9d628fd971b700382ac6f65920a86f149777b2e748e0c955fb3b19695aa8f204",
+      "metrics": {
+        "n": 2130,
+        "labeled": 1420,
+        "accepted": 496,
+        "negative_labels": 710,
+        "positive_labels": 710,
+        "coverage": 0.3492957746478873,
+        "selective_accuracy": 0.4495967741935484,
+        "accuracy_at_0_5": 0.4387323943661972,
+        "false_allow": 227,
+        "false_decline": 46,
+        "false_allow_rate": 0.31971830985915495,
+        "false_decline_rate": 0.0647887323943662,
+        "brier": 0.34756879304225335,
+        "unknown_cases": 710,
+        "unknown_non_abstention": 331
+      },
+      "correct_decisive": 223,
+      "known_abstention": 924,
+      "unknown_abstention": 379,
+      "temperature_control": null
+    },
+    "v1": {
+      "checkpoint_sha256": "eefb252d471a4b924311e4977ce431090c50d3d5160f611de4608456d9ad59eb",
+      "metrics": {
+        "n": 2130,
+        "labeled": 1420,
+        "accepted": 1312,
+        "negative_labels": 710,
+        "positive_labels": 710,
+        "coverage": 0.923943661971831,
+        "selective_accuracy": 0.725609756097561,
+        "accuracy_at_0_5": 0.7091549295774648,
+        "false_allow": 272,
+        "false_decline": 88,
+        "false_allow_rate": 0.38309859154929576,
+        "false_decline_rate": 0.12394366197183099,
+        "brier": 0.26250153255633835,
+        "unknown_cases": 710,
+        "unknown_non_abstention": 661
+      },
+      "correct_decisive": 952,
+      "known_abstention": 108,
+      "unknown_abstention": 49,
+      "temperature_control": null
+    },
+    "mixed": {
+      "checkpoint_sha256": "1bf7cd28e32d2fef39299ac291362ec71b9d281a4c48b02e8b0c1580ae13c195",
+      "metrics": {
+        "n": 2130,
+        "labeled": 1420,
+        "accepted": 1201,
+        "negative_labels": 710,
+        "positive_labels": 710,
+        "coverage": 0.8457746478873239,
+        "selective_accuracy": 0.8209825145711906,
+        "accuracy_at_0_5": 0.7866197183098591,
+        "false_allow": 144,
+        "false_decline": 71,
+        "false_allow_rate": 0.2028169014084507,
+        "false_decline_rate": 0.1,
+        "brier": 0.1790501815492961,
+        "unknown_cases": 710,
+        "unknown_non_abstention": 30
+      },
+      "correct_decisive": 986,
+      "known_abstention": 219,
+      "unknown_abstention": 680,
+      "temperature_control": null
+    },
+    "scope": {
+      "checkpoint_sha256": "f90ac2e6f359691e4ace7c318d611a78461acbe8aa4e0d2962e7728368c84e3d",
+      "metrics": {
+        "n": 2130,
+        "labeled": 1420,
+        "accepted": 1109,
+        "negative_labels": 710,
+        "positive_labels": 710,
+        "coverage": 0.7809859154929577,
+        "selective_accuracy": 0.9044183949504058,
+        "accuracy_at_0_5": 0.8485915492957746,
+        "false_allow": 32,
+        "false_decline": 74,
+        "false_allow_rate": 0.04507042253521127,
+        "false_decline_rate": 0.10422535211267606,
+        "brier": 0.12320677600704233,
+        "unknown_cases": 710,
+        "unknown_non_abstention": 0
+      },
+      "correct_decisive": 1003,
+      "known_abstention": 311,
+      "unknown_abstention": 710,
+      "temperature_control": null
+    },
+    "scope_at_mixed_temperature": {
+      "checkpoint_sha256": "f90ac2e6f359691e4ace7c318d611a78461acbe8aa4e0d2962e7728368c84e3d",
+      "metrics": {
+        "n": 2130,
+        "labeled": 1420,
+        "accepted": 1277,
+        "negative_labels": 710,
+        "positive_labels": 710,
+        "coverage": 0.8992957746478873,
+        "selective_accuracy": 0.860610806577917,
+        "accuracy_at_0_5": 0.8485915492957746,
+        "false_allow": 33,
+        "false_decline": 145,
+        "false_allow_rate": 0.04647887323943662,
+        "false_decline_rate": 0.20422535211267606,
+        "brier": 0.13730555640845132,
+        "unknown_cases": 710,
+        "unknown_non_abstention": 15
+      },
+      "correct_decisive": 1099,
+      "known_abstention": 143,
+      "unknown_abstention": 695,
+      "temperature_control": {
+        "shipped": [
+          1.0,
+          1.0,
+          5.0
+        ],
+        "noul_override": 1.5331206321716309
+      }
+    }
+  }
+}

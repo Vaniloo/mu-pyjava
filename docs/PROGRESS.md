@@ -204,7 +204,7 @@ remain unfilled. Software gate:**210 tests,209 passed,1 native PowerShell skip**
 [diagnosis and next training work](../training/results-intent-ablation.md).
 GitHub:[milestone17](https://github.com/Vaniloo/mu-pyjava/issues/17).
 
-## Milestone 18 — scope paraphrases (in progress)
+## Milestone 18 — scope paraphrases
 
 Frozen12,195 train with7,209 prior train states unchanged and4,986 new rows;1,602 validation,
 1,602 calibration,2,130 test. File/command phrase families and file goals stay in one partition;
@@ -212,8 +212,25 @@ prerequisite templates share structure with held-out executable goals.24 multi-s
 cases are protected from exports and independently reviewed by DeepSeek without labels or judge
 predictions:24 agreements. This is teacher verification,not independent human gold.
 
-Candidate initialized from a mixed-r1 copy,three epochs with predeclared validation-only epoch
-selection and separate calibration. Original/v1/mixed serving baselines completed. Five dataset
-guards pass;candidate serving,retention,live harness and full software gate are pending.
-See[scope experiment](../training/results-intent-scope.md).
+Candidate initialized from a mixed-r1 copy. Validation selected epoch 1 of three;
+separate calibration reached the temperature upper bound 5. On the new synthetic test,
+false allows fell from 144 to 32/710, correct decisive answers rose from 986 to 1,003,
+and known abstentions rose from 219 to 311. At the old temperature, candidate false
+allows were 33 but false declines rose from 71 to 145: weights reduce false allows,
+while calibration converts many declines to abstentions. 31/32 remaining false allows
+cluster in one response-only proposal phrase family.
+
+Frozen challenge: 19/20 known correct at 0.5, but 16 correct decisive, one false decline,
+three abstentions, and 3/4 unknown abstentions. Manual retention: 19/20 at 0.5, but
+16 correct decisive plus four abstentions. Old diagnostic false allows fell 210 to 77;
+old synthetic accuracy regressed from 574 to 563/580. DeepSeek live harness completed
+six fixtures with five actual allows and two abstentions; fallback let necessary edits
+proceed, and fix-then-test passed one unit test. Fifteen unique constructed counterfactuals
+matched labels, with no forbidden action execution. These checks are not independent
+human gold or estimates of deployment error rates.
+
+Five dataset guards and the full software gate passed: 215 tests, 214 passed and one
+native PowerShell skip. Candidate weights are retained on lab; the temporary model
+service is stopped. Laya remains intrinsically intent-only/shadow-only, with no promotion.
+See [scope results, audit and limitations](../training/results-intent-scope.md).
 GitHub:[milestone18](https://github.com/Vaniloo/mu-pyjava/issues/18).

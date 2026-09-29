@@ -55,7 +55,12 @@ def main():
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--batch-size", type=int, default=16)
+    parser.add_argument("--noul-temperature", type=float,
+                        help="Post-hoc in-memory calibration control; never modifies checkpoint files")
     args = parser.parse_args()
+    if args.noul_temperature is not None and (
+            not math.isfinite(args.noul_temperature) or not .5 <= args.noul_temperature <= 5):
+        raise ValueError("Temperature control must be finite and within [0.5, 5]")
     if args.output.exists():
         raise FileExistsError("Evaluation output already exists")
     rows = [row for row in read_jsonl(args.data) if args.split == "all" or row.get("split") == args.split]
@@ -65,6 +70,11 @@ def main():
            row.get("label") is not None and type(row["label"]) is not bool for row in rows):
         raise ValueError("Evaluation expects current intent question and Boolean/unknown labels")
     judge = LayaBooleanJudge(str(args.checkpoint), device=args.device)
+    shipped_temperatures = list(judge.agent.temperature)
+    if args.noul_temperature is not None:
+        from laya.common import QTYPES
+        judge.agent.temperature[QTYPES["noul"]] = args.noul_temperature
+        judge.agent.temperature_by_options["noul:2"] = args.noul_temperature
     started = time.perf_counter()
     probabilities = []
     for offset in range(0, len(rows), args.batch_size):
@@ -100,6 +110,8 @@ def main():
               "checkpoint_sha256": hashlib.sha256((args.checkpoint / "model.safetensors").read_bytes()).hexdigest(),
               "evaluation_basis": sorted({row.get("origin", "legacy_regression") for row in rows}),
               "sequence_limit": judge.agent.cfg.get("max_len"), "batch_size": args.batch_size,
+              "temperature_control": {"shipped": shipped_temperatures,
+                                      "noul_override": args.noul_temperature},
               "batch_amortized_ms": (time.perf_counter() - started) * 1000 / len(rows),
               "coverage_inventory": coverage_inventory(rows),
               "overall": metrics(rows, probabilities), "by_family": groups(by_family), "by_tool": groups(by_tool),
