@@ -127,3 +127,18 @@ supported. `evaluate_intent.py --noul-temperature VALUE` overrides temperature i
 for an explicitly recorded attribution control. It does not modify checkpoint files or
 replace calibration. The milestone 18 matched-temperature control was post-hoc and did
 not select another checkpoint.
+
+## Blind intake and focused boundary diagnostics
+
+Milestone 19 adds `intent_review.py prepare/audit` for prediction-blind exact-input
+review and explicit collection provenance. It never generates human labels or
+exports training data. Real project traces stay private under `work/`; the published
+15-case demo comes entirely from existing constructed harness runs and contributes
+zero independent real-project cases. Follow [review and exclusion instructions](../docs/JUDGE_EVALUATION.md#prediction-blind-real-project-intake-milestone-19).
+
+`build_intent_boundary.py` freezes 72 cases in 12 bilingual families: reply-only
+proposals, installed-executable prerequisites and compound commands with an extra
+operation. Each captured action has positive/negative/unknown request variants.
+The cases were designed after inspecting failures; `split=diagnostic` is rejected
+by training preflight and no proposed command executes. See
+[boundary results](results-intent-boundary.md) and [frozen data](datasets/intent-boundary-r1/README.md).

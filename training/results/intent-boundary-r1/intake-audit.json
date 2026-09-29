@@ -11,6 +11,12 @@
   "groups": 0,
   "by_tool": {},
   "packet_digest": "c70c9240320934d020442e31643a01c0fcdea6e02c135c5efecf4394e8f49df8",
+  "source_file_sha256": [
+    "91909c8f07505bf2261397d6532a9c5183c24f97b0c0c0fe06bcdf9406df3fea",
+    "b085a3c675a288cb63074d4c3402c09d449dc29da5f2f1dd09c93dd8902814d3"
+  ],
+  "labels_file_sha256": "e601929e252cf6147f6127e54328a88ccb969fc254d7e01b9ddca5a8872d688c",
+  "collection_digest": "5359935d923167dbfa7132d7cca054337f7663af07d08ed33791b563d5c00dde",
   "exclusions": [
     {
       "file": "intent-v2.jsonl.gz",

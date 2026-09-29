@@ -138,7 +138,10 @@ def audit(paths, packet_dir, labels_path, exclusion_paths=()):
             'unknown_cases': sum(row['label'] is None for row in eligible),
             'groups': len({row['group_id'] for row in eligible}),
             'by_tool': dict(Counter(row['tool'] for row in eligible)),
-            'packet_digest': manifest['packet_digest'], 'exclusions': exclusions,
+            'packet_digest': manifest['packet_digest'],
+            'source_file_sha256': hashes,
+            'labels_file_sha256': hashlib.sha256(labels_path.read_bytes()).hexdigest(),
+            'collection_digest': manifest['groups_digest'], 'exclusions': exclusions,
             'ready_for_retraining': False,
             'limitations': 'Intake audit only; no accuracy or training export. Human identity and collection attestations are not independently verified. Exact exclusion applies only to listed files; semantic overlap and related repository groups require review.'}
 

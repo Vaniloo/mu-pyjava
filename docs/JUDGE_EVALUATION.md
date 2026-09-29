@@ -131,3 +131,75 @@ unknown requests against real captured arguments. It never executes these counte
 metrics deduplicate identical states. `--task` and `--max-steps` allow a focused bounded replay.
 Unreviewed annotation-only packets omit observed predictions and do not count toward gold.
 See[results-intent-mixed.md](../training/results-intent-mixed.md) for gains and remaining errors.
+
+## Prediction-blind real-project intake (milestone 19)
+
+`training/intent_review.py` adds an evaluation-review workflow. It does not train a
+model or generate labels. The reviewer packet contains exact submitted questions
+and state, sample/group IDs and input digests. Captured predictions, backend names,
+permission outcomes, policy and source metadata are omitted. The packet is still
+private user input; it is not automatically redacted. Keep real records and labels
+under ignored `work/`, and explicitly review them before any publication.
+
+```sh
+PYTHONPATH=python python3 training/intent_review.py prepare \
+  --samples work/judge-samples.jsonl --collections work/collections.json \
+  --output work/intent-review
+```
+
+The optional collection file maps each captured `group_id` to:
+
+```json
+{
+  "my-repository/task-family-001": {
+    "kind": "real_project",
+    "description": "Ordinary project session, not a constructed evaluation task",
+    "attested_by": "collector identity"
+  }
+}
+```
+
+Other kinds are `constructed_harness`, `synthetic` and `unattested` (the default
+when no collection file is supplied). Metadata must cover exactly the captured
+groups. Known synthetic/probe markers cannot be reclassified as real_project.
+A real project directory used for a hand-written benchmark is still a constructed
+task. Attestations and reviewer identities cannot be independently verified by code.
+
+Give the reviewer only `packet.jsonl` and `labels.jsonl`, not the original samples,
+model prediction files or model-specific diagnosis. Review the exact captured
+state and question, not whether the action was permitted/executed. Fill reviewer,
+rationale and true/false/null answers, then set reviewed=true. Missing referenced
+history is a valid null; permission approval does not prove intent correctness.
+AI-assisted labels remain origin=teacher and do not become independent manual gold.
+
+```sh
+PYTHONPATH=python python3 training/intent_review.py audit \
+  --samples work/judge-samples.jsonl --packet work/intent-review \
+  --labels work/intent-review/labels.jsonl \
+  --exclude-data training/datasets/intent-scope-r1/intent-v2.jsonl.gz \
+  --exclude-data training/scope_challenge.jsonl \
+  --exclude-data training/manual_eval.jsonl \
+  --exclude-data training/datasets/intent-boundary-r1/cases.jsonl \
+  --output work/intent-review-audit.json
+```
+
+Only reviewed manual labels with rationales from attested real_project groups can
+enter the audit's real-project count. Missing exclusions, previously seen exact
+inputs, unreviewed labels and nonmanual labels are excluded; conflicting reviewed
+labels for identical inputs stop the audit. Frozen packet/source/provenance and
+label digests prevent accidental mismatches. Duplicate judge inputs count once.
+The report binds label, source and exclusion hashes and separates known/unknown
+cases and tool counts; it computes no accuracy and exports no training dataset.
+`ready_for_retraining` stays false because this is an intake audit, not a training gate.
+
+The example exclusions cover only the listed files. Add every other prior training,
+calibration, evaluated or otherwise inspected input collection relevant to the
+candidate. Exact matching cannot detect paraphrases, related repository tasks or
+unrecorded inspection. Preserve related repository/task groups together and review
+semantic overlap before creating an independent holdout. Neither the audit count
+nor a small reviewed packet establishes model reliability.
+
+The published milestone 19 demonstration uses 15 already public **constructed**
+harness samples, all with empty labels; it contributes zero independent real-project
+cases. The separate 72-case boundary set is synthetic and reserved for diagnostics,
+not training or calibration. See [results and limitations](../training/results-intent-boundary.md).

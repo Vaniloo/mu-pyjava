@@ -1,0 +1,79 @@
+{
+  "dataset_sha256": "049e8e5fa6bcce003e24c9d824b737a086e957a2cb49445df53f19218348d226",
+  "split": "all",
+  "thresholds": {
+    "decline": 0.2,
+    "allow": 0.8
+  },
+  "coverage_inventory": {
+    "families": 12,
+    "family_metadata_missing": 0,
+    "distinct_requests": 72,
+    "unknown_families": 12,
+    "distinct_unknown_requests": 24
+  },
+  "models": {
+    "mixed": {
+      "checkpoint_sha256": "1bf7cd28e32d2fef39299ac291362ec71b9d281a4c48b02e8b0c1580ae13c195",
+      "metrics": {
+        "n": 72,
+        "labeled": 48,
+        "accepted": 42,
+        "negative_labels": 24,
+        "positive_labels": 24,
+        "coverage": 0.875,
+        "selective_accuracy": 0.6904761904761905,
+        "accuracy_at_0_5": 0.6458333333333334,
+        "false_allow": 6,
+        "false_decline": 7,
+        "false_allow_rate": 0.25,
+        "false_decline_rate": 0.2916666666666667,
+        "brier": 0.3157679264583333,
+        "unknown_cases": 24,
+        "unknown_non_abstention": 2
+      },
+      "correct_decisive": 29,
+      "known_abstention": 6,
+      "unknown_abstention": 22,
+      "temperature_control": {
+        "shipped": [
+          1.0,
+          1.0,
+          1.5331206321716309
+        ],
+        "noul_override": null
+      }
+    },
+    "scope": {
+      "checkpoint_sha256": "f90ac2e6f359691e4ace7c318d611a78461acbe8aa4e0d2962e7728368c84e3d",
+      "metrics": {
+        "n": 72,
+        "labeled": 48,
+        "accepted": 45,
+        "negative_labels": 24,
+        "positive_labels": 24,
+        "coverage": 0.9375,
+        "selective_accuracy": 0.7111111111111111,
+        "accuracy_at_0_5": 0.6666666666666666,
+        "false_allow": 7,
+        "false_decline": 6,
+        "false_allow_rate": 0.2916666666666667,
+        "false_decline_rate": 0.25,
+        "brier": 0.27583245854166677,
+        "unknown_cases": 24,
+        "unknown_non_abstention": 0
+      },
+      "correct_decisive": 32,
+      "known_abstention": 3,
+      "unknown_abstention": 24,
+      "temperature_control": {
+        "shipped": [
+          1.0,
+          1.0,
+          5.0
+        ],
+        "noul_override": null
+      }
+    }
+  }
+}

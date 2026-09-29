@@ -234,3 +234,34 @@ native PowerShell skip. Candidate weights are retained on lab; the temporary mod
 service is stopped. Laya remains intrinsically intent-only/shadow-only, with no promotion.
 See [scope results, audit and limitations](../training/results-intent-scope.md).
 GitHub:[milestone18](https://github.com/Vaniloo/mu-pyjava/issues/18).
+
+## Milestone 19 — blind review intake and focused scope boundaries
+
+Added prediction-blind exact-input review packets and an intake audit with frozen
+source/provenance/label hashes. Predictions, backend and permission outcomes stay
+out of reviewer packets. Reviewed manual labels with rationales count toward
+real-project intake only for explicitly attested ordinary project collections;
+constructed/unattested/teacher/unreviewed cases and previously seen exact inputs
+are excluded. Duplicate conflicts and input changes stop the audit. No human
+identity/collection truth is inferred, and no training export or accuracy claim
+is produced. The published 15-case constructed demo remains unlabeled and
+contributes zero independent real-project cases.
+
+Frozen 72 synthetic diagnostic cases before inference: 12 bilingual families,
+24 positive/negative/unknown each, covering reply-only proposals, executable
+prerequisites and compound commands. Real five-tool schemas; no command execution;
+diagnostic split rejected by training. Actual shipped-temperature comparison:
+mixed-r1 → scope-r1 false allows 6 → 7/24, false declines 7 → 6/24,
+correct decisive 29 → 32/48, known abstentions 6 → 3 and unknown abstentions
+22 → 24/24. Broad previous improvement does not resolve these boundaries.
+Scope still falsely allows five reply-only writes and two Java command explanations,
+and wrongly declines six necessary executable lookups. Compound-command controls
+have zero decisive errors, with one legitimate Go operation abstaining.
+
+Blind DeepSeek verification agreed 72/72, as teacher evidence rather than human
+gold. All inputs fit 512 tokens (max 174), no truncation; retained hashes and
+calibration unchanged. Seven new guards and full gate passed: 222 tests,
+221 passed and native PowerShell skipped. No retraining, serving process,
+checkpoint promotion or runtime/Java policy change. See
+[boundary results and collection limitations](../training/results-intent-boundary.md).
+GitHub: [milestone 19](https://github.com/Vaniloo/mu-pyjava/issues/19).

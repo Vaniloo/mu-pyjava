@@ -1,0 +1,38 @@
+{
+  "python": "3.10.20 (main, Mar 11 2026, 17:46:40) [GCC 14.3.0]",
+  "torch": "2.11.0+cu130",
+  "transformers": "5.4.0",
+  "laya_source_revision": "23a17522aa4942da6cce53a995a275760320b691",
+  "data_freeze_commit": "7f5c3ba",
+  "thresholds": {
+    "decline": 0.2,
+    "allow": 0.8
+  },
+  "checkpoints": {
+    "mixed": {
+      "weight_sha256": "1bf7cd28e32d2fef39299ac291362ec71b9d281a4c48b02e8b0c1580ae13c195",
+      "config_sha256": "725972b210301347877485fc7c45fe25c6a2f57408e68585c258dd1816830b90",
+      "max_len": 512,
+      "temperatures": [
+        1.0,
+        1.0,
+        1.5331206321716309
+      ]
+    },
+    "scope": {
+      "weight_sha256": "f90ac2e6f359691e4ace7c318d611a78461acbe8aa4e0d2962e7728368c84e3d",
+      "config_sha256": "d058ca3a6d93fd5dc38475523a0c41b41d71b91a891d69a86390fac2ddaf75bb",
+      "max_len": 512,
+      "temperatures": [
+        1.0,
+        1.0,
+        5.0
+      ]
+    }
+  },
+  "sequence_check": {
+    "cases": 72,
+    "maximum_tokens": 174,
+    "truncated_at_512": 0
+  }
+}
