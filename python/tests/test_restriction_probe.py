@@ -38,3 +38,15 @@ class RestrictionTests(unittest.TestCase):
             self.assertEqual(set(t['requests']),{'plain','restricted','decline','unknown'})
             self.assertTrue(t['requests']['restricted'].startswith(t['requests']['plain']+' '))
             self.assertIsNone(audit.command_state_issue(t))
+
+    def test_future_designs_exclude_this_probe_and_keep_old_designs_reproducible(self):
+        from pathlib import Path
+        from mupyjava.judge_data import read_jsonl
+        module=training_module('training_design');root=Path(__file__).resolve().parents[2]
+        rows=read_jsonl(root/'training/datasets/restriction-probe-r1/cases.jsonl')
+        for filename in ['intent-semantic-r4.json','intent-semantic-r4-uniform.json']:
+            design=module.load_design(root/'training/designs'/filename)
+            with self.assertRaisesRegex(ValueError,'protected'):
+                module.audit_design(rows,design,root)
+        old=module.load_design(root/'training/designs/intent-semantic-r3.json')
+        self.assertFalse(any(r['path'].endswith('restriction-probe-r1/cases.jsonl') for r in old['protected_inputs']))

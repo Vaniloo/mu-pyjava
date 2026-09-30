@@ -371,3 +371,21 @@ evaluations and both GPU training runs completed. Existing runtime stays unchang
 tokens (max149). Small authored fixtures, no independent human gold/real telemetry.
 See [full comparison](../training/results-captured-training.md) and
 [milestone24](https://github.com/Vaniloo/mu-pyjava/issues/24).
+
+
+## Milestone 25 — paired unrelated-restriction diagnostic
+
+Frozen80 authored Agent-captured states (10 actions ×2 languages ×4 conditions)
+before inference in49ae425. All80 blind teacher labels agreed; full call contracts
+and history exclusion pass. Scripted probes, no real-user telemetry/human gold.
+
+Only adding unrelated restrictions turns correct allows into wrong declines in
+4/20 mixed,2/20 scope,8/20 r3-uniform,8/20 r3-weighted comparisons. Overall known
+correct decisive counts are43/51/37/39 out of60; all models abstain20/20 unknowns.
+Neither candidate is promoted. This isolates clause addition, not a keyword or
+parameter-count cause. Future r4 designs protect all these inspected cases.
+
+247 distinct tests exercised (246 passed, one platform skip); four serving runs
+completed, checkpoint/config hashes unchanged, max150 tokens/no truncation.
+No retraining or runtime changes. See [full diagnostic](../training/results-restriction-probe.md)
+and [milestone25](https://github.com/Vaniloo/mu-pyjava/issues/25).

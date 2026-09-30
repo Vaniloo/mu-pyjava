@@ -1,5 +1,8 @@
 # Revised intent training design
 
+Latest diagnostic: [unrelated restrictions](results-restriction-probe.md). Use r4 protection configs for future collections; they additionally exclude inspected r3 inputs and the new probe. No r4 training has run. New data should distinguish positive permission with unrelated restrictions from a restriction on the action itself.
+
+
 Update after milestones 21–22: the first pilot was rejected for transport-inconsistent data. See [pilot correction](results-intent-semantic.md) and [runtime capture intake](results-harness-intake.md). Use the r3 design copies for the next collection; they additionally exclude the inspected r2 pilot. The protocol below records the original prescribed comparison. The [captured r3 dataset](datasets/intent-captured-r3/README.md) is now frozen, and [both training arms completed](results-captured-training.md) without a promotion.
 
 
