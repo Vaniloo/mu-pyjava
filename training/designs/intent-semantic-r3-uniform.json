@@ -76,6 +76,10 @@
     {
       "path": "training/datasets/intent-semantic-r2/fresh-cases.jsonl",
       "selection": "all"
+    },
+    {
+      "path": "training/datasets/harness-intake-r1/cases.jsonl",
+      "selection": "all"
     }
   ],
   "rehearsal_fraction": 0.25
