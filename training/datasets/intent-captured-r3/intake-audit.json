@@ -1,0 +1,59 @@
+{
+  "plan_digest": "d373e0b09e846d55424d32f97690cc33a2a130c03c1c26077bc6c67555376050",
+  "preparation_exclusions": {
+    "retention_doc": [
+      "capture_failed_or_missing"
+    ],
+    "route_table": [
+      "capture_failed_or_missing"
+    ],
+    "ratio_zero": [
+      "capture_failed_or_missing"
+    ],
+    "sum_bytes": [
+      "original_contract_failure"
+    ]
+  },
+  "review_exclusions": {
+    "captured-r3/compile_python": [
+      "duplicate_input"
+    ],
+    "captured-r3/perl_syntax": [
+      "duplicate_input"
+    ],
+    "captured-r3/ps_count": [
+      "blind_label_disagreement"
+    ],
+    "captured-r3/ps_size": [
+      "blind_label_disagreement",
+      "duplicate_input"
+    ],
+    "captured-r3/python_help": [
+      "duplicate_input"
+    ]
+  },
+  "submitted_rows": 141,
+  "accepted_fresh": 108,
+  "fresh_families_by_split": {
+    "train": 20,
+    "validation": 4,
+    "test": 5,
+    "calibration": 4
+  },
+  "accepted_fresh_by_split": {
+    "train": 69,
+    "validation": 12,
+    "calibration": 12,
+    "test": 15
+  },
+  "teacher_agreement": 139,
+  "rehearsal_rows": 382,
+  "rehearsal_contract_exclusions": [
+    "24bb87515fe91a51b529226aa06231b4",
+    "86c96b578cc222b6cef70d0437aa0923"
+  ],
+  "human_gold": 0,
+  "real_user_project_traces": 0,
+  "candidate_inference": false,
+  "ready_for_training": true
+}

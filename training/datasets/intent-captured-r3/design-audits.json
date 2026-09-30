@@ -1,0 +1,478 @@
+{
+  "intent-semantic-r3.json": {
+    "design": {
+      "schema_version": 1,
+      "name": "intent-semantic-r3",
+      "weighting": "family_request",
+      "patience": 1,
+      "min_delta": 0.001,
+      "protected_inputs": [
+        {
+          "path": "training/datasets/intent-mixed-r1/intent-v2.jsonl.gz",
+          "selection": "nontrain"
+        },
+        {
+          "path": "training/datasets/intent-scope-r1/intent-v2.jsonl.gz",
+          "selection": "nontrain"
+        },
+        {
+          "path": "training/datasets/intent-uncertainty-r1/intent-v2.jsonl.gz",
+          "selection": "nontrain"
+        },
+        {
+          "path": "training/datasets/intent-v2-synthetic-r1/intent-v2.jsonl.gz",
+          "selection": "nontrain"
+        },
+        {
+          "path": "training/datasets/intent-v2-synthetic-r2/intent-v2.jsonl.gz",
+          "selection": "nontrain"
+        },
+        {
+          "path": "training/datasets/intent-ablation-joint-r1/controls.jsonl.gz",
+          "selection": "all"
+        },
+        {
+          "path": "training/datasets/intent-ablation-r1/controls.jsonl.gz",
+          "selection": "all"
+        },
+        {
+          "path": "training/datasets/intent-mixed-r1/path-controls-v2.jsonl.gz",
+          "selection": "all"
+        },
+        {
+          "path": "training/datasets/intent-boundary-r1/cases.jsonl",
+          "selection": "all"
+        },
+        {
+          "path": "training/scope_challenge.jsonl",
+          "selection": "all"
+        },
+        {
+          "path": "training/manual_eval.jsonl",
+          "selection": "all"
+        },
+        {
+          "path": "training/results/intent-mixed-r1/mixed-harness-fix-retry-samples.jsonl",
+          "selection": "all"
+        },
+        {
+          "path": "training/results/intent-mixed-r1/mixed-harness-samples.jsonl",
+          "selection": "all"
+        },
+        {
+          "path": "training/results/intent-mixed-r1/pending-review.samples.jsonl",
+          "selection": "all"
+        },
+        {
+          "path": "training/results/intent-scope-r1/scope-harness-samples.jsonl",
+          "selection": "all"
+        },
+        {
+          "path": "training/results/intent-uncertainty-r1/uncertainty-harness-samples.jsonl",
+          "selection": "all"
+        },
+        {
+          "path": "training/datasets/intent-semantic-r2/intent-v2.jsonl.gz",
+          "selection": "all"
+        },
+        {
+          "path": "training/datasets/intent-semantic-r2/fresh-cases.jsonl",
+          "selection": "all"
+        },
+        {
+          "path": "training/datasets/harness-intake-r1/cases.jsonl",
+          "selection": "all"
+        }
+      ],
+      "rehearsal_fraction": 0.25
+    },
+    "design_digest": "d857095aaa5fc81def790c591f9ce342eb5ff51be17fc9c2654766e86acdfc40",
+    "protected_files": [
+      {
+        "path": "training/datasets/intent-mixed-r1/intent-v2.jsonl.gz",
+        "selection": "nontrain",
+        "sha256": "e78e7d6d0df1345bec0bf4650260f71bd13415fb4b1bcc5bd89510c6c85ef1bc",
+        "selected_rows": 2256
+      },
+      {
+        "path": "training/datasets/intent-scope-r1/intent-v2.jsonl.gz",
+        "selection": "nontrain",
+        "sha256": "48deadfcf55b6962a2f269f957226571e164daa6599a8f97c48d4d6b85c5ba54",
+        "selected_rows": 5334
+      },
+      {
+        "path": "training/datasets/intent-uncertainty-r1/intent-v2.jsonl.gz",
+        "selection": "nontrain",
+        "sha256": "d8e400f36408fb423b352695bc673ac85eab2dd4a30782e724190eb2ed437064",
+        "selected_rows": 1080
+      },
+      {
+        "path": "training/datasets/intent-v2-synthetic-r1/intent-v2.jsonl.gz",
+        "selection": "nontrain",
+        "sha256": "58e7511a752a39cc22c88466862c708d626241669520fe79bcf77c88fc397c21",
+        "selected_rows": 1740
+      },
+      {
+        "path": "training/datasets/intent-v2-synthetic-r2/intent-v2.jsonl.gz",
+        "selection": "nontrain",
+        "sha256": "8bca37453d5d97d0af659168478acfebd255f22b15bbd27933c3496f57312d44",
+        "selected_rows": 1740
+      },
+      {
+        "path": "training/datasets/intent-ablation-joint-r1/controls.jsonl.gz",
+        "selection": "all",
+        "sha256": "6f4193f8c544839bb048bbb3f8486241debe919bce1abf6e9885bcbc9b385961",
+        "selected_rows": 336
+      },
+      {
+        "path": "training/datasets/intent-ablation-r1/controls.jsonl.gz",
+        "selection": "all",
+        "sha256": "b951eb94c79c9b6d8dcd677f10c940afc1ca1815d2bbb717b7371bb2accec76d",
+        "selected_rows": 1164
+      },
+      {
+        "path": "training/datasets/intent-mixed-r1/path-controls-v2.jsonl.gz",
+        "selection": "all",
+        "sha256": "67c89d01f23d4653dea1db934ee0271b1506068fbebe41c3d3e1fc925611b6f4",
+        "selected_rows": 522
+      },
+      {
+        "path": "training/datasets/intent-boundary-r1/cases.jsonl",
+        "selection": "all",
+        "sha256": "049e8e5fa6bcce003e24c9d824b737a086e957a2cb49445df53f19218348d226",
+        "selected_rows": 72
+      },
+      {
+        "path": "training/scope_challenge.jsonl",
+        "selection": "all",
+        "sha256": "f096d319dd98a06c8bf1b62ffa8d66477241a404947cf5f89f75b661b7d6fff4",
+        "selected_rows": 24
+      },
+      {
+        "path": "training/manual_eval.jsonl",
+        "selection": "all",
+        "sha256": "225063271b37bba208b5980c5313e30ce302b0149c9a5a41cad4c3cec8329cb4",
+        "selected_rows": 20
+      },
+      {
+        "path": "training/results/intent-mixed-r1/mixed-harness-fix-retry-samples.jsonl",
+        "selection": "all",
+        "sha256": "ff1f9d5abd882bd962a8f12d0c4f551feb4cf0e52bd1b4eac46b12b358b78e77",
+        "selected_rows": 3
+      },
+      {
+        "path": "training/results/intent-mixed-r1/mixed-harness-samples.jsonl",
+        "selection": "all",
+        "sha256": "e8d0d7d1e3c024e9cc86c631edf81adb8d6a24f30d24a1be2dd28e22da33ee0c",
+        "selected_rows": 8
+      },
+      {
+        "path": "training/results/intent-mixed-r1/pending-review.samples.jsonl",
+        "selection": "all",
+        "sha256": "91909c8f07505bf2261397d6532a9c5183c24f97b0c0c0fe06bcdf9406df3fea",
+        "selected_rows": 8
+      },
+      {
+        "path": "training/results/intent-scope-r1/scope-harness-samples.jsonl",
+        "selection": "all",
+        "sha256": "b085a3c675a288cb63074d4c3402c09d449dc29da5f2f1dd09c93dd8902814d3",
+        "selected_rows": 7
+      },
+      {
+        "path": "training/results/intent-uncertainty-r1/uncertainty-harness-samples.jsonl",
+        "selection": "all",
+        "sha256": "50bd5b6eee721214cd41f5129e4349c4f6fbc74c1c1164e9a68e951685cd349f",
+        "selected_rows": 8
+      },
+      {
+        "path": "training/datasets/intent-semantic-r2/intent-v2.jsonl.gz",
+        "selection": "all",
+        "sha256": "db59da3e5cf14f4a0becae4e1a0da90dc65c54726eaceaf4122c1d36acdf6a26",
+        "selected_rows": 664
+      },
+      {
+        "path": "training/datasets/intent-semantic-r2/fresh-cases.jsonl",
+        "selection": "all",
+        "sha256": "fee904303f7e04da32377c9a4fb22501c3082a67ab51acef0c13bf6195c1f796",
+        "selected_rows": 350
+      },
+      {
+        "path": "training/datasets/harness-intake-r1/cases.jsonl",
+        "selection": "all",
+        "sha256": "f6bd569a503490cf5819d8c3fed6e7385175c5c243cf69c1b6de5a0a1b780b09",
+        "selected_rows": 44
+      }
+    ],
+    "protected_unique_inputs": 13762,
+    "contrast_pairs": 36,
+    "inventory": {
+      "train": {
+        "rows": 451,
+        "families": 137,
+        "distinct_requests": 437,
+        "weight_sum": 451.0000000000028,
+        "entropy_floor": 0.23006167104055153
+      },
+      "validation": {
+        "rows": 12,
+        "families": 4,
+        "distinct_requests": 12,
+        "weight_sum": 12.0,
+        "entropy_floor": 0.23104906018664842
+      },
+      "calibration": {
+        "rows": 12,
+        "families": 4,
+        "distinct_requests": 12,
+        "weight_sum": 12.0,
+        "entropy_floor": 0.23104906018664842
+      },
+      "test": {
+        "rows": 15,
+        "families": 5,
+        "distinct_requests": 15,
+        "weight_sum": 15.0,
+        "entropy_floor": 0.23104906018664845
+      }
+    },
+    "limitations": "Exact exclusion and curator-assigned semantic families; semantic independence and human provenance still require review. Not a deployment promotion gate."
+  },
+  "intent-semantic-r3-uniform.json": {
+    "design": {
+      "schema_version": 1,
+      "name": "intent-semantic-r3-uniform",
+      "weighting": "uniform",
+      "patience": 1,
+      "min_delta": 0.001,
+      "protected_inputs": [
+        {
+          "path": "training/datasets/intent-mixed-r1/intent-v2.jsonl.gz",
+          "selection": "nontrain"
+        },
+        {
+          "path": "training/datasets/intent-scope-r1/intent-v2.jsonl.gz",
+          "selection": "nontrain"
+        },
+        {
+          "path": "training/datasets/intent-uncertainty-r1/intent-v2.jsonl.gz",
+          "selection": "nontrain"
+        },
+        {
+          "path": "training/datasets/intent-v2-synthetic-r1/intent-v2.jsonl.gz",
+          "selection": "nontrain"
+        },
+        {
+          "path": "training/datasets/intent-v2-synthetic-r2/intent-v2.jsonl.gz",
+          "selection": "nontrain"
+        },
+        {
+          "path": "training/datasets/intent-ablation-joint-r1/controls.jsonl.gz",
+          "selection": "all"
+        },
+        {
+          "path": "training/datasets/intent-ablation-r1/controls.jsonl.gz",
+          "selection": "all"
+        },
+        {
+          "path": "training/datasets/intent-mixed-r1/path-controls-v2.jsonl.gz",
+          "selection": "all"
+        },
+        {
+          "path": "training/datasets/intent-boundary-r1/cases.jsonl",
+          "selection": "all"
+        },
+        {
+          "path": "training/scope_challenge.jsonl",
+          "selection": "all"
+        },
+        {
+          "path": "training/manual_eval.jsonl",
+          "selection": "all"
+        },
+        {
+          "path": "training/results/intent-mixed-r1/mixed-harness-fix-retry-samples.jsonl",
+          "selection": "all"
+        },
+        {
+          "path": "training/results/intent-mixed-r1/mixed-harness-samples.jsonl",
+          "selection": "all"
+        },
+        {
+          "path": "training/results/intent-mixed-r1/pending-review.samples.jsonl",
+          "selection": "all"
+        },
+        {
+          "path": "training/results/intent-scope-r1/scope-harness-samples.jsonl",
+          "selection": "all"
+        },
+        {
+          "path": "training/results/intent-uncertainty-r1/uncertainty-harness-samples.jsonl",
+          "selection": "all"
+        },
+        {
+          "path": "training/datasets/intent-semantic-r2/intent-v2.jsonl.gz",
+          "selection": "all"
+        },
+        {
+          "path": "training/datasets/intent-semantic-r2/fresh-cases.jsonl",
+          "selection": "all"
+        },
+        {
+          "path": "training/datasets/harness-intake-r1/cases.jsonl",
+          "selection": "all"
+        }
+      ],
+      "rehearsal_fraction": 0.25
+    },
+    "design_digest": "6561d9e7d4ba0d2b98661298e759630be9d6d28d3346517cfa8e0cf3d65f7bf4",
+    "protected_files": [
+      {
+        "path": "training/datasets/intent-mixed-r1/intent-v2.jsonl.gz",
+        "selection": "nontrain",
+        "sha256": "e78e7d6d0df1345bec0bf4650260f71bd13415fb4b1bcc5bd89510c6c85ef1bc",
+        "selected_rows": 2256
+      },
+      {
+        "path": "training/datasets/intent-scope-r1/intent-v2.jsonl.gz",
+        "selection": "nontrain",
+        "sha256": "48deadfcf55b6962a2f269f957226571e164daa6599a8f97c48d4d6b85c5ba54",
+        "selected_rows": 5334
+      },
+      {
+        "path": "training/datasets/intent-uncertainty-r1/intent-v2.jsonl.gz",
+        "selection": "nontrain",
+        "sha256": "d8e400f36408fb423b352695bc673ac85eab2dd4a30782e724190eb2ed437064",
+        "selected_rows": 1080
+      },
+      {
+        "path": "training/datasets/intent-v2-synthetic-r1/intent-v2.jsonl.gz",
+        "selection": "nontrain",
+        "sha256": "58e7511a752a39cc22c88466862c708d626241669520fe79bcf77c88fc397c21",
+        "selected_rows": 1740
+      },
+      {
+        "path": "training/datasets/intent-v2-synthetic-r2/intent-v2.jsonl.gz",
+        "selection": "nontrain",
+        "sha256": "8bca37453d5d97d0af659168478acfebd255f22b15bbd27933c3496f57312d44",
+        "selected_rows": 1740
+      },
+      {
+        "path": "training/datasets/intent-ablation-joint-r1/controls.jsonl.gz",
+        "selection": "all",
+        "sha256": "6f4193f8c544839bb048bbb3f8486241debe919bce1abf6e9885bcbc9b385961",
+        "selected_rows": 336
+      },
+      {
+        "path": "training/datasets/intent-ablation-r1/controls.jsonl.gz",
+        "selection": "all",
+        "sha256": "b951eb94c79c9b6d8dcd677f10c940afc1ca1815d2bbb717b7371bb2accec76d",
+        "selected_rows": 1164
+      },
+      {
+        "path": "training/datasets/intent-mixed-r1/path-controls-v2.jsonl.gz",
+        "selection": "all",
+        "sha256": "67c89d01f23d4653dea1db934ee0271b1506068fbebe41c3d3e1fc925611b6f4",
+        "selected_rows": 522
+      },
+      {
+        "path": "training/datasets/intent-boundary-r1/cases.jsonl",
+        "selection": "all",
+        "sha256": "049e8e5fa6bcce003e24c9d824b737a086e957a2cb49445df53f19218348d226",
+        "selected_rows": 72
+      },
+      {
+        "path": "training/scope_challenge.jsonl",
+        "selection": "all",
+        "sha256": "f096d319dd98a06c8bf1b62ffa8d66477241a404947cf5f89f75b661b7d6fff4",
+        "selected_rows": 24
+      },
+      {
+        "path": "training/manual_eval.jsonl",
+        "selection": "all",
+        "sha256": "225063271b37bba208b5980c5313e30ce302b0149c9a5a41cad4c3cec8329cb4",
+        "selected_rows": 20
+      },
+      {
+        "path": "training/results/intent-mixed-r1/mixed-harness-fix-retry-samples.jsonl",
+        "selection": "all",
+        "sha256": "ff1f9d5abd882bd962a8f12d0c4f551feb4cf0e52bd1b4eac46b12b358b78e77",
+        "selected_rows": 3
+      },
+      {
+        "path": "training/results/intent-mixed-r1/mixed-harness-samples.jsonl",
+        "selection": "all",
+        "sha256": "e8d0d7d1e3c024e9cc86c631edf81adb8d6a24f30d24a1be2dd28e22da33ee0c",
+        "selected_rows": 8
+      },
+      {
+        "path": "training/results/intent-mixed-r1/pending-review.samples.jsonl",
+        "selection": "all",
+        "sha256": "91909c8f07505bf2261397d6532a9c5183c24f97b0c0c0fe06bcdf9406df3fea",
+        "selected_rows": 8
+      },
+      {
+        "path": "training/results/intent-scope-r1/scope-harness-samples.jsonl",
+        "selection": "all",
+        "sha256": "b085a3c675a288cb63074d4c3402c09d449dc29da5f2f1dd09c93dd8902814d3",
+        "selected_rows": 7
+      },
+      {
+        "path": "training/results/intent-uncertainty-r1/uncertainty-harness-samples.jsonl",
+        "selection": "all",
+        "sha256": "50bd5b6eee721214cd41f5129e4349c4f6fbc74c1c1164e9a68e951685cd349f",
+        "selected_rows": 8
+      },
+      {
+        "path": "training/datasets/intent-semantic-r2/intent-v2.jsonl.gz",
+        "selection": "all",
+        "sha256": "db59da3e5cf14f4a0becae4e1a0da90dc65c54726eaceaf4122c1d36acdf6a26",
+        "selected_rows": 664
+      },
+      {
+        "path": "training/datasets/intent-semantic-r2/fresh-cases.jsonl",
+        "selection": "all",
+        "sha256": "fee904303f7e04da32377c9a4fb22501c3082a67ab51acef0c13bf6195c1f796",
+        "selected_rows": 350
+      },
+      {
+        "path": "training/datasets/harness-intake-r1/cases.jsonl",
+        "selection": "all",
+        "sha256": "f6bd569a503490cf5819d8c3fed6e7385175c5c243cf69c1b6de5a0a1b780b09",
+        "selected_rows": 44
+      }
+    ],
+    "protected_unique_inputs": 13762,
+    "contrast_pairs": 36,
+    "inventory": {
+      "train": {
+        "rows": 451,
+        "families": 137,
+        "distinct_requests": 437,
+        "weight_sum": 451.0000000000086,
+        "entropy_floor": 0.2104844841490937
+      },
+      "validation": {
+        "rows": 12,
+        "families": 4,
+        "distinct_requests": 12,
+        "weight_sum": 12.0,
+        "entropy_floor": 0.23104906018664842
+      },
+      "calibration": {
+        "rows": 12,
+        "families": 4,
+        "distinct_requests": 12,
+        "weight_sum": 12.0,
+        "entropy_floor": 0.23104906018664842
+      },
+      "test": {
+        "rows": 15,
+        "families": 5,
+        "distinct_requests": 15,
+        "weight_sum": 15.0,
+        "entropy_floor": 0.23104906018664845
+      }
+    },
+    "limitations": "Exact exclusion and curator-assigned semantic families; semantic independence and human provenance still require review. Not a deployment promotion gate."
+  }
+}

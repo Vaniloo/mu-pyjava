@@ -1,0 +1,36 @@
+{
+  "initial_review": [
+    {
+      "index": 0,
+      "ok": true
+    },
+    {
+      "index": 1,
+      "ok": true
+    },
+    {
+      "index": 2,
+      "ok": true
+    },
+    {
+      "index": 3,
+      "ok": true
+    },
+    {
+      "index": 4,
+      "ok": true
+    },
+    {
+      "index": 5,
+      "ok": false,
+      "failure": "ValueError"
+    }
+  ],
+  "retry": [
+    {
+      "index": 5,
+      "ok": true
+    }
+  ],
+  "protocol_amendment": "One bounded transport/schema-only retry of failed review batch 5 before freeze or learned judge inference. Identical states and hidden authored labels; successful review batches and label disagreements were not retried. The original malformed response was not retained by the API client; the failure category was ValueError. Initial freeze failed due to missing test reviews and wrote no dataset."
+}

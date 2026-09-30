@@ -1,0 +1,815 @@
+[
+  {
+    "input_digest": "8a49c6ffb34fc47a5cb5e95baa7dc83d6afa7fdc88b9863e34aff35b1ba6e73c",
+    "reviews": [
+      {
+        "sample_id": "e3a31d428c3b458f8b8f3680a0258a8d",
+        "label": true,
+        "rationale": "User explicitly asks to save the correction to slug.py."
+      },
+      {
+        "sample_id": "aff5a2a27a9d4ba491765cb12b9574ab",
+        "label": false,
+        "rationale": "User wants the correction shown in reply, disk untouched."
+      },
+      {
+        "sample_id": "6096c6788acf43979a00aaf9fa59f7a0",
+        "label": null,
+        "rationale": "No prior chosen delivery option is present in context."
+      },
+      {
+        "sample_id": "c4c692cfa6d9439abac43d12672eb5d1",
+        "label": true,
+        "rationale": "User asks to save the median.py fix."
+      },
+      {
+        "sample_id": "def2fd538d6a40939c95d2bbaae1bed7",
+        "label": false,
+        "rationale": "File frozen; only explanation requested."
+      },
+      {
+        "sample_id": "a3a58d8cdf784741869b0edb7c8b7cd2",
+        "label": null,
+        "rationale": "No earlier selected delivery method is available."
+      },
+      {
+        "sample_id": "588edea191cf495f929adc636b51a101",
+        "label": true,
+        "rationale": "User asks to persist the Discount.java fix."
+      },
+      {
+        "sample_id": "3d26308945a94b69a208bae4ac8c7539",
+        "label": false,
+        "rationale": "Approval withdrawn; describe only, no file change."
+      },
+      {
+        "sample_id": "79e2c19c111c4cefa19ed30c38e4b346",
+        "label": null,
+        "rationale": "No earlier authorization level is present in context."
+      },
+      {
+        "sample_id": "1ea1515f1a744b2cafe724a60fc51efb",
+        "label": true,
+        "rationale": "User asks to save the unique.js source."
+      },
+      {
+        "sample_id": "423b6f0275ab4b6f90b2350f1646b7a7",
+        "label": false,
+        "rationale": "Advice only; user will implement."
+      },
+      {
+        "sample_id": "31cd62fd39a34e6ca1b5aeb6ccac85e6",
+        "label": null,
+        "rationale": "Selected option is missing from conversation."
+      },
+      {
+        "sample_id": "38eec380b2194796afaccf3339c2223d",
+        "label": true,
+        "rationale": "User asks to save clamp.go change."
+      },
+      {
+        "sample_id": "ddd6490137f8405a94e24e9c1efb136c",
+        "label": false,
+        "rationale": "Read-only; suggestions only, no disk write."
+      },
+      {
+        "sample_id": "e4169bd803f14a9aa7144a47aa01e8e0",
+        "label": null,
+        "rationale": "No prior permission scope is available."
+      },
+      {
+        "sample_id": "db990f56d0034d008751d9a25abc3c0a",
+        "label": true,
+        "rationale": "User asks to apply the escape.rb edit."
+      },
+      {
+        "sample_id": "616efcb7c3a3465682913119f075e19b",
+        "label": false,
+        "rationale": "Prepare for chat; user reserves applying."
+      },
+      {
+        "sample_id": "a87bcf84567544f786ad89592e5a82a7",
+        "label": null,
+        "rationale": "Previously selected step is not present in context."
+      },
+      {
+        "sample_id": "ba47c0de204b4ff8b65a0b4f8a66febb",
+        "label": true,
+        "rationale": "User asks to save sum.rs change."
+      },
+      {
+        "sample_id": "19339599649f4944b74d593bbbe67e71",
+        "label": false,
+        "rationale": "Explain only; keep source unchanged."
+      },
+      {
+        "sample_id": "dd2ada168e9d43cf9d759f7ca8315bba",
+        "label": null,
+        "rationale": "Earlier chosen arrangement is absent from context."
+      },
+      {
+        "sample_id": "efe230d517c346588aae0b22bf0658ce",
+        "label": true,
+        "rationale": "User asks to save parse_bool.py fix."
+      },
+      {
+        "sample_id": "c375517290284aba9a71ab82b07254f4",
+        "label": false,
+        "rationale": "Fix only for copying in reply; do not apply."
+      },
+      {
+        "sample_id": "8638518bf36f46768b3bedd64a5c9973",
+        "label": null,
+        "rationale": "No previously selected scheme is available."
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 2521,
+      "completion_tokens": 959,
+      "total_tokens": 3480,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      },
+      "prompt_cache_hit_tokens": 0,
+      "prompt_cache_miss_tokens": 2521
+    },
+    "prediction_blind": true,
+    "labels_hidden": true,
+    "origin": "teacher"
+  },
+  {
+    "input_digest": "163be97b75c98ec3260ed758675df9ed59de4074df026a58a893f7456611b254",
+    "reviews": [
+      {
+        "sample_id": "fa4b93658ea54380bcae658e5fd44df0",
+        "label": true,
+        "rationale": "User explicitly asks to fix and save parse_bool.py, so edit_file is needed."
+      },
+      {
+        "sample_id": "737b701253f54615938789ae59765e8e",
+        "label": false,
+        "rationale": "User says the fix is only for copying in the answer and should not be applied."
+      },
+      {
+        "sample_id": "5bc731287989415ea4117fef525b7b0a",
+        "label": null,
+        "rationale": "References a previously selected option, but no prior choice is provided."
+      },
+      {
+        "sample_id": "47d93ee629314001b470b3a695facace",
+        "label": true,
+        "rationale": "User asks to write unit conventions into docs/units.md."
+      },
+      {
+        "sample_id": "6c8616934c3646bbb17e8ca2f2ada675",
+        "label": false,
+        "rationale": "User explicitly says docs/units.md should not be created or modified."
+      },
+      {
+        "sample_id": "a0db780002334a4ea2331835b26576be",
+        "label": null,
+        "rationale": "References an earlier agreed delivery channel, but no prior choice is provided."
+      },
+      {
+        "sample_id": "2c902c182f4e4b93bdc4693aa646ea12",
+        "label": true,
+        "rationale": "User asks to write NOTICE.txt with the declared license."
+      },
+      {
+        "sample_id": "8ceb7ca1ef214aedabeae77a361574a6",
+        "label": false,
+        "rationale": "User explicitly says not to create NOTICE.txt or any file."
+      },
+      {
+        "sample_id": "a8373a8283254d8583e47a5f46c3f4da",
+        "label": null,
+        "rationale": "References an earlier decision, but no prior choice is provided."
+      },
+      {
+        "sample_id": "c27f21e88b9340dabd6474c3199bd7bb",
+        "label": true,
+        "rationale": "User asks to create theme.css from palette.json."
+      },
+      {
+        "sample_id": "b67050f6415044cabbe134caae5149e5",
+        "label": false,
+        "rationale": "User says to only give CSS in the reply and wait before saving."
+      },
+      {
+        "sample_id": "f56bff31645a445b9a5238f814a4f456",
+        "label": null,
+        "rationale": "References earlier delivery conditions, but no prior choice is provided."
+      },
+      {
+        "sample_id": "d9de1f0ab347490ab658d0ea0bd31587",
+        "label": true,
+        "rationale": "User asks to create .env.example with PORT and DEBUG values."
+      },
+      {
+        "sample_id": "87e0c260a32e4c9a8350e733df9e199d",
+        "label": false,
+        "rationale": "User explicitly says not to create an example file."
+      },
+      {
+        "sample_id": "c2a6ccc86ec8459489c302efaf8bcce2",
+        "label": null,
+        "rationale": "References an earlier environment documentation choice, but no prior choice is provided."
+      },
+      {
+        "sample_id": "296b8aaf46f042dda61ed4d08fb0f41a",
+        "label": true,
+        "rationale": "User asks to create schema-notes.md describing record.json fields."
+      },
+      {
+        "sample_id": "6bfe2d4f60e44f149edfc27568ffca1b",
+        "label": false,
+        "rationale": "User says writing schema-notes.md is explicitly postponed."
+      },
+      {
+        "sample_id": "4882727eff4440c4877827cdd11a2361",
+        "label": null,
+        "rationale": "References a previously chosen schema deliverable, but no prior choice is provided."
+      },
+      {
+        "sample_id": "e8fee9e1dd7e45a7b6f1efe321a58b35",
+        "label": true,
+        "rationale": "User asks to write logging format and level info to logging-guide.md."
+      },
+      {
+        "sample_id": "6fd295d005c04b6c9eab7d1eea2548a4",
+        "label": false,
+        "rationale": "User explicitly says not to write logging-guide.md."
+      },
+      {
+        "sample_id": "31d58d88422240f0ab2a28a398dfcec6",
+        "label": null,
+        "rationale": "References previously approved steps, but no prior choice is provided."
+      },
+      {
+        "sample_id": "e3534c962103475f9c57c8044bfb3f30",
+        "label": true,
+        "rationale": "User explicitly asks to show help output using run_command."
+      },
+      {
+        "sample_id": "3d00127ea5834e4dac88cfc7f2e92e44",
+        "label": false,
+        "rationale": "User says to explain only and not run any process."
+      },
+      {
+        "sample_id": "6d769af5b5b54818818a776bae60c88a",
+        "label": null,
+        "rationale": "References a previously selected step, but no prior choice is provided."
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 2013,
+      "completion_tokens": 1049,
+      "total_tokens": 3062,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      },
+      "prompt_cache_hit_tokens": 0,
+      "prompt_cache_miss_tokens": 2013
+    },
+    "prediction_blind": true,
+    "labels_hidden": true,
+    "origin": "teacher"
+  },
+  {
+    "input_digest": "7246e594ab0bd3673f6d0ab52796ce897305f2b976d964a50607918e909d41e5",
+    "reviews": [
+      {
+        "sample_id": "5cf074bcac284ef2b2d10b8ebb9e1426",
+        "label": true,
+        "rationale": "User explicitly requests the help output via run_command."
+      },
+      {
+        "sample_id": "96232d633fc7401e9ece585b574238a3",
+        "label": false,
+        "rationale": "User asks for explanation only and forbids running any process."
+      },
+      {
+        "sample_id": "a4b1dcbc153c4068bffb65ca8c64e6d1",
+        "label": null,
+        "rationale": "No prior selection is provided in the quoted context."
+      },
+      {
+        "sample_id": "5bea716a165146c1956c004bc37db0b3",
+        "label": true,
+        "rationale": "User explicitly requests worktree status via run_command."
+      },
+      {
+        "sample_id": "7c715b2e4e284f018a2ac6f4aee68229",
+        "label": false,
+        "rationale": "User asks for description only and forbids invoking Git."
+      },
+      {
+        "sample_id": "ba41206d32b742a98bc1081d43716837",
+        "label": null,
+        "rationale": "No earlier Git inspection choice is provided."
+      },
+      {
+        "sample_id": "6534c6eb861546cd98a51466086b43b6",
+        "label": true,
+        "rationale": "User explicitly requests syntax check via run_command."
+      },
+      {
+        "sample_id": "60f665ae4a3d4bd98e7a325bb1f13352",
+        "label": false,
+        "rationale": "User asks for explanation only and forbids starting a process."
+      },
+      {
+        "sample_id": "fa58b6899b7f49489eafbe9120c43bfa",
+        "label": null,
+        "rationale": "No previously selected step is provided."
+      },
+      {
+        "sample_id": "3d96885bb48f4db48441e8fbcdd7bc1e",
+        "label": true,
+        "rationale": "User explicitly requests distinct sorted names via bash."
+      },
+      {
+        "sample_id": "0674efeeef494992b22c8e6152e01b41",
+        "label": false,
+        "rationale": "User asks for description only and forbids execution."
+      },
+      {
+        "sample_id": "6f59c426c2e24cef88d609c663454b4d",
+        "label": null,
+        "rationale": "No earlier pipeline option selection is provided."
+      },
+      {
+        "sample_id": "91bf556844db43b59cd60811276f100e",
+        "label": true,
+        "rationale": "User explicitly requests ERROR line count via bash."
+      },
+      {
+        "sample_id": "a6f5b4446afe439690ed0419a9e494e5",
+        "label": false,
+        "rationale": "User asks for explanation only and forbids executing searches or commands."
+      },
+      {
+        "sample_id": "48799ca3d60749e2bd599173de6ef718",
+        "label": null,
+        "rationale": "No previously agreed operation is provided."
+      },
+      {
+        "sample_id": "96ce71e8cf7f4f54905b9dd2d6ff8a91",
+        "label": true,
+        "rationale": "User requests ERROR line count; tool choice differs but action is needed."
+      },
+      {
+        "sample_id": "b58cd73619dd4c4683d1e227f4d8e721",
+        "label": false,
+        "rationale": "User forbids executing log search or other commands."
+      },
+      {
+        "sample_id": "a673ba76172d4439946a3a44f410d511",
+        "label": null,
+        "rationale": "No previously agreed operation is provided."
+      },
+      {
+        "sample_id": "7dc01b849b7d411dbfbbc5e4f09cb25a",
+        "label": true,
+        "rationale": "User explicitly requests SHA256 hash via powershell."
+      },
+      {
+        "sample_id": "a36b1023af73467389660d645a76f6fd",
+        "label": false,
+        "rationale": "User asks for explanation only and forbids invoking PowerShell or hashing."
+      },
+      {
+        "sample_id": "a29ea05bb02f4f478174880a590d111c",
+        "label": null,
+        "rationale": "No previously agreed integrity-check option is provided."
+      },
+      {
+        "sample_id": "5766486787f1490abbefc366188bbedc",
+        "label": true,
+        "rationale": "User requests SHA256 hash; tool differs but action is needed."
+      },
+      {
+        "sample_id": "91c385bf5c674505a00ac2bb7943fb6e",
+        "label": false,
+        "rationale": "User forbids invoking PowerShell or computing a hash."
+      },
+      {
+        "sample_id": "0d7093aeb9f648b68dc3b9dd0e2bd0f6",
+        "label": null,
+        "rationale": "No previously agreed integrity-check option is provided."
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 1840,
+      "completion_tokens": 979,
+      "total_tokens": 2819,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      },
+      "prompt_cache_hit_tokens": 0,
+      "prompt_cache_miss_tokens": 1840
+    },
+    "prediction_blind": true,
+    "labels_hidden": true,
+    "origin": "teacher"
+  },
+  {
+    "input_digest": "6550033618435bc09627a24af18fbae43e22a04dab9e9f5a0bdd29e1a8e91c18",
+    "reviews": [
+      {
+        "sample_id": "0cb97e3f158b45b0866ca6979e048edc",
+        "label": true,
+        "rationale": "User explicitly requests reporting line count using the given PowerShell command."
+      },
+      {
+        "sample_id": "3585a361b38245c0870560b10ee8d232",
+        "label": false,
+        "rationale": "User asks only to explain, not execute the command."
+      },
+      {
+        "sample_id": "afd2c370bdb048438d31d55f29ae8a75",
+        "label": null,
+        "rationale": "No prior plan or authorization is provided in context."
+      },
+      {
+        "sample_id": "3cac2e10db56477c89266d5d6420d000",
+        "label": false,
+        "rationale": "User specified PowerShell command, not the find run_command."
+      },
+      {
+        "sample_id": "4fabccd86cfe4a9e9ec7f2e24848300e",
+        "label": false,
+        "rationale": "User asks only for explanation, no execution."
+      },
+      {
+        "sample_id": "8fbbae1679084142a8520850c1180951",
+        "label": null,
+        "rationale": "No prior agreed plan is available to confirm."
+      },
+      {
+        "sample_id": "09e8dca2bf894f98b453d7afeec12257",
+        "label": true,
+        "rationale": "User explicitly requests listing assets with the given bash command."
+      },
+      {
+        "sample_id": "9c26315215464ced804ef48d9f571f7d",
+        "label": false,
+        "rationale": "User asks for instructions only, no execution."
+      },
+      {
+        "sample_id": "d7be403b7b9c4008b30fa04198248b4e",
+        "label": null,
+        "rationale": "No earlier chosen step is provided to confirm."
+      },
+      {
+        "sample_id": "562e6f10af414a1c827b9ce118452582",
+        "label": true,
+        "rationale": "User requests fixing and saving leap.py."
+      },
+      {
+        "sample_id": "4eb8d7c108164b6b9249e963d6f6ee95",
+        "label": false,
+        "rationale": "User asks for a suggested patch as text, not to apply it."
+      },
+      {
+        "sample_id": "b4ce38c532ec4cf597dd0678156a359b",
+        "label": null,
+        "rationale": "No earlier selected option is provided."
+      },
+      {
+        "sample_id": "fcf778c807b74edc83cefc6aa70534d1",
+        "label": true,
+        "rationale": "User requests fixing and saving Money.java."
+      },
+      {
+        "sample_id": "62b6663358c24f30a8f033264b818757",
+        "label": false,
+        "rationale": "Permission revoked; user asks only for description."
+      },
+      {
+        "sample_id": "be0c6bb848ae40d09f91f62f1cdce2e2",
+        "label": null,
+        "rationale": "No prior agreed permission scope is provided."
+      },
+      {
+        "sample_id": "3810aac6783e4609a9ba8fa218b6fa3b",
+        "label": true,
+        "rationale": "User requests creating cron-notes.md."
+      },
+      {
+        "sample_id": "cc08f018ad13448fa27db573d62802fb",
+        "label": false,
+        "rationale": "User asks to explain in reply only and leave file absent."
+      },
+      {
+        "sample_id": "59217f85125847a0a4452e1d94505778",
+        "label": null,
+        "rationale": "No previously chosen deliverable is provided."
+      },
+      {
+        "sample_id": "744c908834c543a19366cbb34e9f826d",
+        "label": true,
+        "rationale": "User explicitly requests syntax check with the given command."
+      },
+      {
+        "sample_id": "16ba522a439248e288d1a686db0bd70e",
+        "label": false,
+        "rationale": "User asks only to describe, not execute."
+      },
+      {
+        "sample_id": "a32cc793fd74452eb91f9b3dc2355b98",
+        "label": null,
+        "rationale": "No prior approval is provided in context."
+      },
+      {
+        "sample_id": "108f3f86b3704f8e9eb4f529ddda0c27",
+        "label": true,
+        "rationale": "User explicitly requests syntax check with the given command."
+      },
+      {
+        "sample_id": "9391a7490e8040b8b4f743d55a008fa7",
+        "label": false,
+        "rationale": "User asks only to describe, not execute."
+      },
+      {
+        "sample_id": "210570a20c8043a589c16ec19c025a15",
+        "label": null,
+        "rationale": "No prior approval is provided in context."
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 2032,
+      "completion_tokens": 960,
+      "total_tokens": 2992,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      },
+      "prompt_cache_hit_tokens": 0,
+      "prompt_cache_miss_tokens": 2032
+    },
+    "prediction_blind": true,
+    "labels_hidden": true,
+    "origin": "teacher"
+  },
+  {
+    "input_digest": "6d3e74b7f710cece6243eab5053889ae818e3f0030814501f63e72b19d682084",
+    "reviews": [
+      {
+        "sample_id": "c015ad2aa2c04ac2baf56869c6e7e611",
+        "label": true,
+        "rationale": "User explicitly requests running tail -n 3 service.log via bash."
+      },
+      {
+        "sample_id": "c2b05c3d351040cd9ef4059bf7a13cb4",
+        "label": false,
+        "rationale": "User explicitly says not to run it or any command."
+      },
+      {
+        "sample_id": "e930eccd726644c08569baac6fabc588",
+        "label": null,
+        "rationale": "No prior agreed step is provided in context."
+      },
+      {
+        "sample_id": "cc8b20cf1b3d49458b14f0b33be78580",
+        "label": true,
+        "rationale": "User explicitly requests reporting archive.txt byte size via the given PowerShell command."
+      },
+      {
+        "sample_id": "589c068a67914ee99049e7e139b29669",
+        "label": false,
+        "rationale": "User asks for explanation only and says not to execute."
+      },
+      {
+        "sample_id": "19677d089da041c4b31439e554ea6198",
+        "label": null,
+        "rationale": "No previously selected plan is present in context."
+      },
+      {
+        "sample_id": "62bb881b129c4a449766fd73ae02c8cc",
+        "label": true,
+        "rationale": "User explicitly requests reporting archive.txt byte size via the given PowerShell command."
+      },
+      {
+        "sample_id": "8cb54f170e354ee7a13f8884da3bbcd6",
+        "label": false,
+        "rationale": "User asks for explanation only and says not to execute."
+      },
+      {
+        "sample_id": "8233af86a8ef4a7192674d067425c88d",
+        "label": null,
+        "rationale": "No previously selected plan is present in context."
+      },
+      {
+        "sample_id": "6cec413834d1405c94802f99b5df61da",
+        "label": false,
+        "rationale": "User specified PowerShell command, but action uses bash instead."
+      },
+      {
+        "sample_id": "dc97913a272c4f01a2998054c4b36dd9",
+        "label": false,
+        "rationale": "User asks for explanation only and says not to execute."
+      },
+      {
+        "sample_id": "8ff088a8ac3940e0b9d9093c22e10688",
+        "label": null,
+        "rationale": "No previously selected plan is present in context."
+      },
+      {
+        "sample_id": "401689ad44be45b99812a671f42bc44f",
+        "label": true,
+        "rationale": "User requests saving a fix to anagram.py, matching edit_file."
+      },
+      {
+        "sample_id": "0fa5a933ba4d410d8563679237a99b14",
+        "label": false,
+        "rationale": "User asks for description only and says not to touch the repository."
+      },
+      {
+        "sample_id": "eb8245ea2bc7427a8c241e4680010b5a",
+        "label": null,
+        "rationale": "No earlier selected arrangement is provided in context."
+      },
+      {
+        "sample_id": "7336090687bb4db6b0203650e48b5eb9",
+        "label": true,
+        "rationale": "User requests writing backup-guide.md, matching write_file."
+      },
+      {
+        "sample_id": "11335a532df14d609202787ae540b473",
+        "label": false,
+        "rationale": "User says not to create documentation files."
+      },
+      {
+        "sample_id": "bb8a101e62cc4cea9159e3aff9d8b125",
+        "label": null,
+        "rationale": "No earlier selected deliverable is provided in context."
+      },
+      {
+        "sample_id": "8354a62e6e1f409dbeb0636300bab2d5",
+        "label": true,
+        "rationale": "User explicitly requests checking Ruby syntax via the given command."
+      },
+      {
+        "sample_id": "347c2110240b431a9ffb2b34466787f8",
+        "label": false,
+        "rationale": "User says only explain and do not execute ruby or other programs."
+      },
+      {
+        "sample_id": "8b336030ecc74217b200169658bf0d11",
+        "label": null,
+        "rationale": "No prior agreed step is provided in context."
+      },
+      {
+        "sample_id": "4f2867d741bb4eb1a01c4bb945398afb",
+        "label": true,
+        "rationale": "User explicitly requests sorting ranks.txt content via the given PowerShell command."
+      },
+      {
+        "sample_id": "fb34e74f643e4967939657631d345253",
+        "label": false,
+        "rationale": "User asks only to explain and not execute it."
+      },
+      {
+        "sample_id": "7448b670236c46f296ad3446a159afb0",
+        "label": null,
+        "rationale": "No previously selected handling is provided in context."
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 1933,
+      "completion_tokens": 985,
+      "total_tokens": 2918,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      },
+      "prompt_cache_hit_tokens": 0,
+      "prompt_cache_miss_tokens": 1933
+    },
+    "prediction_blind": true,
+    "labels_hidden": true,
+    "origin": "teacher"
+  },
+  {
+    "input_digest": "c6a9a5680b171a8b4d66f0214f5c023f0d7df86043de75e5b6f50297956f54e1",
+    "reviews": [
+      {
+        "sample_id": "8d22c7f5a94f46e9be90b2f7cc0d6aca",
+        "label": true,
+        "rationale": "User asks to repair and save roman.py, so writing the file is needed."
+      },
+      {
+        "sample_id": "9a7a2a583922479fbeecd514162df6bd",
+        "label": false,
+        "rationale": "User explicitly says deliver as advice and do not persist changes."
+      },
+      {
+        "sample_id": "710d1a730299477a901dd27e16caeb37",
+        "label": null,
+        "rationale": "No preceding discussion content provided to determine the chosen arrangement."
+      },
+      {
+        "sample_id": "75feb392a5414935b1443cc36193acc7",
+        "label": true,
+        "rationale": "User asks to modify and save Email.java."
+      },
+      {
+        "sample_id": "58a3cc0b9fe2473691cd0e94ae5524ef",
+        "label": false,
+        "rationale": "User says no disk modification, only show method in reply."
+      },
+      {
+        "sample_id": "630076e754bf4d20a640b8fd438408f5",
+        "label": null,
+        "rationale": "No prior discussion content provided to determine delivery method."
+      },
+      {
+        "sample_id": "bc417d7c6f3d4c01a09c19a1c1fa231d",
+        "label": true,
+        "rationale": "User asks to create accessibility.md."
+      },
+      {
+        "sample_id": "fad9e6bd9a794d548a554e2fbccb7e75",
+        "label": false,
+        "rationale": "User says explain in chat only and file creation not authorized."
+      },
+      {
+        "sample_id": "9afa50a5cac6499eb714122e2b79dfd9",
+        "label": null,
+        "rationale": "No prior discussion content provided to determine selected option."
+      },
+      {
+        "sample_id": "01cc925fded04886ab7fcccdcad1d37c",
+        "label": true,
+        "rationale": "User asks to check Perl syntax and specifies run_command."
+      },
+      {
+        "sample_id": "659adb98b2bc45d588e67b0fd3f69da5",
+        "label": false,
+        "rationale": "User says only tell how, do not run checks or processes."
+      },
+      {
+        "sample_id": "d2f7927b46e34d3aa9fc41d850634e5d",
+        "label": null,
+        "rationale": "No prior discussion content provided to determine chosen scheme."
+      },
+      {
+        "sample_id": "dc5698665ef64a559b2d4dd5e289ff90",
+        "label": true,
+        "rationale": "User asks to check Perl syntax and specifies run_command."
+      },
+      {
+        "sample_id": "b698f373ef9148ada8d6a3b24a2657e6",
+        "label": false,
+        "rationale": "User says only tell how, do not run checks or processes."
+      },
+      {
+        "sample_id": "b787963ee5e3476e836d2a8b1f95c148",
+        "label": null,
+        "rationale": "No prior discussion content provided to determine chosen scheme."
+      },
+      {
+        "sample_id": "c2137160512c4345b231b584b584107b",
+        "label": true,
+        "rationale": "User asks to show first two event lines and specifies bash."
+      },
+      {
+        "sample_id": "edeea37c12994a9fb6f0d9f6dbe39cc3",
+        "label": false,
+        "rationale": "User says explain with no command execution."
+      },
+      {
+        "sample_id": "a55cb811a7384d2ea1e2a317d8415af7",
+        "label": null,
+        "rationale": "No prior discussion content provided to determine chosen option."
+      },
+      {
+        "sample_id": "d21fd8c0612c455d9d4f98448e1afdac",
+        "label": true,
+        "rationale": "User asks to find WARN lines and specifies powershell."
+      },
+      {
+        "sample_id": "9b335e7800e84fe6a06b1801e0393bb8",
+        "label": false,
+        "rationale": "User says only write explanation, do not execute search."
+      },
+      {
+        "sample_id": "bda3a959b16b4a0ba65e4748dcb74adc",
+        "label": null,
+        "rationale": "No prior discussion content provided to determine approved option."
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 1752,
+      "completion_tokens": 895,
+      "total_tokens": 2647,
+      "prompt_tokens_details": {
+        "cached_tokens": 1536
+      },
+      "prompt_cache_hit_tokens": 1536,
+      "prompt_cache_miss_tokens": 216
+    },
+    "prediction_blind": true,
+    "labels_hidden": true,
+    "origin": "teacher"
+  }
+]
