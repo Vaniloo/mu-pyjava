@@ -6,8 +6,10 @@ validation /6 calibration /6 test). No learned judge has run at freeze time.
 After whole-family exclusions: 33 families, 108 fresh rows. Partitions: 69 fresh
 train +382 historical rehearsal; 12 validation; 12 calibration; 15 test. Total 490.
 The original assignments were retained. Two rehearsal rows with transport defects
-were removed. Full-call schemas, actual Agent state projections, transport checks,
-protected-input exclusion, contrast pairs and both training-design audits pass.
+were removed. Fresh rows pass full-call schema and actual Agent projection checks. Transport
+checks, protected-input exclusion, contrast pairs and both design audits pass.
+Historical rehearsal retains its original synthetic provenance and metadata;
+full original call payloads were not reconstructed for those old rows.
 
 Three tasks yielded no sampled mutation; one task had a transport mismatch. Five
 more families were excluded for duplicates and/or teacher label disagreement.

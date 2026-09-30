@@ -1,5 +1,8 @@
 # Tool-intent judge experiment
 
+Latest: [captured-data training comparison](results-captured-training.md). Both r3 candidates completed training; neither is promoted because older diagnostics regress.
+
+
 Latest: [semantic pilot results and data-contract correction](results-intent-semantic.md). Both arms completed; the frozen pilot is invalid for quality claims and current preflight intentionally rejects it.
 
 For new experiments, use the [revised semantic training design](TRAINING_DESIGN.md) and its `--design` preflight. The original commands below document historical runs. See the [implemented changes and capability comparison](results-training-design.md).

@@ -1,6 +1,6 @@
 # Revised intent training design
 
-Update after milestones 21–22: the first pilot was rejected for transport-inconsistent data. See [pilot correction](results-intent-semantic.md) and [runtime capture intake](results-harness-intake.md). Use the r3 design copies for the next collection; they additionally exclude the inspected r2 pilot. The protocol below records the original prescribed comparison. No new four-partition r3 dataset is ready.
+Update after milestones 21–22: the first pilot was rejected for transport-inconsistent data. See [pilot correction](results-intent-semantic.md) and [runtime capture intake](results-harness-intake.md). Use the r3 design copies for the next collection; they additionally exclude the inspected r2 pilot. The protocol below records the original prescribed comparison. The [captured r3 dataset](datasets/intent-captured-r3/README.md) is now frozen, and [both training arms completed](results-captured-training.md) without a promotion.
 
 
 Milestone 20 changes the next experiment from expanding template rows to testing

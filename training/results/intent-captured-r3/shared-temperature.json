@@ -1,0 +1,110 @@
+{
+  "dataset_sha256": "9fbbcc1eabf6cc63a546afd2dfdcbc4c51e48cae0d91745c20b323fa27227594",
+  "split": "test",
+  "thresholds": {
+    "decline": 0.2,
+    "allow": 0.8
+  },
+  "coverage_inventory": {
+    "families": 5,
+    "family_metadata_missing": 0,
+    "distinct_requests": 15,
+    "unknown_families": 5,
+    "distinct_unknown_requests": 5
+  },
+  "models": {
+    "mixed": {
+      "checkpoint_sha256": "1bf7cd28e32d2fef39299ac291362ec71b9d281a4c48b02e8b0c1580ae13c195",
+      "metrics": {
+        "n": 15,
+        "labeled": 10,
+        "accepted": 9,
+        "negative_labels": 5,
+        "positive_labels": 5,
+        "coverage": 0.9,
+        "selective_accuracy": 0.8888888888888888,
+        "accuracy_at_0_5": 0.8,
+        "false_allow": 1,
+        "false_decline": 0,
+        "false_allow_rate": 0.2,
+        "false_decline_rate": 0.0,
+        "brier": 0.12536776700000002,
+        "unknown_cases": 5,
+        "unknown_non_abstention": 1
+      },
+      "correct_decisive": 8,
+      "known_abstention": 1,
+      "unknown_abstention": 4,
+      "temperature_control": {
+        "shipped": [
+          1.0,
+          1.0,
+          1.5331206321716309
+        ],
+        "noul_override": null
+      }
+    },
+    "uniform": {
+      "checkpoint_sha256": "ea5c23da514ff997ff3f45ae7bf8c094f85dda5b066317abd3aa75494807ab93",
+      "metrics": {
+        "n": 15,
+        "labeled": 10,
+        "accepted": 10,
+        "negative_labels": 5,
+        "positive_labels": 5,
+        "coverage": 1.0,
+        "selective_accuracy": 1.0,
+        "accuracy_at_0_5": 1.0,
+        "false_allow": 0,
+        "false_decline": 0,
+        "false_allow_rate": 0.0,
+        "false_decline_rate": 0.0,
+        "brier": 8.743000000000057e-06,
+        "unknown_cases": 5,
+        "unknown_non_abstention": 0
+      },
+      "correct_decisive": 10,
+      "known_abstention": 0,
+      "unknown_abstention": 5,
+      "temperature_control": {
+        "shipped": [
+          1.0,
+          1.0,
+          0.9139373898506165
+        ],
+        "noul_override": 1.5331206321716309
+      }
+    },
+    "weighted": {
+      "checkpoint_sha256": "106ddc085c03b10cafa3720e1f40cd41b2223fbc4eaaad3d5a25d0d398a92a25",
+      "metrics": {
+        "n": 15,
+        "labeled": 10,
+        "accepted": 10,
+        "negative_labels": 5,
+        "positive_labels": 5,
+        "coverage": 1.0,
+        "selective_accuracy": 1.0,
+        "accuracy_at_0_5": 1.0,
+        "false_allow": 0,
+        "false_decline": 0,
+        "false_allow_rate": 0.0,
+        "false_decline_rate": 0.0,
+        "brier": 4.3100000000000824e-07,
+        "unknown_cases": 5,
+        "unknown_non_abstention": 0
+      },
+      "correct_decisive": 10,
+      "known_abstention": 0,
+      "unknown_abstention": 5,
+      "temperature_control": {
+        "shipped": [
+          1.0,
+          1.0,
+          2.101339340209961
+        ],
+        "noul_override": 1.5331206321716309
+      }
+    }
+  }
+}

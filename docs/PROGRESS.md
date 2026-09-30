@@ -331,3 +331,43 @@ human gold, learned-judge inference or retraining. Training validation rejects i
 metadata tampering, invalid schema and exclusion/partition guards covered. See
 [collection report](../training/results-harness-intake.md) and
 [milestone 22](https://github.com/Vaniloo/mu-pyjava/issues/22).
+
+
+## Milestone 23 — prespecified workflow collection and freeze
+
+Plan 8eb1f28 preceded actor calls; freeze 93d28c2 preceded learned-judge inference.
+42 authored workflow families produced 33 admitted families/108 fresh captured
+states after full-family quarantine. With 382 valid rehearsal rows, the immutable
+data has 451 train /12 validation /12 calibration /15 test rows. Original scenario
+assignments remain unchanged. Both design audits and tool-contract guards pass.
+
+A real actor fallback switched shell redirection to direct run_command and was
+excluded. Three tasks had no sampled mutation; five more families were excluded
+for duplicates/disagreement. One malformed review batch had a documented bounded
+same-input retry before freeze; no successful or disagreeing review was retried.
+139/141 review hypotheses agreed. Human gold/real-user telemetry remain zero, and
+test coverage is only five families without run_command. No broad quality claim.
+
+243 software tests: 242 passed, one native PowerShell skip. See
+[collection report](../training/results-captured-data.md),
+[frozen inputs](../training/datasets/intent-captured-r3/README.md), and
+[milestone 23](https://github.com/Vaniloo/mu-pyjava/issues/23).
+
+
+## Milestone 24 — completed captured-data training comparison
+
+Both arms trained from identical mixed-r1 initialization on frozen data93d28c2;
+both selected epoch3 with improving validation. Uniform/weighted temperatures
+.9139/2.1013, neither at bounds. Actual serving and common-temperature controls
+pass the small new test (10 known correct +5 unknown abstentions), as does scope-r1.
+
+No promotion: on captured intake, scope gets33/33 known correct; uniform wrongly
+declines two legitimate command requests, weighted abstains on those two. Weighted
+gains one correct decisive scope-challenge answer but adds one wrong decline on
+historical manual regression. Retained weights/configs unchanged; all18 serving
+evaluations and both GPU training runs completed. Existing runtime stays unchanged.
+
+243 software tests (242 passed, one platform skip); all490 cohort inputs fit512
+tokens (max149). Small authored fixtures, no independent human gold/real telemetry.
+See [full comparison](../training/results-captured-training.md) and
+[milestone24](https://github.com/Vaniloo/mu-pyjava/issues/24).
