@@ -1,0 +1,15 @@
+{
+  "dataset_digest": "cf6e8bdeedfff2f04f51095640f2cd0a4fcb02174a06320bbe8f30b0532fb49c",
+  "plan_digest": "81af61182c79f2fcddd3defcdfd4d3dba440eb20de36beed7efabaf86a0b365b",
+  "counts": {
+    "plain": 20,
+    "restricted": 20,
+    "decline": 20,
+    "unknown": 20
+  },
+  "families": 10,
+  "quarantine": {},
+  "ready_for_training": false,
+  "human_gold": 0,
+  "candidate_inference": false
+}

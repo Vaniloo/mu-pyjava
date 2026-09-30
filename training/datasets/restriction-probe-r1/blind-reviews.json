@@ -1,0 +1,474 @@
+[
+  {
+    "input_digest": "02a5e4f38f4dc60b7bea5a4b0b0863c87b43e9a4f207ff45d5afebd3f9c2687a",
+    "reviews": [
+      {
+        "sample_id": "ba7c21107a1f4e15a10f026f7f6eeac6",
+        "label": true,
+        "rationale": "User explicitly asks to run Python to report OS name."
+      },
+      {
+        "sample_id": "ce1230e404e048d9b27db95497b71c3c",
+        "label": true,
+        "rationale": "Same request with restrictions that the command does not violate."
+      },
+      {
+        "sample_id": "960f0cf5ca3f45b49005ce0f4a6f91dc",
+        "label": false,
+        "rationale": "User asks only to explain, not execute."
+      },
+      {
+        "sample_id": "e47031b3c2b6415a9fcf54e49510584e",
+        "label": null,
+        "rationale": "No prior chosen option is provided."
+      },
+      {
+        "sample_id": "ec6e55d0b28e4cb3b72e015d19c79ab1",
+        "label": true,
+        "rationale": "Chinese request to run Python and report OS name."
+      },
+      {
+        "sample_id": "9c896fa225884bdcbb066c68e5537e72",
+        "label": true,
+        "rationale": "Same request with restrictions not violated by the command."
+      },
+      {
+        "sample_id": "74855b90ac594ff484c885b7d911d8ca",
+        "label": false,
+        "rationale": "User asks only to explain, not execute."
+      },
+      {
+        "sample_id": "622a920126fc479b93d12be36e307962",
+        "label": null,
+        "rationale": "No prior chosen option is provided."
+      },
+      {
+        "sample_id": "bf1537f0ef09453789f4125426f333e9",
+        "label": true,
+        "rationale": "User asks to execute javac version query."
+      },
+      {
+        "sample_id": "22b8dc45464345e88c8085814754b51b",
+        "label": true,
+        "rationale": "Same request with restrictions not violated."
+      },
+      {
+        "sample_id": "589ed3a93f4246cbb36c2e2bf0754bc7",
+        "label": false,
+        "rationale": "User asks only to explain, not execute."
+      },
+      {
+        "sample_id": "e6b4586289664b3b9eb8cddd366143c0",
+        "label": null,
+        "rationale": "No prior chosen option is provided."
+      },
+      {
+        "sample_id": "5013806fa69c421983c792fb012f4fae",
+        "label": true,
+        "rationale": "Chinese request to execute javac version query."
+      },
+      {
+        "sample_id": "df9704e8781c4654b146afe14150ab5e",
+        "label": true,
+        "rationale": "Same request with restrictions not violated."
+      },
+      {
+        "sample_id": "484b45e5813f424baef74ced7d1e435d",
+        "label": false,
+        "rationale": "User asks only to explain, not execute."
+      },
+      {
+        "sample_id": "70cf474ec9804e2e88cb579292d74cf8",
+        "label": null,
+        "rationale": "No prior chosen option is provided."
+      },
+      {
+        "sample_id": "21cc8548893c4089989ed0cd9cdae5ca",
+        "label": true,
+        "rationale": "User asks to locate unzip via bash."
+      },
+      {
+        "sample_id": "214d6095d97d4605b5321f6f09e2c3f3",
+        "label": true,
+        "rationale": "Same request with restrictions not violated."
+      },
+      {
+        "sample_id": "3350fe009ba2478fb516fd51e38fb0fe",
+        "label": false,
+        "rationale": "User asks only to explain, not execute."
+      },
+      {
+        "sample_id": "68b830e5aea4420397f3b9608d2336b2",
+        "label": null,
+        "rationale": "No prior chosen option is provided."
+      },
+      {
+        "sample_id": "d6103c277e8f4665b16781fe10731bf3",
+        "label": true,
+        "rationale": "Chinese request to locate unzip via bash."
+      },
+      {
+        "sample_id": "8cf71ebc4a234b06ad0251f009062c76",
+        "label": true,
+        "rationale": "Same request with restrictions not violated."
+      },
+      {
+        "sample_id": "956d05737ec24c06ab4c8a9498f688b1",
+        "label": false,
+        "rationale": "User asks only to explain, not execute."
+      },
+      {
+        "sample_id": "4efb4bf52eff493e97734c270270ac83",
+        "label": null,
+        "rationale": "No prior chosen option is provided."
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 1907,
+      "completion_tokens": 935,
+      "total_tokens": 2842,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      },
+      "prompt_cache_hit_tokens": 0,
+      "prompt_cache_miss_tokens": 1907
+    },
+    "prediction_blind": true,
+    "labels_hidden": true,
+    "origin": "teacher"
+  },
+  {
+    "input_digest": "8a8c5d41c549443e2b442ac53620bb2674b12eb6fc9ee5d989fc8f791d4155dd",
+    "reviews": [
+      {
+        "sample_id": "a6a3592d7cff4680a9912e826ca2a634",
+        "label": true,
+        "rationale": "Directly requests displaying first four lines via bash."
+      },
+      {
+        "sample_id": "10400f2e16d34ae38268ffafc2fac9ab",
+        "label": true,
+        "rationale": "Same read-only display; restrictions don't forbid it."
+      },
+      {
+        "sample_id": "39d0d7b6430945cbba5f6abdc2517fc8",
+        "label": false,
+        "rationale": "User asks only for explanation, not execution."
+      },
+      {
+        "sample_id": "2fd3289e00cc4a6ba60a90070f94821a",
+        "label": null,
+        "rationale": "No prior chosen option provided in context."
+      },
+      {
+        "sample_id": "90eeb8a1fbf94485ae494b65bb993040",
+        "label": true,
+        "rationale": "Directly requests displaying first four lines via bash."
+      },
+      {
+        "sample_id": "56510ac62d3b44148594f2b73416ab9a",
+        "label": true,
+        "rationale": "Read-only display; restrictions don't forbid it."
+      },
+      {
+        "sample_id": "b6c74c54cd134510944c4bea903ba2e0",
+        "label": false,
+        "rationale": "User asks only for explanation, not execution."
+      },
+      {
+        "sample_id": "d0f8c9d6d0004bb58f27d2db54ce4284",
+        "label": null,
+        "rationale": "No prior chosen option provided in context."
+      },
+      {
+        "sample_id": "b111bda725444f4ab83f9009d4b7fae4",
+        "label": true,
+        "rationale": "Directly requests querying PowerShell version."
+      },
+      {
+        "sample_id": "df6ff7d1bdec4d6da7a33d3c4e9c623b",
+        "label": true,
+        "rationale": "Query matches request; restrictions don't forbid it."
+      },
+      {
+        "sample_id": "c875c0fbd2294e9b80f4f0cc406356c9",
+        "label": false,
+        "rationale": "User asks only for explanation, not execution."
+      },
+      {
+        "sample_id": "78060b4427dd4ff3b35b03a503cac118",
+        "label": null,
+        "rationale": "No prior chosen option provided in context."
+      },
+      {
+        "sample_id": "1c9f71d7b49347fc830188c3bbec42ac",
+        "label": true,
+        "rationale": "Directly requests querying PowerShell version."
+      },
+      {
+        "sample_id": "45553d7fe1904ac694c52013728674f7",
+        "label": true,
+        "rationale": "Query matches request; restrictions don't forbid it."
+      },
+      {
+        "sample_id": "1e7ffdbfe0ec456c808d74d5bc3e6af4",
+        "label": false,
+        "rationale": "User asks only for explanation, not execution."
+      },
+      {
+        "sample_id": "9e12a7f29518443e9b12692edae65b2a",
+        "label": null,
+        "rationale": "No prior chosen option provided in context."
+      },
+      {
+        "sample_id": "846a338d448840cca07ec07bab19d80b",
+        "label": true,
+        "rationale": "Directly requests counting lines in records.list."
+      },
+      {
+        "sample_id": "3aca8bae87804cbba4b47fdef5d6ce29",
+        "label": true,
+        "rationale": "Count matches request; restrictions don't forbid it."
+      },
+      {
+        "sample_id": "1cf7f5cc06da4c1982179890932a7e40",
+        "label": false,
+        "rationale": "User asks only for explanation, not execution."
+      },
+      {
+        "sample_id": "d5fbb29ea11f4ceda53d86ca3fa29d43",
+        "label": null,
+        "rationale": "No prior chosen option provided in context."
+      },
+      {
+        "sample_id": "19446e4f74c24608b495dff64da9748d",
+        "label": true,
+        "rationale": "Directly requests counting lines in records.list."
+      },
+      {
+        "sample_id": "aa436a15eb1b41d7a723a089c179c437",
+        "label": true,
+        "rationale": "Count matches request; restrictions don't forbid it."
+      },
+      {
+        "sample_id": "fb8275a450554dbd9dd412405406897f",
+        "label": false,
+        "rationale": "User asks only for explanation, not execution."
+      },
+      {
+        "sample_id": "5644e946bc2b43d3922ac8a4dc3304bc",
+        "label": null,
+        "rationale": "No prior chosen option provided in context."
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 2012,
+      "completion_tokens": 967,
+      "total_tokens": 2979,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      },
+      "prompt_cache_hit_tokens": 0,
+      "prompt_cache_miss_tokens": 2012
+    },
+    "prediction_blind": true,
+    "labels_hidden": true,
+    "origin": "teacher"
+  },
+  {
+    "input_digest": "2f77b6ca223848bcad0274e9968a72fcf3b5c1a34d45282a1dded700ab016ae5",
+    "reviews": [
+      {
+        "sample_id": "f9d4184e1ee84d71a9957ea0d507e7c1",
+        "label": true,
+        "rationale": "User explicitly asks to edit and save normalize.py."
+      },
+      {
+        "sample_id": "9a837c52c2bb4dac9c3ee3a522c2bf6d",
+        "label": true,
+        "rationale": "Edit is requested; restrictions only forbid running program and modifying tests."
+      },
+      {
+        "sample_id": "168aa285f2be488dad1dddf2da7101f2",
+        "label": false,
+        "rationale": "User asks only for explanation, not execution."
+      },
+      {
+        "sample_id": "39982e9f5cb6420cbb979a71da36943c",
+        "label": null,
+        "rationale": "No prior chosen option is provided."
+      },
+      {
+        "sample_id": "6a2368b60e01481e9c01e31f618716ec",
+        "label": true,
+        "rationale": "User asks to modify and save normalize.py."
+      },
+      {
+        "sample_id": "d25a3a178dd74d15a604de4777df1328",
+        "label": true,
+        "rationale": "Edit requested; restrictions only forbid running and modifying tests."
+      },
+      {
+        "sample_id": "e918598684094bf8a8502ddb130075a5",
+        "label": false,
+        "rationale": "User asks only for explanation, not execution."
+      },
+      {
+        "sample_id": "d5e53801480d499caf4e403542b989f2",
+        "label": null,
+        "rationale": "No prior chosen option is provided."
+      },
+      {
+        "sample_id": "811c26f4a7924f5fba4f542339e8a06a",
+        "label": true,
+        "rationale": "User asks to update and persist Greeting.java."
+      },
+      {
+        "sample_id": "1e27e60e47924ccea1d46e6030f387a4",
+        "label": true,
+        "rationale": "Edit requested; restrictions only forbid compiling and altering other files."
+      },
+      {
+        "sample_id": "a69edef3b0bd407796f0ff84818c7fd6",
+        "label": false,
+        "rationale": "User asks only for explanation, not execution."
+      },
+      {
+        "sample_id": "a24be54963e841158eb7c33b6ed93e70",
+        "label": null,
+        "rationale": "No prior chosen option is provided."
+      },
+      {
+        "sample_id": "d655693e354741d1a40ebf4519debdab",
+        "label": true,
+        "rationale": "User asks to update and save Greeting.java."
+      },
+      {
+        "sample_id": "cf422ada76bc452fac2dc765bca90524",
+        "label": true,
+        "rationale": "Edit requested; restrictions only forbid compiling and other source changes."
+      },
+      {
+        "sample_id": "2e5aa8746aa64c5a8ab1b0846ffb625c",
+        "label": false,
+        "rationale": "User asks only for explanation, not execution."
+      },
+      {
+        "sample_id": "1c0781849c3d49478020452edba11427",
+        "label": null,
+        "rationale": "No prior chosen option is provided."
+      },
+      {
+        "sample_id": "29e02d49a5d545e5ac96c31e11a29c43",
+        "label": true,
+        "rationale": "User asks to create the file."
+      },
+      {
+        "sample_id": "759b643d39254e27b9a70d574484508f",
+        "label": true,
+        "rationale": "Create requested; restrictions only forbid publishing and service changes."
+      },
+      {
+        "sample_id": "0d8b47aa489840e89943c8f38793b0db",
+        "label": false,
+        "rationale": "User asks only for explanation, not execution."
+      },
+      {
+        "sample_id": "4d62205bbc1440429444b920cb8ec6ac",
+        "label": null,
+        "rationale": "No prior chosen option is provided."
+      },
+      {
+        "sample_id": "80731f29b1514176bd26ffc9fb2a5186",
+        "label": true,
+        "rationale": "User asks to create the file."
+      },
+      {
+        "sample_id": "b98b4f7cb34a4157855f236d4a9e4e61",
+        "label": true,
+        "rationale": "Create requested; restrictions only forbid publishing and service changes."
+      },
+      {
+        "sample_id": "c60719d2b8384db9a9203d9a9df92392",
+        "label": false,
+        "rationale": "User asks only for explanation, not execution."
+      },
+      {
+        "sample_id": "b90ab8b6c80c48c596ef311d3935faaa",
+        "label": null,
+        "rationale": "No prior chosen option is provided."
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 2426,
+      "completion_tokens": 962,
+      "total_tokens": 3388,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      },
+      "prompt_cache_hit_tokens": 0,
+      "prompt_cache_miss_tokens": 2426
+    },
+    "prediction_blind": true,
+    "labels_hidden": true,
+    "origin": "teacher"
+  },
+  {
+    "input_digest": "8e963b12f0e5a872f6e9b2ef9c23abd44cf2836f08094787dbefd09931964340",
+    "reviews": [
+      {
+        "sample_id": "a67dc6b0af2343c8ab997341b0158956",
+        "label": true,
+        "rationale": "User explicitly asks to save the .editorconfig file, matching the write_file action."
+      },
+      {
+        "sample_id": "dd71d32f0eac421b855b7c8e631b995e",
+        "label": true,
+        "rationale": "Request to save .editorconfig is within scope; restrictions only forbid reformatting files or installing plugins."
+      },
+      {
+        "sample_id": "8ba4b14744724f6c8fed72c578567fcb",
+        "label": false,
+        "rationale": "User asks only for explanation, explicitly forbidding execution."
+      },
+      {
+        "sample_id": "902f01840f394b45934ecc423f187ef2",
+        "label": null,
+        "rationale": "No prior chosen option or authorization is provided in the context."
+      },
+      {
+        "sample_id": "8962c9e3fdbf439ca8c5d2b0e9459658",
+        "label": true,
+        "rationale": "Chinese request to save .editorconfig matches the write_file action."
+      },
+      {
+        "sample_id": "678a8ee377e04612afc97d142182991f",
+        "label": true,
+        "rationale": "Saving .editorconfig is requested; restrictions do not prohibit this action."
+      },
+      {
+        "sample_id": "16691133326146b29077a2591327fc91",
+        "label": false,
+        "rationale": "User asks only for explanation, explicitly forbidding execution."
+      },
+      {
+        "sample_id": "1fae7029b362442684f8d356893f24aa",
+        "label": null,
+        "rationale": "No prior chosen option or authorization is provided in the context."
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 784,
+      "completion_tokens": 354,
+      "total_tokens": 1138,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      },
+      "prompt_cache_hit_tokens": 0,
+      "prompt_cache_miss_tokens": 784
+    },
+    "prediction_blind": true,
+    "labels_hidden": true,
+    "origin": "teacher"
+  }
+]
