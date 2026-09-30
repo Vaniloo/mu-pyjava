@@ -312,3 +312,22 @@ compile/smoke passed. Retained checkpoints/configs unchanged; both candidates ar
 diagnostic only. Next: fresh valid harness states and independent evaluation
 families, protecting this inspected pilot. See [full results](../training/results-intent-semantic.md).
 GitHub: [milestone 21](https://github.com/Vaniloo/mu-pyjava/issues/21).
+
+
+## Milestone 22 — runtime-captured diagnostic intake
+
+Captured 11 actual DeepSeek tool proposals from 12 isolated authored fixture tasks
+through Agent, plus 33 same-action authorization/missing-context replays. All 44
+states pass full-call schema, UTF-8 projection and command-transport checks; blind
+teacher review agrees 44/44. One observed bash proposal violated a no-command
+request and was blocked. The reviewer is the same model family as the actor.
+
+Archived 10 families covering five tool kinds, with full provenance and no historical
+input overlap. r3 designs now protect all prior semantic-r2 frozen/submitted data.
+This remains a diagnostic intake: no four-way split, real-user telemetry, independent
+human gold, learned-judge inference or retraining. Training validation rejects it.
+
+241 distinct tests executed (240 passed, one platform skip); mutation dispatch,
+metadata tampering, invalid schema and exclusion/partition guards covered. See
+[collection report](../training/results-harness-intake.md) and
+[milestone 22](https://github.com/Vaniloo/mu-pyjava/issues/22).

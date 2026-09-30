@@ -1,5 +1,8 @@
 # Revised intent training design
 
+Update after milestones 21–22: the first pilot was rejected for transport-inconsistent data. See [pilot correction](results-intent-semantic.md) and [runtime capture intake](results-harness-intake.md). Use the r3 design copies for the next collection; they additionally exclude the inspected r2 pilot. The protocol below records the original prescribed comparison. No new four-partition r3 dataset is ready.
+
+
 Milestone 20 changes the next experiment from expanding template rows to testing
 semantic generalization and evidence sufficiency. The implementation is opt-in
 through `train_laya.py --design`; the original recipe remains reproducible without
