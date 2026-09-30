@@ -19,7 +19,7 @@ from tool_state_audit import require_command_states, command_state_issue
 from training_design import audit_design, load_design
 
 ROOT = Path(__file__).resolve().parents[1]
-DESIGNS = ('intent-semantic-r4.json', 'intent-semantic-r4-uniform.json')
+DESIGNS = ('intent-semantic-r4.json', 'intent-semantic-r4-balanced.json', 'intent-semantic-r4-uniform.json')
 SPLITS = ('train', 'train', 'train', 'train', 'validation', 'calibration', 'test', 'test')
 
 # New actions and task families. Each tool contributes the same split counts.

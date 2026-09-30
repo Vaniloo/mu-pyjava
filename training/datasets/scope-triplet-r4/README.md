@@ -15,7 +15,27 @@ retain the actual projection and blocked tool calls. These scripted proposals ar
 controlled fixtures, not natural actor behavior or real-user telemetry.
 
 The captured states passed exact historical-input exclusion and tool transport
-checks. The authored labels are hypotheses pending prediction-blind review. No
-candidate prediction, training result, or independent human gold is present in this
-freeze. A later dataset freeze must verify review digests and agreement, preserve
-the family partitions, and report any exclusions before training.
+checks. The plan and capture were committed as `4394be1` before review.
+
+The `frozen/` directory contains 160/160 prediction-blind DeepSeek reviews in ten
+16-case batches; all agreed with the authored hypotheses. The frozen training
+dataset has 80 fresh training rows plus 382 historical rehearsal rows, 20
+validation, 20 calibration, and 40 test rows. All five tools occur in every split.
+The data audits found no exact protected or prior-training overlap and no whole-
+family exclusions. Review used 22,972 provider tokens. Teacher agreement is not
+independent human gold; no real-user project traces or candidate predictions were
+used in this freeze.
+
+## Prespecified training comparison
+
+After a valid blind-review freeze, compare two `family_request` training arms from
+identical copies of the retained mixed-r1 checkpoint. The intended weighting-pipeline
+difference is historical rehearsal loss mass: 25% for
+`intent-semantic-r4.json`, 50% for `intent-semantic-r4-balanced.json`. Use seed
+20260927, batch 16, encoder learning rate 5e-6, head learning rate 2.5e-5,
+at most three epochs, validation-only checkpoint selection and separate
+calibration. Serve both with the existing 0.2/0.8 decision thresholds. Compare
+the frozen new test, previously inspected restriction probe, captured intake,
+and historical manual/challenge diagnostics on identical inputs. Retain the
+uniform r4 design as a preflight control, not a third training arm. Neither
+candidate is automatically eligible for promotion.

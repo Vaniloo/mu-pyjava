@@ -1,0 +1,30 @@
+{
+  "fresh": 160,
+  "fresh_families": 40,
+  "rehearsal": 382,
+  "by_split": {
+    "train": 462,
+    "validation": 20,
+    "calibration": 20,
+    "test": 40
+  },
+  "by_tool": {
+    "run_command": 32,
+    "bash": 32,
+    "powershell": 32,
+    "edit_file": 32,
+    "write_file": 32
+  },
+  "by_role": {
+    "plain": 40,
+    "restricted": 40,
+    "forbidden": 40,
+    "unknown": 40
+  },
+  "quarantine": {},
+  "human_gold": 0,
+  "real_user_project_traces": 0,
+  "review_agreement": 160,
+  "candidate_inference": false,
+  "mutations_executed": false
+}
