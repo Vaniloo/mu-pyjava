@@ -1,9 +1,9 @@
 # Tool-intent judge experiment
 
-Latest: [scope-triplet r4 training and data-quality review](results-scope-triplet-r4.md).
-The 50% rehearsal arm passes 29/30 known new-test cases but permits prohibited
-actions on older diagnostics, so neither candidate is promoted. See the
-[open-dataset review](open-dataset-review.md) for the next evidence-gathering step.
+Latest: [ScopeJudge external transfer and ToolACE sample audit](results-scopejudge-transfer-r1.md).
+The transfer shows heavy domain mismatch and 512-token clipping; neither
+candidate is promoted or retrained. See the [open-dataset review](open-dataset-review.md)
+and [scope-triplet r4 training review](results-scope-triplet-r4.md).
 
 Earlier: [captured-data training comparison](results-captured-training.md) and
 [semantic pilot results and data-contract correction](results-intent-semantic.md).

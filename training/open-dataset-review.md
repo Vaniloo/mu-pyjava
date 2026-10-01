@@ -39,3 +39,9 @@ tasks, not automatic Boolean labels for this judge.
 
 No external dataset has been imported or used to train a checkpoint in this
 review. The current r4 candidates remain shadow-only.
+
+The first [ScopeJudge transfer diagnostic](results-scopejudge-transfer-r1.md)
+and spread ToolACE sample audit are complete. They strengthen the case for
+independent coding-task labels and a richer, length-checked judge input before
+another training run; they do not turn cross-domain scores into deployment
+claims. No external records were used for training.
