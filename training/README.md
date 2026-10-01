@@ -1,9 +1,10 @@
 # Tool-intent judge experiment
 
-Latest: [source-grounded context input and blind packet](results-intent-context-input.md).
-Previous: [ScopeJudge external transfer and ToolACE sample audit](results-scopejudge-transfer-r1.md).
-The transfer shows heavy domain mismatch and 512-token clipping; neither
-candidate is promoted or retrained. See the [open-dataset review](open-dataset-review.md)
+Latest: [actual checkpoint context-format retraining pilot](results-intent-context-pilot-r1.md).
+Previous: [source-grounded context input and blind packet](results-intent-context-input.md)
+and [ScopeJudge external transfer and ToolACE sample audit](results-scopejudge-transfer-r1.md).
+The earlier external transfer shows heavy domain mismatch and 512-token clipping; neither
+external-transfer candidate was promoted or retrained. See the [open-dataset review](open-dataset-review.md)
 and [scope-triplet r4 training review](results-scope-triplet-r4.md).
 
 Earlier: [captured-data training comparison](results-captured-training.md) and

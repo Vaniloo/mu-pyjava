@@ -1,0 +1,68 @@
+{
+  "checkpoint_sha256": "0f465c40b521ed5979f0a4f6f14a8931836ef077c477f9f31d98c7a9654445a1",
+  "constructed_length_probe": {
+    "1000": {
+      "fit": true,
+      "state_tokens": 350
+    },
+    "1500": {
+      "fit": true,
+      "state_tokens": 424
+    },
+    "250": {
+      "fit": true,
+      "state_tokens": 196
+    },
+    "2500": {
+      "fit": false,
+      "state_tokens": 571
+    },
+    "4000": {
+      "fit": false,
+      "state_tokens": 790
+    },
+    "500": {
+      "fit": true,
+      "state_tokens": 266
+    },
+    "750": {
+      "fit": true,
+      "state_tokens": 314
+    }
+  },
+  "constructed_pilots": {
+    "boundary": {
+      "audit_sha256": "12af157c3a00cd2f557e9e51695ce1147d99f258b11d044bc021eb11cc5689b6",
+      "clipped": 0,
+      "dataset_sha256": "184e034592ca963767c16a11ad2be6643838993c80626adbcdef59eb44fb11e7",
+      "full": 144,
+      "max_state_tokens": 177,
+      "median_state_tokens": 82.0,
+      "rows": 144
+    },
+    "r4": {
+      "audit_sha256": "99c5ca7a6b11ffde1fb5e1e3644f089521928d736a33c6dd99bcb67868d66100",
+      "clipped": 0,
+      "dataset_sha256": "0066f01c9d4932c2cb7d7c19bf99d69f06331bae3af13bee47e6c1ee0e34c17c",
+      "full": 1084,
+      "max_state_tokens": 153,
+      "median_state_tokens": 84.0,
+      "rows": 1084
+    },
+    "restriction": {
+      "audit_sha256": "5f423c051a7c8aee961c3630573849b54b50c39a287fd4cc0875f3ccce7c6c05",
+      "clipped": 0,
+      "dataset_sha256": "5340a78369b9164d4435ba6261538aebeeb3037b28847c380606942538a10cbf",
+      "full": 160,
+      "max_state_tokens": 144,
+      "median_state_tokens": 80.5,
+      "rows": 160
+    }
+  },
+  "head_max_len": 256,
+  "limitations": "All inputs are constructed, and the length probe repeats neutral English filler. These counts do not estimate fit rates for real user requests.",
+  "max_len": 512,
+  "purpose": "actual_checkpoint_context_token_fit",
+  "schema_version": 1,
+  "state_token_room": 425
+}

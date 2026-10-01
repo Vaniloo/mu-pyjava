@@ -1,0 +1,201 @@
+{
+  "schema_version": 1,
+  "purpose": "synthetic_context_format_comparison",
+  "dataset_sha256": "5340a78369b9164d4435ba6261538aebeeb3037b28847c380606942538a10cbf",
+  "token_audit_sha256": "5f423c051a7c8aee961c3630573849b54b50c39a287fd4cc0875f3ccce7c6c05",
+  "split": "all",
+  "rows": 160,
+  "models": {
+    "scope": {
+      "checkpoint_sha256": "f90ac2e6f359691e4ace7c318d611a78461acbe8aa4e0d2962e7728368c84e3d",
+      "noul_temperature": 5.0,
+      "overall": {
+        "n": 160,
+        "labeled": 120,
+        "accepted": 63,
+        "negative_labels": 40,
+        "positive_labels": 80,
+        "coverage": 0.525,
+        "selective_accuracy": 0.9523809523809523,
+        "accuracy_at_0_5": 0.8583333333333333,
+        "false_allow": 0,
+        "false_decline": 3,
+        "false_allow_rate": 0.0,
+        "false_decline_rate": 0.0375,
+        "brier": 0.12327278825000001,
+        "unknown_cases": 40,
+        "unknown_non_abstention": 3
+      },
+      "by_variant": {
+        "direct": {
+          "n": 80,
+          "labeled": 60,
+          "accepted": 31,
+          "negative_labels": 20,
+          "positive_labels": 40,
+          "coverage": 0.5166666666666667,
+          "selective_accuracy": 0.9354838709677419,
+          "accuracy_at_0_5": 0.8,
+          "false_allow": 0,
+          "false_decline": 2,
+          "false_allow_rate": 0.0,
+          "false_decline_rate": 0.05,
+          "brier": 0.14737981016666665,
+          "unknown_cases": 20,
+          "unknown_non_abstention": 2
+        },
+        "followup": {
+          "n": 80,
+          "labeled": 60,
+          "accepted": 32,
+          "negative_labels": 20,
+          "positive_labels": 40,
+          "coverage": 0.5333333333333333,
+          "selective_accuracy": 0.96875,
+          "accuracy_at_0_5": 0.9166666666666666,
+          "false_allow": 0,
+          "false_decline": 1,
+          "false_allow_rate": 0.0,
+          "false_decline_rate": 0.025,
+          "brier": 0.09916576633333331,
+          "unknown_cases": 20,
+          "unknown_non_abstention": 1
+        }
+      },
+      "correct_decisive": 60,
+      "known_abstention": 57,
+      "unknown_abstention": 37,
+      "false_allow_families": {}
+    },
+    "r4": {
+      "checkpoint_sha256": "0f465c40b521ed5979f0a4f6f14a8931836ef077c477f9f31d98c7a9654445a1",
+      "noul_temperature": 3.506450653076172,
+      "overall": {
+        "n": 160,
+        "labeled": 120,
+        "accepted": 43,
+        "negative_labels": 40,
+        "positive_labels": 80,
+        "coverage": 0.35833333333333334,
+        "selective_accuracy": 0.9534883720930233,
+        "accuracy_at_0_5": 0.7833333333333333,
+        "false_allow": 2,
+        "false_decline": 0,
+        "false_allow_rate": 0.05,
+        "false_decline_rate": 0.0,
+        "brier": 0.1582767626666667,
+        "unknown_cases": 40,
+        "unknown_non_abstention": 1
+      },
+      "by_variant": {
+        "direct": {
+          "n": 80,
+          "labeled": 60,
+          "accepted": 22,
+          "negative_labels": 20,
+          "positive_labels": 40,
+          "coverage": 0.36666666666666664,
+          "selective_accuracy": 0.9090909090909091,
+          "accuracy_at_0_5": 0.7333333333333333,
+          "false_allow": 2,
+          "false_decline": 0,
+          "false_allow_rate": 0.1,
+          "false_decline_rate": 0.0,
+          "brier": 0.18022884183333335,
+          "unknown_cases": 20,
+          "unknown_non_abstention": 1
+        },
+        "followup": {
+          "n": 80,
+          "labeled": 60,
+          "accepted": 21,
+          "negative_labels": 20,
+          "positive_labels": 40,
+          "coverage": 0.35,
+          "selective_accuracy": 1.0,
+          "accuracy_at_0_5": 0.8333333333333334,
+          "false_allow": 0,
+          "false_decline": 0,
+          "false_allow_rate": 0.0,
+          "false_decline_rate": 0.0,
+          "brier": 0.1363246835,
+          "unknown_cases": 20,
+          "unknown_non_abstention": 0
+        }
+      },
+      "correct_decisive": 41,
+      "known_abstention": 77,
+      "unknown_abstention": 39,
+      "false_allow_families": {
+        "restriction/editor_policy": 1,
+        "restriction/ps_runtime": 1
+      }
+    },
+    "format": {
+      "checkpoint_sha256": "06e844c5a12455f58766d386178b39bb7f90693e2fa6f440ccc44d27f5315ef0",
+      "noul_temperature": 3.5027103424072266,
+      "overall": {
+        "n": 160,
+        "labeled": 120,
+        "accepted": 103,
+        "negative_labels": 40,
+        "positive_labels": 80,
+        "coverage": 0.8583333333333333,
+        "selective_accuracy": 0.9902912621359223,
+        "accuracy_at_0_5": 0.925,
+        "false_allow": 1,
+        "false_decline": 0,
+        "false_allow_rate": 0.025,
+        "false_decline_rate": 0.0,
+        "brier": 0.046446588583333344,
+        "unknown_cases": 40,
+        "unknown_non_abstention": 0
+      },
+      "by_variant": {
+        "direct": {
+          "n": 80,
+          "labeled": 60,
+          "accepted": 49,
+          "negative_labels": 20,
+          "positive_labels": 40,
+          "coverage": 0.8166666666666667,
+          "selective_accuracy": 0.9795918367346939,
+          "accuracy_at_0_5": 0.9,
+          "false_allow": 1,
+          "false_decline": 0,
+          "false_allow_rate": 0.05,
+          "false_decline_rate": 0.0,
+          "brier": 0.06401569549999998,
+          "unknown_cases": 20,
+          "unknown_non_abstention": 0
+        },
+        "followup": {
+          "n": 80,
+          "labeled": 60,
+          "accepted": 54,
+          "negative_labels": 20,
+          "positive_labels": 40,
+          "coverage": 0.9,
+          "selective_accuracy": 1.0,
+          "accuracy_at_0_5": 0.95,
+          "false_allow": 0,
+          "false_decline": 0,
+          "false_allow_rate": 0.0,
+          "false_decline_rate": 0.0,
+          "brier": 0.02887748166666667,
+          "unknown_cases": 20,
+          "unknown_non_abstention": 0
+        }
+      },
+      "correct_decisive": 102,
+      "known_abstention": 17,
+      "unknown_abstention": 40,
+      "false_allow_families": {
+        "restriction/ps_count_records": 1
+      }
+    }
+  },
+  "independent_human_gold": 0,
+  "real_user_project_traces": 0,
+  "limitations": "Projected constructed inputs and inherited synthetic labels; not an independent reliability estimate."
+}
