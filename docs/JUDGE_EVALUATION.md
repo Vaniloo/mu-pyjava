@@ -203,3 +203,20 @@ The published milestone 19 demonstration uses 15 already public **constructed**
 harness samples, all with empty labels; it contributes zero independent real-project
 cases. The separate 72-case boundary set is synthetic and reserved for diagnostics,
 not training or calibration. See [results and limitations](../training/results-intent-boundary.md).
+
+## 完整请求与任务约束候选输入
+
+开启采样后，Agent 还会在每条私有 `tool.intent` 原始样本的 `source.intent_context` 中记录完整的最新用户消息、消息摘要，以及当轮 `TaskFrame`。这会增加原始样本中的敏感文本；继续放在忽略的 `work/`，不要直接提交或发布。当前运行中的 `tool.intent` v2 state、模型输入、权限和阈值均不变。如果样本超出原有大小限制，采样失败仍只在记录中标出，不会改变工具决策。
+
+用已采集的样本生成独立的候选审核包：
+
+```sh
+PYTHONPATH=python python3 training/prepare_intent_context.py \
+  --samples work/judge-samples.jsonl \
+  --collections work/collections.json \
+  --output work/intent-context-review
+```
+
+`--collections` 可省略；省略时所有组都是 `unattested`。包中的 `tool.intent.context` 是**新候选输入**，字段依次为工具、已隐去文件正文的动作参数、完整最新请求、记录的用户约束、任务目标摘录。目标摘录只提供背景，不能当作额外授权。原始预测与权限结果不会进入审核包；`labels.jsonl` 全部为空，不会自动产生人工标签或训练数据。审核者应按新问题和可见输入独立标 true/false/null；缺关键上下文时标 null。若借助其他模型给建议，来源仍应记为 teacher，不能当作独立人工标签。
+
+先对候选包运行 `training/audit_intent_token_fit.py`，传入计划比较的 checkpoint 和 `packet.jsonl`。该脚本使用候选问题计算可容纳的 state 长度，并核对有序 state 与 Laya 序列化的摘要。超出 512-token 序列预算的样本不能悄悄截断后用于质量比较或推理。任务目标可能来自较早轮次，约束记录也只覆盖显式指令和任务状态判别出的修正；不能把它当作完整对话。详见[输入阶段报告](../training/results-intent-context-input.md)。

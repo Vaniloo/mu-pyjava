@@ -23,18 +23,28 @@ def audit(checkpoint, data):
     tokenizer = AutoTokenizer.from_pretrained(str(checkpoint / "tokenizer"))
     max_len = config.get("max_len", 512)
     head_max_len = config.get("head_max_len", 256)
-    question = {"t": "noul", "ins": TOOL_INTENT.question,
-                "crit": LayaBooleanJudge.CRITERIA}
-    empty_ids, _ = build_sequence(tokenizer, "", question, max_len, head_max_len,
-                                  state_ids=[])
-    room = max(0, max_len - len(empty_ids))
+    rooms = {}
     status = {}
     counts = Counter()
     for row in read_jsonl(data):
         sample_id = row["sample_id"]
         if sample_id in status:
             raise ValueError("Repeated sample ID")
+        instructions = row.get("question", TOOL_INTENT.question)
+        if not isinstance(instructions, str) or not instructions:
+            raise ValueError("Intent question must be nonempty text")
+        if instructions not in rooms:
+            question = {"t": "noul", "ins": instructions,
+                        "crit": LayaBooleanJudge.CRITERIA}
+            empty_ids, _ = build_sequence(tokenizer, "", question, max_len,
+                                          head_max_len, state_ids=[])
+            rooms[instructions] = max(0, max_len - len(empty_ids))
+        room = rooms[instructions]
         serialized = serialize_state(row["state"])
+        expected_serialized_hash = row.get("serialized_state_sha256")
+        if (expected_serialized_hash is not None and
+                hashlib.sha256(serialized.encode("utf-8")).hexdigest() != expected_serialized_hash):
+            raise ValueError("Ordered packet state differs from Laya serialization")
         state_ids = tokenizer(serialized.replace(tokenizer.mask_token, " "),
                               add_special_tokens=False)["input_ids"]
         fit = len(state_ids) <= room
@@ -51,10 +61,15 @@ def audit(checkpoint, data):
         counts["full" if fit else "clipped"] += 1
         if entry.get("command_visible") is False:
             counts["command_absent"] += 1
-    return {"dataset_sha256": hashlib.sha256(data.read_bytes()).hexdigest(),
+    result = {"dataset_sha256": hashlib.sha256(data.read_bytes()).hexdigest(),
             "max_len": max_len, "head_max_len": head_max_len,
-            "state_token_room": room, "counts": dict(sorted(counts.items())),
+            "counts": dict(sorted(counts.items())),
             "status": status}
+    if len(rooms) == 1:
+        result["state_token_room"] = next(iter(rooms.values()))
+    else:
+        result["state_token_room_by_question"] = rooms
+    return result
 
 
 def main():
@@ -69,8 +84,8 @@ def main():
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, sort_keys=True) + "\n")
     print(json.dumps({k: result[k] for k in (
-        "dataset_sha256", "max_len", "head_max_len", "state_token_room", "counts"
-    )}))
+        "dataset_sha256", "max_len", "head_max_len", "state_token_room",
+        "state_token_room_by_question", "counts") if k in result}))
 
 
 if __name__ == "__main__":

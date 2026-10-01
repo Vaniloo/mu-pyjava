@@ -15,6 +15,7 @@ from .judge import DecisionEngine, format_judgment
 from .decision_points import (ACTION_POINTS, BUILTIN_POINTS, TASK_FRAME, TOOL_CONSTRAINT,
                               TOOL_INTENT, TOOL_REVIEW, TOOL_RISK)
 from .task_frame import TaskFrame
+from .intent_context import capture_context
 from .admission import OutputAdmission
 from .summary import TaskSummaries
 from .command_risk import risk_flag
@@ -76,6 +77,7 @@ class Agent:
         self.summaries.begin_turn()
         if self.judge.sampler is not None:
             self.judge.sampler.begin_turn()
+            self.judge.sampler.context.pop("intent_context", None)
         append({"role": "user", "content": prompt})
         change = "none"
         if self.frame.version and self.judge.policy_for(TASK_FRAME).mode != "off":
@@ -87,6 +89,7 @@ class Agent:
         if cancel is not None:
             cancel.raise_if_cancelled()
         self.frame = self.frame.advance(prompt, change)
+        intent_context = capture_context(prompt, self.frame) if self.judge.sampler is not None else None
         if on_frame is not None:
             on_frame(self.frame.payload())
         for _ in range(self.max_steps):
@@ -185,11 +188,19 @@ class Agent:
                             policy = self.judge.policy_for(point)
                             if point != TOOL_INTENT and policy.mode == "off":
                                 continue
-                            outcome = self.judge.decide(
-                                point, {"user_request": prompt[:1000], "tool": name,
-                                        "arguments": copy.deepcopy(judged_arguments)}, cancel=cancel,
-                                on_record=on_judgment if policy.mode != "off" else None,
-                            )
+                            if point == TOOL_INTENT and self.judge.sampler is not None:
+                                # Only intent samples need the full source context.
+                                # The submitted v2 decision state remains unchanged.
+                                self.judge.sampler.context["intent_context"] = intent_context
+                            try:
+                                outcome = self.judge.decide(
+                                    point, {"user_request": prompt[:1000], "tool": name,
+                                            "arguments": copy.deepcopy(judged_arguments)}, cancel=cancel,
+                                    on_record=on_judgment if policy.mode != "off" else None,
+                                )
+                            finally:
+                                if point == TOOL_INTENT and self.judge.sampler is not None:
+                                    self.judge.sampler.context.pop("intent_context", None)
                             if policy.mode != "off" and self.judge.last_record is not None:
                                 yield "judge", format_judgment(self.judge.last_record).strip()
                             if cancel is not None:
