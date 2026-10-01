@@ -270,6 +270,8 @@ class Agent:
                     change = {}
                 if change.get("first_changed_line") is not None:
                     result += "\nFirst changed line: " + str(change["first_changed_line"])
+                if change.get("recovery_id"):
+                    result += "\nRecovery ID: " + change["recovery_id"]
                 if change.get("used_fuzzy_match"):
                     result += "\nFuzzy normalization used on lines: " + json.dumps(change.get("normalized_line_ranges", []))
                 if on_tool_event is not None:

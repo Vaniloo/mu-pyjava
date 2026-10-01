@@ -44,6 +44,10 @@ def action_preview(tools: WorkspaceTools, name: str, arguments: dict,
                 for item in change["normalized_line_ranges"])
             preview = summary + "\nReview the entire changed lines; normalization can alter other characters on them.\n\n" + preview
         return (f"{verb} {relative} ({change['after_bytes']} bytes)", preview, grant, target)
+    if name == "restore_file_change":
+        change = tools.preview_recovery(arguments["id"])
+        return ("Restore " + change["path"] + " from recovery receipt",
+                change["diff"] or "(No visible line change; content and mode are checked)", None, None)
     if name in COMMAND_TOOLS:
         command = arguments["command"]
         if not isinstance(command, str) or not command.strip():
@@ -103,7 +107,7 @@ class ApprovalManager:
                 if confirmed == (name, fingerprint):
                     return True  # Consume the same action's fresh human confirmation once.
         if not force_confirmation and ((name in COMMAND_TOOLS and self.full_command)
-                                       or (name in FILE_MUTATIONS and self.full_write)):
+                                       or (name in FILE_MUTATIONS and name != "restore_file_change" and self.full_write)):
             return True
         proposed = self.tools.prepare_change(name, arguments) if name in {"write_file", "edit_file"} else None
         summary, preview, grant, target = action_preview(self.tools, name, arguments, proposed)

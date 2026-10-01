@@ -221,4 +221,4 @@ PYTHONPATH=python python3 training/prepare_intent_context.py \
 
 先对候选包运行 `training/audit_intent_token_fit.py`，传入计划比较的 checkpoint 和 `packet.jsonl`。该脚本使用候选问题计算可容纳的 state 长度，并核对有序 state 与 Laya 序列化的摘要。超出 512-token 序列预算的样本不能悄悄截断后用于质量比较或推理。任务目标可能来自较早轮次，约束记录也只覆盖显式指令和任务状态判别出的修正；不能把它当作完整对话。详见[输入阶段报告](../training/results-intent-context-input.md)。
 
-使用实际 lab checkpoint 的[合成格式重训报告](../training/results-intent-context-pilot-r1.md)显示同风格留出集覆盖率上升，但边界误放行也明显增加。新权重没有接入运行时；真实输入的审核和长度处理仍是重训前提。
+使用实际 lab checkpoint 的[合成格式重训报告](../training/results-intent-context-pilot-r1.md)显示同风格留出集覆盖率和明确正确判断明显上升，同时边界误放行、误拒绝增加。这些指标应一起看；误放行不是单一否决项。新权重尚未接入运行时，下一步应测真实任务的完成率、人工介入、条件恢复成功率和残留影响，同时处理真实输入审核和长度问题。文件恢复机制见[恢复说明](RECOVERY.md)。

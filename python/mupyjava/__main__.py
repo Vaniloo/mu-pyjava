@@ -31,7 +31,8 @@ def build_agent(args: argparse.Namespace) -> Agent:
     # The interactive server gates each call before reaching these tool methods.
     tools = WorkspaceTools(Path(args.workspace), args.allow_write or args.server,
                            args.allow_command or args.server,
-                           allow_custom=args.server or getattr(args, "allow_custom_tools", False))
+                           allow_custom=args.server or getattr(args, "allow_custom_tools", False),
+                           recovery_enabled=args.server)
     modules = list(getattr(args, "tool_module", None) or [])
     modules.extend(name.strip() for name in os.environ.get("MU_TOOL_MODULES", "").split(",") if name.strip())
     for name in dict.fromkeys(modules):
@@ -122,8 +123,9 @@ def main() -> int:
                 if kind == "tool.change":
                     location = ("\nFirst changed line: " + str(payload["first_changed_line"])) \
                         if payload.get("first_changed_line") is not None else ""
+                    recovery = ("\nRecovery ID: " + payload["recovery_id"]) if payload.get("recovery_id") else ""
                     emit(request_id, kind, f"{payload['path']}: {payload['before_bytes']} → "
-                         f"{payload['after_bytes']} bytes" + location + "\n" + payload["diff"])
+                         f"{payload['after_bytes']} bytes" + location + recovery + "\n" + payload["diff"])
                 elif kind == "tool.result":
                     summary = format_result_details(payload["tool"], payload)
                     if summary:

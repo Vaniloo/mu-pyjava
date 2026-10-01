@@ -21,6 +21,7 @@ from .search_ops import GitOperations, LocalGitOperations, LocalSearchOperations
 from .shell_ops import LocalShellOperations, ShellOperations
 from .image_ops import ImageOperations, PillowImageOperations, MAX_SOURCE_BYTES, detect_image_mime
 from .registry import ToolContext, ToolRegistry, validate_arguments
+from .recovery import FileRecovery
 from .tool_policy import COMMAND_TOOLS, MUTATING_TOOLS
 from .tool_result import ToolResult, TextContent
 
@@ -160,6 +161,14 @@ TOOL_SCHEMAS.extend({
     },
 } for shell in ("bash", "powershell"))
 
+RECOVERY_SCHEMA = {
+    "type": "function", "function": {
+        "name": "restore_file_change",
+        "description": "Undo a recorded local file write or edit by recovery ID, only while its result is unchanged. Requires write permission and approval.",
+        "parameters": {"type": "object", "properties": {"id": {"type": "string"}}, "required": ["id"]},
+    },
+}
+
 
 class WorkspaceTools:
     def __init__(self, root: Path, allow_write: bool = False, allow_command: bool = False,
@@ -167,7 +176,8 @@ class WorkspaceTools:
                  search_ops: Optional[SearchOperations] = None, git_ops: Optional[GitOperations] = None,
                  command_ops: Optional[CommandOperations] = None,
                  shell_ops: Optional[ShellOperations] = None,
-                 image_ops: Optional[ImageOperations] = None, allow_custom: bool = False):
+                 image_ops: Optional[ImageOperations] = None, allow_custom: bool = False,
+                 recovery_enabled: bool = False):
         self.root = root.resolve(strict=True)
         if not self.root.is_dir():
             raise ValueError("Workspace must be a directory")
@@ -175,18 +185,26 @@ class WorkspaceTools:
         self.allow_command = allow_command
         self.output_root = output_root or Path(tempfile.gettempdir()) / "mupyjava-output"
         self.file_ops = file_ops or LocalFileOperations()
+        if recovery_enabled and type(self.file_ops) is not LocalFileOperations:
+            raise ValueError("File recovery requires local file operations")
+        self.recovery_enabled = recovery_enabled
         self.search_ops = search_ops or LocalSearchOperations(self.root)
         self.git_ops = git_ops or LocalGitOperations(self.root)
         self.command_ops = command_ops or LocalCommandOperations()
         self.shell_ops = shell_ops or LocalShellOperations()
         self.image_ops = image_ops or PillowImageOperations()
         self.allow_custom = allow_custom
-        self.registry = ToolRegistry(schema["function"]["name"] for schema in TOOL_SCHEMAS)
+        self.registry = ToolRegistry(schema["function"]["name"] for schema in [*TOOL_SCHEMAS, RECOVERY_SCHEMA])
         self.mutations = FileMutationQueue()
 
     @property
     def schemas(self):
-        return copy.deepcopy(TOOL_SCHEMAS) + self.registry.schemas()
+        return copy.deepcopy(TOOL_SCHEMAS + ([RECOVERY_SCHEMA] if self.recovery_enabled else [])) + self.registry.schemas()
+
+    def preview_recovery(self, recovery_id: str) -> dict:
+        if not self.recovery_enabled:
+            raise ValueError("File recovery is disabled")
+        return FileRecovery(self.root, self.output_root).preview(recovery_id)
 
     def is_mutating(self, name: str) -> bool:
         definition = self.registry.resolve(name)
@@ -549,6 +567,11 @@ class WorkspaceTools:
                     raise ValueError("File changed since approval; review the new diff")
                 if cancel is not None:
                     cancel.raise_if_cancelled()
+                if self.recovery_enabled:
+                    recovery_id = FileRecovery(self.root, self.output_root).stage(target, change)
+                    change["recovery_id"] = recovery_id
+                if cancel is not None:
+                    cancel.raise_if_cancelled()
                 self.file_ops.replace_text(target, change["content"])
                 details["change"] = {key: value for key, value in change.items() if key != "content"}
                 if on_change is not None:
@@ -558,6 +581,22 @@ class WorkspaceTools:
                         # Reporting cannot turn a committed write into an apparent failure.
                         pass
             return ("Wrote " if name == "write_file" else "Edited ") + change["path"]
+        if name == "restore_file_change":
+            if not self.allow_write:
+                raise PermissionError("Writing is disabled; restart with --allow-write")
+            preview = self.preview_recovery(arguments["id"])
+            target = self._path(preview["path"])
+            with self.mutations.hold(target):
+                if cancel is not None:
+                    cancel.raise_if_cancelled()
+                change = FileRecovery(self.root, self.output_root).restore(arguments["id"])
+                details["change"] = change
+                if on_change is not None:
+                    try:
+                        on_change(change)
+                    except Exception:
+                        pass
+            return "Restored " + change["path"]
         if name in COMMAND_TOOLS:
             return self._run_command(name, arguments, cancel, on_update, on_artifact, output_dir, details)
         raise ValueError("Unknown tool: " + name)

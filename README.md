@@ -95,6 +95,7 @@ See [progress](docs/PROGRESS.md) for completed work and next milestones. The ups
 
 The [tool parity table](docs/TOOL_PARITY.md) tracks which mu behaviors have been reproduced and what remains.
 The [operation contracts](docs/OPERATIONS.md) describe local and alternate workspace implementations.
+The desktop keeps private receipts for local file writes and offers a separately approved conditional undo; see [file recovery](docs/RECOVERY.md). The new context-trained judge showed broader correct coverage on synthetic cases, with more boundary errors. [The evaluation report](training/results-intent-context-pilot-r1.md) now treats recovery and whole-task outcomes as the next adoption criteria.
 
 `read_file` also recognizes PNG/JPEG/GIF/WebP/BMP images by their bytes. Configure `MU_MODEL_SUPPORTS_IMAGES=true` for a vision endpoint; the default text-only mode returns a clear omission notice. Optional Pillow handles orientation, BMP conversion, transparency and bounded resizing. Image attachments survive completed-session restoration. The desktop displays image metadata; an image viewer is not implemented.
 

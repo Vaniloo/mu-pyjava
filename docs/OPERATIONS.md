@@ -17,6 +17,8 @@ tools = WorkspaceTools(
 
 An implementation may supply one or more operation groups. Omitted groups use local defaults; configuring an alternate file backend does not automatically move the other groups.
 
+The desktop's local file adapter saves private receipts for conditional write/edit undo. Recovery is disabled for injected file backends until they provide equivalent snapshot and restore semantics; see [file recovery](RECOVERY.md).
+
 | Interface | Operations | Responsibility |
 | --- | --- | --- |
 | `FileOperations` | `exists`, `is_dir`, `list_dir`, `read_text`, `open_text`, `read_bytes`, `size`, `replace_text` | Supply text streams and directory entries; report exact UTF-8 text and byte size for mutation previews; commit replacements atomically |

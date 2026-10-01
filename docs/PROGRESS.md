@@ -24,6 +24,7 @@ The ordered gap audit and acceptance criteria are in [NEXT_PHASE.md](NEXT_PHASE.
 - [x] Persist completed turns in a versioned local session journal, restore the selected session on restart, and show saved judge records in a dedicated Java tab.
 - [x] Add a desktop Stop action, process-tree cancellation, live bounded command output and a full-output retrieval tool.
 - [x] Show unified diffs before write/edit approval, recheck the approved revision, serialize same-path mutations, replace atomically, and record structured change events.
+- [x] Save private local-file recovery receipts before desktop writes/edits; expose a separately approved, conditional file restore tool and refuse to overwrite changed results.
 - [x] Compare mu's current tool and architecture contracts; extend edit to multiple disjoint replacements while preserving BOM and CRLF.
 - [x] Route read/list through injectable operations; verify paging and multi-edit with an in-memory workspace that has no local target file.
 - [x] Extend operation injection to find/grep, read-only Git and streamed commands; verify a complete alternate-backend agent workflow with common approvals, output artifacts and cancellation.
@@ -31,7 +32,7 @@ The ordered gap audit and acceptance criteria are in [NEXT_PHASE.md](NEXT_PHASE.
 - [x] Add bounded image reading/conversion with explicit model capabilities, correct Chat Completions attachment ordering and completed-session restoration.
 - [x] Add trusted custom-tool modules with validated schemas, fresh mutation approvals, judge/cancel/result handling and Java process coverage.
 - [x] Add replayable standard patches, numbered display diffs and navigation metadata; implement explicit fuzzy normalization with fresh approvals, ambiguity checks, untouched-line preservation and Java history coverage.
-- [ ] Collect independently labeled decisions for all mutating tools, including `edit_file`, and resolve confident false positives before enabling the trained judge.
+- [ ] Compare judge checkpoints on real task completion, useful tool actions, recovery success and residual effects; independently review harmful actions before enabling active decisions.
 - [x] Opt-in exact judge input sampling, reviewed annotation schema, offline/fresh-shadow replay and frozen group-isolated intent-v2 exports with separate calibration/test partitions.
 - [x] Add parent-linked session trees, completed-turn selection, independent forks with copied output artifacts, selected-path restart and a Java session browser.
 - [x] Add deterministic request/tool/image budgets, immutable canonical history, full-text admission archives, general retrieval and Java Context history/status.
